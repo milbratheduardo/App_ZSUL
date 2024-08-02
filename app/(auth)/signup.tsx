@@ -1,23 +1,51 @@
-import { View, Text, ScrollView, Image } from 'react-native'
+import { View, Text, ScrollView, Image, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { images } from '../../constants'
 import FormField from '@/components/FormField'
 import CustomButton from '@/components/CustomButton'
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
+import {createUser} from '../../lib/appwrite'
+import { useGlobalContext } from "../../context/GlobalProvider";
 
 const SignUp = () => {
+  const { setUser, setIsLoggedIn } = useGlobalContext();
+
   const [form, setForm] = useState({
     username:'',
+    cpf:'',
     email:'',
-    password:''
+    password:'',
+    endereco:'',
+    bairro:''
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const submit = () => {
+  const submit = async () => {
+    if(form.username === '' || form.cpf === '' || 
+      form.email === '' || form.password === '' || 
+      form.endereco === '' || form.bairro === ''){
+      Alert.alert('Error', 'Por favor, preencha todos os campos')
+    }
 
+    setIsSubmitting(true);
+
+    try {
+      const result = await createUser(form.email, form.password, 
+        form.username, form.cpf, form.endereco, form.bairro);
+      setUser(result);
+      setIsLoggedIn(true);
+
+      router.replace('/home')
+    } catch (error) {
+      Alert.alert('Error', error.message)
+    } finally {
+      setIsSubmitting(false);
+    }
+    createUser();
   }
+
   return (
     <SafeAreaView className="bg-white h-full">
       <ScrollView>
@@ -37,6 +65,16 @@ const SignUp = () => {
               handleChangeText={(e) => setForm({
                 ...form,
                 username: e
+              })}
+              otherStyles='mt-10'
+            />
+
+            <FormField 
+              title='CPF'
+              value={form.cpf}
+              handleChangeText={(e) => setForm({
+                ...form,
+                cpf: e
               })}
               otherStyles='mt-10'
             />
@@ -63,8 +101,28 @@ const SignUp = () => {
               keyboardType='email-address'
             />
 
+            <FormField 
+              title='Endereço'
+              value={form.endereco}
+              handleChangeText={(e) => setForm({
+                ...form,
+                endereco: e
+              })}
+              otherStyles='mt-7'
+            />
+
+            <FormField 
+              title='Bairro'
+              value={form.bairro}
+              handleChangeText={(e) => setForm({
+                ...form,
+                bairro: e
+              })}
+              otherStyles='mt-7'
+            />
+
             <CustomButton 
-              title='Login'
+              title='Cadastrar'
               handlePress={submit}
               containerStyles='mt-7'
               isLoading={isSubmitting}

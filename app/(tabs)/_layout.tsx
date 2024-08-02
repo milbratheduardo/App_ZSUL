@@ -25,8 +25,7 @@ const TabsLayout = () => {
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
-          tabBarStyle: { position: 'absolute', bottom: 0, left: 0, right: 0 }
-        }}
+          tabBarStyle: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 63 }        }}
       >
         <Tabs.Screen 
           name='home'
