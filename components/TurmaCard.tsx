@@ -1,11 +1,11 @@
 import { View, Text, TouchableOpacity } from 'react-native'
 import React from 'react'
 
-const TurmasCard = ({ turma: { title, Qtd_Semana, Dia1, Dia2, Dia3, Local, MaxAlunos }, onPress }) => {
+const TurmasCard = ({ turma: { title, Qtd_Semana, Dia1, Dia2, Dia3, Local, MaxAlunos, Horario_de_inicio }, onPress }) => {
   return (
     <TouchableOpacity 
       activeOpacity={0.7} 
-      className="flex-col items-start p-4 mb-4 bg-gray-800 rounded-lg shadow-md pb-6"
+      className="flex-col items-start p-4 mb-6 bg-gray-800 rounded-lg shadow-md pb-6"
       onPress={onPress}
       style={{
         width: '90%', // Define a largura dos cards como 90% da largura da tela
@@ -37,6 +37,9 @@ const TurmasCard = ({ turma: { title, Qtd_Semana, Dia1, Dia2, Dia3, Local, MaxAl
               {Dia3}
           </Text>
         )}
+        <Text className="text-white text-sm mt-2">
+            Horário: {Horario_de_inicio}
+        </Text>
         <Text className="text-white text-sm mt-2">
             Vagas Disponíveis: {MaxAlunos}
         </Text>
