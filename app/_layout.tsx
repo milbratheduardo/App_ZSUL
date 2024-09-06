@@ -36,6 +36,9 @@ const RootLayout = () => {
         <Stack.Screen name="index" options={{headerShown: false}} />
         <Stack.Screen name="(auth)" options={{headerShown: false}} />
         <Stack.Screen name="(tabs)" options={{headerShown: false}} />
+        <Stack.Screen name="cadastro_atleta" options={{headerShown: false}} />
+        <Stack.Screen name="cadastro_turma" options={{headerShown: false}} />
+        <Stack.Screen name="cadastro_eventos" options={{headerShown: false}} />
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>
     </GlobalProvider>

@@ -7,7 +7,7 @@ import EmptyState from '@/components/EmptyState';
 import TurmasCard from '@/components/TurmaCard';
 import { useGlobalContext } from '@/context/GlobalProvider'
 
-const Home = () => {
+const Alunos = () => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -77,4 +77,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Alunos;

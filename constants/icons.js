@@ -13,6 +13,8 @@ import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
 import calendario from '../assets/icons/calendario.png';
 import turmas from '../assets/icons/turmas.png';
+import trophy from '../assets/icons/trophy.png';
+import alunos from '../assets/icons/alunos.png';
 
 export default {
   play,
@@ -29,5 +31,7 @@ export default {
   eyeHide,
   eye,
   calendario,
-  turmas
+  turmas,
+  trophy,
+  alunos
 };

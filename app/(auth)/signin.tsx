@@ -31,7 +31,7 @@ const SignIn = () => {
       setIsLoggedIn(true);
 
       Alert.alert("Success", "Usuário logado com sucesso");
-      router.replace('/home')
+      router.replace('/turmas')
     } catch (error) {
       Alert.alert('Error', error.message)
     } finally {

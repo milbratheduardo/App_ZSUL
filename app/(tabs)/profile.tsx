@@ -1,21 +1,37 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, FlatList, RefreshControl } from 'react-native'
-import React, {useState} from 'react'
+import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import EmptyState from '@/components/EmptyState';
 import { signOut } from '@/lib/appwrite';
-
-import { useGlobalContext } from '@/context/GlobalProvider'
+import { useGlobalContext } from '@/context/GlobalProvider';
 import { icons } from '@/constants';
 import InfoBox from '@/components/InfoBox';
 import { router } from 'expo-router';
+import CustomButton from '@/components/CustomButton';
+import { getAlunosByUserId } from '@/lib/appwrite';
 
 const Profile = () => {
-  const {user, setUser, setIsLoggedIn } = useGlobalContext();
+  const { user, setUser, setIsLoggedIn } = useGlobalContext();
   const [refreshing, setRefreshing] = useState(false);
+  const [alunos, setAlunos] = useState([]);
+
+  useEffect(() => {
+    fetchAlunos();
+  }, []);
+
+  const fetchAlunos = async () => {
+    try {
+      const fetchedAlunos = await getAlunosByUserId(user.userId);
+      setAlunos(fetchedAlunos);
+    } catch (error) {
+      console.error('Erro ao buscar alunos:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os alunos.');
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    //await fetchData();
+    await fetchAlunos();
     setRefreshing(false);
   };
 
@@ -23,42 +39,84 @@ const Profile = () => {
     await signOut();
     setUser(null);
     setIsLoggedIn(false);
+    router.replace('/signin');
+  };
 
-    router.replace('/signin')
-  }
+  const renderAluno = ({ item }) => (
+    <View style={{
+      padding: 16,
+      backgroundColor: 'white',
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      marginBottom: 16,
+      marginHorizontal: 16,
+    }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>{item.username}</Text>
+      <Text style={{ fontSize: 16, color: 'gray' }}>{item.nascimento}</Text>
+      <Text style={{ fontSize: 16, color: 'gray' }}>{item.escola}</Text>
+      <Text style={{ fontSize: 16, color: 'gray' }}>{item.ano}</Text>
+    </View>
+  );
+
   return (
-    <SafeAreaView className="bg-gray h-full">
+    <SafeAreaView style={{ flex: 1 }}>
       <FlatList
+        data={alunos}
+        keyExtractor={(item) => item.$id}
+        renderItem={renderAluno}
         contentContainerStyle={{ paddingBottom: 63 }}
         ListHeaderComponent={() => (
-          <View className="w-full justify-center items-center mt-6 mb-12 px-4">
+          <View style={{ width: '100%', justifyContent: 'center', alignItems: 'center', marginTop: 16, marginBottom: 24, paddingHorizontal: 16 }}>
             <TouchableOpacity 
-              className="w-full items-end mb-10"
+              style={{ width: '100%', alignItems: 'flex-end', marginBottom: 16 }}
               onPress={logout}
-              >
-              <Image source={icons.logout} resizeMode='contain' className="w-6 h-6"/>
+            >
+              <Image source={icons.logout} resizeMode='contain' style={{ width: 24, height: 24 }} />
             </TouchableOpacity>
-            <View className= "w-16 h-16 border border-golden rounded-lg
-             justify-center items-center">
-              <Image source={{ uri: user?.avatar}} 
-                className="w-[90%] h-[90%] rounded-lg" 
+            <View style={{
+              width: 64,
+              height: 64,
+              borderWidth: 1,
+              borderColor: 'goldenrod',
+              borderRadius: 8,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Image source={{ uri: user?.avatar }} 
+                style={{ width: '90%', height: '90%', borderRadius: 8 }} 
                 resizeMode='cover'
               />
             </View>
             <InfoBox 
-              title = {user?.username}
-              email = {user?.email}
-              containerStyles = 'mt-5'
-              titleStyles = "text-lg"
+              title={user?.username}
+              email={user?.email}
+              containerStyles='mt-5'
+              titleStyles="text-lg"
             />
-
+            {user.role === 'responsavel' && (
+            <CustomButton 
+              title="Novo Atleta"
+              handlePress={() => router.push('/cadastro_atleta')}
+              containerStyles="p-3 mt-10"
+            />
+            )}
+            {user.role === 'responsavel' && (
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20, color: 'black' }}>
+              Sou Responsável por:
+            </Text>
+            )}
           </View>
         )}
         ListEmptyComponent={() => (
-          <EmptyState
-            title="Nenhum Atleta Encontrado"
-            subtitle="Não foi adicionado nenhum atleta"
-          />
+          user.role === 'responsavel' && ( 
+            <EmptyState
+              title="Nenhum Atleta Encontrado"
+              subtitle="Não foi adicionado nenhum atleta"
+            />
+          )
         )}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -68,6 +126,4 @@ const Profile = () => {
   );
 };
 
-export default Profile
-
-const styles = StyleSheet.create({})
+export default Profile;
