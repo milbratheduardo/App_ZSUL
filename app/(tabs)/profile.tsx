@@ -1,4 +1,4 @@
-import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert } from 'react-native';
+import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import EmptyState from '@/components/EmptyState';
@@ -14,10 +14,13 @@ const Profile = () => {
   const { user, setUser, setIsLoggedIn } = useGlobalContext();
   const [refreshing, setRefreshing] = useState(false);
   const [alunos, setAlunos] = useState([]);
+  const [loadingLogout, setLoadingLogout] = useState(false);
 
   useEffect(() => {
-    fetchAlunos();
-  }, []);
+    if (user) {
+      fetchAlunos();
+    }
+  }, [user]);
 
   const fetchAlunos = async () => {
     try {
@@ -36,10 +39,15 @@ const Profile = () => {
   };
 
   const logout = async () => {
-    await signOut();
-    setUser(null);
-    setIsLoggedIn(false);
-    router.replace('/signin');
+    setLoadingLogout(true); // Ativar o estado de loading
+    try {
+      await signOut();
+      router.replace('/signin'); // Redirecionar após sucesso no logout
+    } catch (error) {
+      Alert.alert('Erro', error.message || 'Não foi possível efetuar o logout.');
+    } finally {
+      setLoadingLogout(false); // Desativar o loading
+    }
   };
 
   const renderAluno = ({ item }) => (
@@ -60,6 +68,24 @@ const Profile = () => {
       <Text style={{ fontSize: 16, color: 'gray' }}>{item.ano}</Text>
     </View>
   );
+
+  // Se estiver em processo de logout, mostrar um indicador de carregamento
+  if (loadingLogout) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </SafeAreaView>
+    );
+  }
+
+  // Evitar acessar propriedades de 'user' quando ele for null
+  if (!user) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Usuário não autenticado</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -127,3 +153,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

@@ -1,12 +1,25 @@
 import { View, Text, Image, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar } from 'react-native-calendars';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useGlobalContext } from '@/context/GlobalProvider'; 
 import { images } from '@/constants'; 
 import CustomButton from '@/components/CustomButton'; 
 import { router } from 'expo-router';
 import { getAllEvents } from '@/lib/appwrite'; // Certifique-se de que essa função retorna corretamente os eventos
+
+// Configurar o calendário para Português
+LocaleConfig.locales['pt'] = {
+  monthNames: [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ],
+  monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+  dayNames: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'],
+  dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+  today: 'Hoje'
+};
+LocaleConfig.defaultLocale = 'pt';
 
 const Eventos = () => {
   const { user } = useGlobalContext();
@@ -59,22 +72,19 @@ const Eventos = () => {
     return acc;
   }, {});
 
+  const convertDateToDMY = (dateString) => {
+    const [year, month, day] = dateString.split('-');
+    return `${day}-${month}-${year}`;
+  };
+  
+
   // Função para lidar com o clique em um dia do calendário
   const handleDayPress = (day) => {
-    const date = day.dateString;
-    const dayEvents = events.filter(event => event.isoDate === date);
-
-    if (dayEvents.length > 0) {
-      const eventDetails = dayEvents
-        .map(event => (
-          `${event.Title}\n\nData: ${event.Date_event}\n\nDescrição: ${event.Description}\n\nHora: ${event.Hora_event}`
-        ))
-        .join('\n\n──────────\n\n'); // Linha separadora para múltiplos eventos
-
-      Alert.alert('Eventos', eventDetails);
-    } else {
-      Alert.alert('Nenhum evento', 'Nenhum evento programado para este dia.');
-    }
+    const date = convertDateToDMY(day.dateString);
+    router.push({
+      pathname: '/eventos_dia',
+      params: { date },
+    });
   };
 
   return (
@@ -105,7 +115,7 @@ const Eventos = () => {
         {/* Calendário */}
         <Calendar
           markedDates={markedDates} // Marca as datas com eventos
-          onDayPress={handleDayPress} // Exibe os detalhes ao clicar
+          onDayPress={handleDayPress} // Redireciona para a tela eventos_dia ao clicar no dia
           theme={{
             selectedDayBackgroundColor: '#A3935E',
             todayTextColor: '#A3935E',

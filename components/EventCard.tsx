@@ -1,0 +1,121 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, Alert } from 'react-native';
+import CustomButton from './CustomButton'; // Botão reutilizável
+import { getImageUrl } from '@/lib/appwrite'; 
+import { router } from 'expo-router'; // Importe o router do expo-router
+import { getCurrentUser } from '@/lib/appwrite'; // Função para buscar o usuário atual
+import { updateEventConfirmados } from '@/lib/appwrite'; // Função para atualizar o evento
+
+const EventCard = ({ event }) => {
+  const [imageUrl, setImageUrl] = useState('');
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    // Buscar imagem do evento
+    const fetchImageUrl = async () => {
+      if (event.ImageID) {
+        try {
+          const url = await getImageUrl(event.ImageID);
+          setImageUrl(url);
+        } catch (error) {
+          console.error("Erro ao buscar a URL da imagem:", error);
+        }
+      }
+    };
+
+    fetchImageUrl();
+
+    // Buscar usuário atual
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getCurrentUser(); // Supondo que getCurrentUser retorne o ID do usuário
+        setUserId(currentUser.$id);
+        checkIfConfirmed(currentUser.$id);
+      } catch (error) {
+        console.error("Erro ao buscar o usuário atual:", error);
+      }
+    };
+
+    fetchUser();
+  }, [event.Confirmados]);
+
+  // Verifica se o usuário já confirmou a presença
+  const checkIfConfirmed = (userId) => {
+    if (event.Confirmados && event.Confirmados.includes(userId)) {
+      setIsConfirmed(true); // Usuário já confirmado
+    }
+  };
+
+  // Função para confirmar presença
+  const handleConfirmPresence = async () => {
+    if (userId && !isConfirmed) {
+      try {
+        const updatedConfirmados = [...event.Confirmados, userId]; // Adiciona o ID do usuário à lista
+        await updateEventConfirmados(event.$id, updatedConfirmados); // Função para atualizar o evento no banco de dados
+
+        setIsConfirmed(true); // Atualiza o estado local
+        Alert.alert('Sucesso', 'Você confirmou presença no evento');
+      } catch (error) {
+        console.error("Erro ao confirmar presença:", error);
+        Alert.alert('Erro', 'Não foi possível confirmar a presença');
+      }
+    }
+  };
+
+  const handleViewRelated = () => {
+    // Navega para a tela 'ver_relacionados' e passa os IDs de confirmados
+    router.push({
+      pathname: '/ver_relacionados', // Nome da rota para a tela 'Ver Relacionados'
+      params: {
+        confirmados: event.Confirmados.join(','), // Passa os IDs como uma string separada por vírgula
+        eventTitle: event.Title // Passando também o título do evento se necessário
+      }
+    });
+  };
+
+  return (
+    <View style={{ marginBottom: 16, borderRadius: 8, backgroundColor: '#fff', padding: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
+      {/* Imagem do evento */}
+      {imageUrl ? (
+        <Image 
+          source={{ uri: imageUrl }} 
+          style={{ width: '100%', height: 150, borderRadius: 8, marginBottom: 8 }} 
+          resizeMode="cover"
+        />
+      ) : (
+        <Text style={{ fontSize: 14, color: 'gray', marginBottom: 10 }}>Evento sem capa</Text>
+      )}
+
+      {/* Título do evento */}
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>{event.Title}</Text>
+
+      {/* Descrição do evento */}
+      <Text style={{ fontSize: 14, color: '#555', marginBottom: 8 }}>{event.Description}</Text>
+
+      {/* Data e hora do evento */}
+      <Text style={{ fontSize: 14, color: '#777' }}>
+        Data: {event.Date_event} - Hora: {event.Hora_event}
+      </Text>
+
+      {/* Botões diferentes dependendo do tipo de evento */}
+      {event.Type === 'partida' ? (
+        <CustomButton
+          title="Ver Relacionados"
+          handlePress={handleViewRelated}
+          containerStyles="mt-4 p-3 bg-primary"
+        />
+      ) : isConfirmed ? (
+        <Text style={{ fontSize: 14, color: 'green', marginTop: 10 }}>Você já está inscrito neste evento</Text>
+      ) : (
+        <CustomButton
+          title="Confirmar Presença"
+          handlePress={handleConfirmPresence}
+          containerStyles="mt-4 p-3 bg-golden"
+        />
+      )}
+    </View>
+  );
+};
+
+export default EventCard;
