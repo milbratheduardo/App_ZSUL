@@ -58,7 +58,21 @@ const Turmas = () => {
         data={data}
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (
-          <TurmasCard turma={item} onPress={() => handleTurmaPress(item)} /> // Passa a função de clique
+          <TurmasCard 
+            turma={{
+              turmaId: item.$id, // Passa o ID da turma
+              title: item.title,
+              Qtd_Semana: item.Qtd_Semana,
+              Dia1: item.Dia1,
+              Dia2: item.Dia2,
+              Dia3: item.Dia3,
+              Local: item.Local,
+              MaxAlunos: item.MaxAlunos,
+              Horario_de_inicio: item.Horario_de_inicio,
+              Horario_de_termino: item.Horario_de_termino,
+            }}
+            onPress={() => handleTurmaPress(item)} // Passa a função de clique
+          />
         )}
         contentContainerStyle={{ paddingBottom: 63 }}
         ListHeaderComponent={() => (
@@ -119,9 +133,7 @@ const Turmas = () => {
                   });
                 }} 
               />
-              {user.role === 'admin' && (
-                  <>
-                    <CustomButton 
+                 <CustomButton 
                       title="Chamadas" 
                       containerStyles="ml-10 mr-10 p-4 mt-4"
                       handlePress={() => {
@@ -132,6 +144,8 @@ const Turmas = () => {
                         });
                       }} 
                     />
+              {user.role === 'admin' && (
+                  <>
                     <CustomButton 
                       title="Cadastrar Alunos" 
                       containerStyles="ml-10 mr-10 p-4 mt-4"

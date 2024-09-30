@@ -15,6 +15,7 @@ import calendario from '../assets/icons/calendario.png';
 import turmas from '../assets/icons/turmas.png';
 import trophy from '../assets/icons/trophy.png';
 import alunos from '../assets/icons/alunos.png';
+import gallery from '../assets/icons/gallery.png';
 
 export default {
   play,
@@ -33,5 +34,6 @@ export default {
   calendario,
   turmas,
   trophy,
-  alunos
+  alunos,
+  gallery
 };

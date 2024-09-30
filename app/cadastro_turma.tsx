@@ -18,7 +18,8 @@ const CadastroTurma = () => {
     Dia3: '',
     Local: '',
     MaxAlunos: '',
-    Horario_de_inicio: ''
+    Horario_de_inicio: '',
+    Horario_de_termino: ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +42,8 @@ const CadastroTurma = () => {
         form.Dia3,
         form.Local,
         form.MaxAlunos,
-        form.Horario_de_inicio  
+        form.Horario_de_inicio,  
+        form.Horario_de_termino
       );
       
       router.replace('/turmas');
@@ -170,6 +172,13 @@ const CadastroTurma = () => {
             title='Horário de Início'
             value={form.Horario_de_inicio}
             handleChangeText={(e) => setForm({ ...form, Horario_de_inicio: e })}
+            otherStyles='mt-10'
+          />
+
+          <FormField 
+            title='Horário de Término'
+            value={form.Horario_de_termino}
+            handleChangeText={(e) => setForm({ ...form, Horario_de_termino: e })}
             otherStyles='mt-10'
           />
 

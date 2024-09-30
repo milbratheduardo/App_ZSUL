@@ -24,7 +24,7 @@ const VerChamadas = () => {
     setIsLoading(true);
     try {
       const response = await getChamadasByTurmaId(turmaId); // Busca todas as chamadas da turma
-      setChamadas(response);
+      setChamadas(response.reverse());
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
@@ -81,7 +81,7 @@ const VerChamadas = () => {
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => handleChamadaPress(item)}>
-            <View style={{ padding: 10, backgroundColor: 'white', marginVertical: 5 }}>
+            <View style={{ padding: 10, backgroundColor: 'white', marginVertical: 5, borderRadius: 20}}>
               <Text style={{ fontWeight: 'bold' }}>{item.data}</Text>
               <Text>Presentes: {item.presentes.length}</Text>
               <Text>Ausentes: {item.ausentes.length}</Text>
@@ -140,6 +140,15 @@ const VerChamadas = () => {
               {ausentesNomes.map((nome, index) => (
                 <Text key={index}>{nome}</Text> // Mostra o nome dos alunos ausentes
               ))}
+
+              <CustomButton 
+                title="Editar Chamada"
+                handlePress={() => router.push({
+                    pathname: '/editar_chamadas',
+                    params: { turmaId, chamadaId: selectedChamada.$id },
+                })}
+                containerStyles="ml-10 mr-10 p-4 mt-10"
+              />
 
               <CustomButton 
                 title="Fechar" 

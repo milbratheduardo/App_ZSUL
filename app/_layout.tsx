@@ -46,6 +46,8 @@ const RootLayout = () => {
         <Stack.Screen name="cadastrar_alunos" options={{headerShown: false}} />
         <Stack.Screen name="turma_chamadas" options={{headerShown: false}} />
         <Stack.Screen name="ver_chamadas" options={{headerShown: false}} />
+        <Stack.Screen name="editar_chamadas" options={{headerShown: false}} />
+        <Stack.Screen name="enviar_imagem" options={{headerShown: false}} />
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>
     </GlobalProvider>

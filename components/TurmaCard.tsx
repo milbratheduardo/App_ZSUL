@@ -1,7 +1,24 @@
-import { View, Text, TouchableOpacity } from 'react-native'
-import React from 'react'
+import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { getAlunosByTurmaId } from '@/lib/appwrite';
 
-const TurmasCard = ({ turma: { title, Qtd_Semana, Dia1, Dia2, Dia3, Local, MaxAlunos, Horario_de_inicio }, onPress }) => {
+const TurmasCard = ({ turma: { turmaId, title, Qtd_Semana, Dia1, Dia2, Dia3, Local, MaxAlunos, Horario_de_inicio, Horario_de_termino }, onPress }) => {
+  const [vagasDisponiveis, setVagasDisponiveis] = useState(MaxAlunos);
+
+  useEffect(() => {
+    const fetchAlunos = async () => {
+      try {
+        const alunos = await getAlunosByTurmaId(turmaId);
+        setVagasDisponiveis(MaxAlunos - alunos.length);
+      } catch (error) {
+        console.error('Erro ao buscar alunos:', error);
+      }
+    };
+
+    fetchAlunos();
+  }, [turmaId, MaxAlunos]);
+
+
   return (
     <TouchableOpacity 
       activeOpacity={0.7} 
@@ -38,16 +55,19 @@ const TurmasCard = ({ turma: { title, Qtd_Semana, Dia1, Dia2, Dia3, Local, MaxAl
           </Text>
         )}
         <Text className="text-white text-sm mt-2">
-            Horário: {Horario_de_inicio}
+            Horário de Início: {Horario_de_inicio}
         </Text>
         <Text className="text-white text-sm mt-2">
-            Vagas Disponíveis: {MaxAlunos}
+            Horário do Término: {Horario_de_termino}
+        </Text>
+        <Text className="text-white text-sm mt-2">
+            Vagas Disponíveis: {vagasDisponiveis}
         </Text>
         <Text className="text-white text-sm mt-2">
             Local: {Local}
         </Text>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 export default TurmasCard;
