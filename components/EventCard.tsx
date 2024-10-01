@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, Alert } from 'react-native';
 import CustomButton from './CustomButton'; // Botão reutilizável
-import { getImageUrl } from '@/lib/appwrite'; 
+import { getImageUrl, getCurrentUser, updateEventConfirmados } from '@/lib/appwrite';
 import { router } from 'expo-router'; // Importe o router do expo-router
-import { getCurrentUser } from '@/lib/appwrite'; // Função para buscar o usuário atual
-import { updateEventConfirmados } from '@/lib/appwrite'; // Função para atualizar o evento
 
 const EventCard = ({ event }) => {
   const [imageUrl, setImageUrl] = useState('');
@@ -63,6 +61,22 @@ const EventCard = ({ event }) => {
     }
   };
 
+  // Função para cancelar presença
+  const handleCancelPresence = async () => {
+    if (userId && isConfirmed) {
+      try {
+        const updatedConfirmados = event.Confirmados.filter((id) => id !== userId); // Remove o ID do usuário da lista
+        await updateEventConfirmados(event.$id, updatedConfirmados); // Atualiza o evento no banco de dados
+
+        setIsConfirmed(false); // Atualiza o estado local
+        Alert.alert('Sucesso', 'Você cancelou sua presença no evento');
+      } catch (error) {
+        console.error("Erro ao cancelar presença:", error);
+        Alert.alert('Erro', 'Não foi possível cancelar a presença');
+      }
+    }
+  };
+
   const handleViewRelated = () => {
     // Navega para a tela 'ver_relacionados' e passa os IDs de confirmados
     router.push({
@@ -106,7 +120,14 @@ const EventCard = ({ event }) => {
           containerStyles="mt-4 p-3 bg-primary"
         />
       ) : isConfirmed ? (
-        <Text style={{ fontSize: 14, color: 'green', marginTop: 10 }}>Você já está inscrito neste evento</Text>
+        <>
+          <Text style={{ fontSize: 14, color: 'green', marginTop: 10 }}>Você já está inscrito neste evento</Text>
+          <CustomButton
+            title="Cancelar Presença"
+            handlePress={handleCancelPresence}
+            containerStyles="mt-4 p-3 bg-red-500"
+          />
+        </>
       ) : (
         <CustomButton
           title="Confirmar Presença"

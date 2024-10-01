@@ -1,43 +1,79 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, FlatList, Image, RefreshControl, Alert, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from '@/constants';
-import { getAllImages, getImageUrl } from '@/lib/appwrite';
+import { getAllImages, getImageUrl, getUsersById } from '@/lib/appwrite';
 import * as FileSystem from 'expo-file-system';
+import * as Notifications from 'expo-notifications';
+import * as Sharing from 'expo-sharing';
+import { useNavigation } from '@react-navigation/native';
 import EmptyState from '@/components/EmptyState';
 import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { router } from 'expo-router';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 const Galeria = () => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null); // Estado para a imagem selecionada
-  const [isModalVisible, setIsModalVisible] = useState(false); // Estado para exibir o modal
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const { user } = useGlobalContext();
+  const navigation = useNavigation();
+
+  // Referência à notificação recebida para tratar a ação de abertura
+  const notificationListener = useRef();
+  const responseListener = useRef();
 
   useEffect(() => {
     fetchData();
+
+    // Listener para quando uma notificação for recebida enquanto o app está em foreground
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notificação recebida!', notification);
+    });
+
+    // Listener para quando a notificação for clicada
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const { uri } = response.notification.request.content.data;
+      if (uri) {
+        openImage(uri);
+      }
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
   }, []);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const images = await getAllImages(); // Buscar todas as imagens da galeria
+      const images = await getAllImages();
 
-      // Para cada imagem, buscar a URL usando o `getImageUrl`
-      const imagesWithUrls = await Promise.all(
+      // Para cada imagem, buscar a URL e o username usando o `getImageUrl` e `getUsersById`
+      const imagesWithDetails = await Promise.all(
         images.map(async (image) => {
-          const imageUrl = await getImageUrl(image.imageId); // Obtém a URL usando o ID da imagem
+          const imageUrl = await getImageUrl(image.imageId);
+          const userDetail = await getUsersById(image.userId);
           return {
             ...image,
             uri: imageUrl,
+            username: userDetail?.username || 'Usuário Desconhecido',
           };
         })
       );
 
-      setData(imagesWithUrls);
+      setData(imagesWithDetails);
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
@@ -52,31 +88,48 @@ const Galeria = () => {
   };
 
   const handleImagePress = (image) => {
-    setSelectedImage(image); // Define a imagem selecionada
-    setIsModalVisible(true); // Abre o modal
+    setSelectedImage(image);
+    setIsModalVisible(true);
   };
 
   const closeModal = () => {
-    setIsModalVisible(false); // Fecha o modal
-    setSelectedImage(null); // Limpa a imagem selecionada
+    setIsModalVisible(false);
+    setSelectedImage(null);
   };
 
-  const handleDownloadImage = async (imageId) => {
+  const handleDownloadAndShareImage = async (imageId) => {
     try {
-      const fileUrl = await getImageUrl(imageId); // Obter a URL da imagem usando o ID
-      const downloadPath = `${FileSystem.documentDirectory}${imageId}.jpg`; // Caminho onde a imagem será salva localmente
+      const fileUrl = await getImageUrl(imageId);
+      const downloadPath = `${FileSystem.documentDirectory}${imageId}.jpg`;
 
-      const downloadResumable = FileSystem.createDownloadResumable(
-        fileUrl,
-        downloadPath
-      );
+      // Baixar a imagem
+      const { uri } = await FileSystem.downloadAsync(fileUrl, downloadPath);
 
-      const { uri } = await downloadResumable.downloadAsync();
-      Alert.alert('Sucesso', `Imagem baixada com sucesso para: ${uri}`);
+      // Compartilhar a imagem usando expo-sharing
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      } else {
+        Alert.alert('Erro', 'Compartilhamento não disponível no dispositivo.');
+      }
+
+      // Notificação de download concluído (opcional)
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Download Completo',
+          body: 'Imagem baixada e pronta para compartilhamento.',
+        },
+        trigger: null,
+      });
     } catch (error) {
       console.error("Erro ao baixar a imagem:", error);
       Alert.alert('Erro', 'Não foi possível baixar a imagem.');
     }
+  };
+
+  // Função para abrir a imagem (navegar para uma tela apropriada ou exibir)
+  const openImage = (uri) => {
+    Alert.alert('Abrindo imagem', `Imagem localizada em: ${uri}`);
+    // Alternativamente, redirecionar para uma tela específica do seu app
   };
 
   return (
@@ -88,19 +141,19 @@ const Galeria = () => {
           <TouchableOpacity onPress={() => handleImagePress(item)}>
             <View style={{ padding: 10, backgroundColor: 'white', marginVertical: 5, borderRadius: 8 }}>
               {item.uri ? (
-                <Image 
+                <Image
                   source={{ uri: item.uri }}
                   style={{ width: '100%', height: 150, borderRadius: 8 }}
-                  resizeMode="contain" // Ajusta a imagem para caber dentro do contêiner mantendo a proporção
+                  resizeMode="contain"
                 />
               ) : (
                 <Text style={{ fontSize: 14, color: 'gray' }}>Imagem não disponível</Text>
               )}
               <Text style={{ fontWeight: 'bold', marginTop: 5 }}>{item.title}</Text>
-              <Text style={{ color: 'gray' }}>Enviado por: {item.userId}</Text>
-              <CustomButton 
-                title="Download"
-                handlePress={() => handleDownloadImage(item.imageId)}
+              <Text style={{ color: 'gray' }}>Enviado por: {item.username}</Text>
+              <CustomButton
+                title="Compartilhar"
+                handlePress={() => handleDownloadAndShareImage(item.imageId)}
                 containerStyles="p-3 mt-2"
               />
             </View>
@@ -120,9 +173,9 @@ const Galeria = () => {
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
               <Text style={{ fontSize: 18, fontWeight: '500', color: '#333' }}>Galeria de Imagens</Text>
-              <CustomButton 
+              <CustomButton
                 title="Enviar Imagem"
-                handlePress={() => router.push('/enviar_imagem')} // Direciona para a tela de enviar imagem
+                handlePress={() => router.push('/enviar_imagem')}
                 containerStyles="ml-1 p-2"
               />
             </View>
@@ -150,10 +203,10 @@ const Galeria = () => {
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 8, width: '90%' }}>
               {selectedImage.uri ? (
-                <Image 
-                  source={{ uri: selectedImage.uri }} 
+                <Image
+                  source={{ uri: selectedImage.uri }}
                   style={{ width: '100%', height: 200, borderRadius: 8 }}
-                  resizeMode="contain" // Ajusta a imagem para caber dentro do contêiner mantendo a proporção
+                  resizeMode="contain"
                 />
               ) : (
                 <Text style={{ fontSize: 14, color: 'gray' }}>Imagem não disponível</Text>
@@ -161,10 +214,10 @@ const Galeria = () => {
               <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginTop: 10 }}>
                 {selectedImage.title}
               </Text>
-              <CustomButton 
-                title="Fechar" 
+              <CustomButton
+                title="Fechar"
                 containerStyles="p-4 mt-4"
-                handlePress={closeModal} 
+                handlePress={closeModal}
               />
             </View>
           </View>
