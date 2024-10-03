@@ -83,7 +83,8 @@ const EventCard = ({ event }) => {
       pathname: '/ver_relacionados', // Nome da rota para a tela 'Ver Relacionados'
       params: {
         confirmados: event.Confirmados.join(','), // Passa os IDs como uma string separada por vírgula
-        eventTitle: event.Title // Passando também o título do evento se necessário
+        eventTitle: event.Title, // Passando também o título do evento se necessário
+        eventId: event.$id
       }
     });
   };

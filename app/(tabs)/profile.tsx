@@ -1,20 +1,24 @@
-import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import EmptyState from '@/components/EmptyState';
-import { signOut } from '@/lib/appwrite';
+import PDFView from 'react-native-pdf';  // Verifique se essa importação está correta
+import { signOut, getAlunosByUserId, atualizarDiaCobranca, gerarPdfContrato } from '@/lib/appwrite';  // Certifique-se que todas as funções estão exportadas corretamente
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { icons } from '@/constants';
-import InfoBox from '@/components/InfoBox';
-import { router } from 'expo-router';
-import CustomButton from '@/components/CustomButton';
-import { getAlunosByUserId } from '@/lib/appwrite';
+import EmptyState from '@/components/EmptyState';  // Verifique se é export default
+import InfoBox from '@/components/InfoBox';  // Verifique se é export default
+import CustomButton from '@/components/CustomButton';  // Verifique se é export default
+import { router } from 'expo-router';  // Verifique se a versão do `expo-router` está correta para suportar o uso de `router`
 
 const Profile = () => {
   const { user, setUser, setIsLoggedIn } = useGlobalContext();
   const [refreshing, setRefreshing] = useState(false);
   const [alunos, setAlunos] = useState([]);
   const [loadingLogout, setLoadingLogout] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedAlunoId, setSelectedAlunoId] = useState(null);
+  const [tipoContrato, setTipoContrato] = useState('');
+  const [diaCobranca, setDiaCobranca] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -39,14 +43,38 @@ const Profile = () => {
   };
 
   const logout = async () => {
-    setLoadingLogout(true); // Ativar o estado de loading
+    setLoadingLogout(true);
     try {
       await signOut();
-      router.replace('/signin'); // Redirecionar após sucesso no logout
+      router.replace('/signin');
     } catch (error) {
       Alert.alert('Erro', error.message || 'Não foi possível efetuar o logout.');
     } finally {
-      setLoadingLogout(false); // Desativar o loading
+      setLoadingLogout(false);
+    }
+  };
+
+  const handleAssinarContrato = (alunoId) => {
+    setSelectedAlunoId(alunoId);
+    setTipoContrato('');
+    setDiaCobranca('');
+    setModalVisible(true);
+  };
+
+  const iniciarAssinatura = async () => {
+    try {
+      const dia = parseInt(diaCobranca, 10);
+      if (isNaN(dia) || dia < 1 || dia > 31) {
+        Alert.alert('Erro', 'Por favor, insira um dia válido (1-31).');
+        return;
+      }
+  
+      await atualizarDiaCobranca(selectedAlunoId, diaCobranca);
+  
+      setModalVisible(false);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível iniciar o processo de assinatura.');
+      console.error('Erro ao iniciar assinatura:', error);
     }
   };
 
@@ -66,6 +94,16 @@ const Profile = () => {
       <Text style={{ fontSize: 16, color: 'gray' }}>{item.nascimento}</Text>
       <Text style={{ fontSize: 16, color: 'gray' }}>{item.escola}</Text>
       <Text style={{ fontSize: 16, color: 'gray' }}>{item.ano}</Text>
+
+      {item.assinado === null || item.assinado === '' ? (
+        <CustomButton
+          title="Assinar Contrato"
+          handlePress={() => handleAssinarContrato(item.$id)}
+          containerStyles="p-3 mt-5"
+        />
+      ) : item.assinado === 'sim' ? (
+        <Text style={{ fontSize: 16, color: 'green', marginTop: 10 }}>{item.tipo_contrato}</Text>
+      ) : null}
     </View>
   );
 
@@ -74,15 +112,6 @@ const Profile = () => {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#0000ff" />
-      </SafeAreaView>
-    );
-  }
-
-  // Evitar acessar propriedades de 'user' quando ele for null
-  if (!user) {
-    return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Usuário não autenticado</Text>
       </SafeAreaView>
     );
   }
@@ -96,7 +125,7 @@ const Profile = () => {
         contentContainerStyle={{ paddingBottom: 63 }}
         ListHeaderComponent={() => (
           <View style={{ width: '100%', justifyContent: 'center', alignItems: 'center', marginTop: 16, marginBottom: 24, paddingHorizontal: 16 }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={{ width: '100%', alignItems: 'flex-end', marginBottom: 16 }}
               onPress={logout}
             >
@@ -111,33 +140,33 @@ const Profile = () => {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-              <Image source={{ uri: user?.avatar }} 
-                style={{ width: '90%', height: '90%', borderRadius: 8 }} 
+              <Image source={{ uri: user?.avatar }}
+                style={{ width: '90%', height: '90%', borderRadius: 8 }}
                 resizeMode='cover'
               />
             </View>
-            <InfoBox 
+            <InfoBox
               title={user?.username}
               email={user?.email}
               containerStyles='mt-5'
               titleStyles="text-lg"
             />
             {user.role === 'responsavel' && (
-            <CustomButton 
-              title="Novo Atleta"
-              handlePress={() => router.push('/cadastro_atleta')}
-              containerStyles="p-3 mt-10"
-            />
+              <CustomButton
+                title="Novo Atleta"
+                handlePress={() => router.push('/cadastro_atleta')}
+                containerStyles="p-3 mt-10"
+              />
             )}
             {user.role === 'responsavel' && (
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20, color: 'black' }}>
-              Sou Responsável por:
-            </Text>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20, color: 'black' }}>
+                Sou Responsável por:
+              </Text>
             )}
           </View>
         )}
         ListEmptyComponent={() => (
-          user.role === 'responsavel' && ( 
+          user.role === 'responsavel' && (
             <EmptyState
               title="Nenhum Atleta Encontrado"
               subtitle="Não foi adicionado nenhum atleta"
@@ -148,9 +177,45 @@ const Profile = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ width: 300, backgroundColor: 'white', borderRadius: 10, padding: 20 }}>
+            {tipoContrato === '' ? (
+              <>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
+                  Escolha o Tipo de Contrato
+                </Text>
+                <CustomButton title="Contrato Mensal" handlePress={() => setTipoContrato('mensal')} containerStyles="mb-4" />
+                <CustomButton title="Contrato Semestral" handlePress={() => setTipoContrato('semestral')} containerStyles="mb-4" />
+                <CustomButton title="Contrato Anual" handlePress={() => setTipoContrato('anual')} containerStyles="mb-4" />
+              </>
+            ) : (
+              <>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
+                  Tipo de Contrato Selecionado: {tipoContrato.charAt(0).toUpperCase() + tipoContrato.slice(1)}
+                </Text>
+                <TextInput
+                  placeholder="Digite o dia da cobrança (1-31)"
+                  keyboardType="numeric"
+                  value={diaCobranca}
+                  onChangeText={setDiaCobranca}
+                  style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 5, padding: 10, marginBottom: 20 }}
+                />
+                <CustomButton title="Confirmar" handlePress={iniciarAssinatura} containerStyles="mb-4" />
+              </>
+            )}
+            <CustomButton title="Cancelar" handlePress={() => setModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 export default Profile;
-

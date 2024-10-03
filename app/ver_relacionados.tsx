@@ -1,54 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TextInput, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router'; // Hook para pegar parâmetros
-import { getAlunosById } from '@/lib/appwrite'; // Função para buscar alunos por IDs
+import CustomButton from '@/components/CustomButton';
+import { getAllAlunos, updateEventConfirmados } from '@/lib/appwrite'; // Funções necessárias
+import { useLocalSearchParams, router } from 'expo-router';
+import { useGlobalContext } from '@/context/GlobalProvider';
+
 
 const VerRelacionados = () => {
   const [alunos, setAlunos] = useState([]);
   const [filteredAlunos, setFilteredAlunos] = useState([]);
+  const [confirmados, setConfirmados] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useGlobalContext();
 
   // Pegando os parâmetros passados via navegação
-  const { confirmados, eventTitle } = useLocalSearchParams();
+  const { confirmados: confirmadosParam, eventTitle, eventId } = useLocalSearchParams();
 
   useEffect(() => {
-    fetchAlunosConfirmados();
-  }, [confirmados]);
+    fetchAlunos();
+  }, []);
 
-  console.log('Confirmados: ', confirmados);
-  console.log('Title: ', eventTitle);
-
-  const fetchAlunosConfirmados = async () => {
+  const fetchAlunos = async () => {
     try {
-      const alunosConfirmados = [];
-      const confirmadosIds = confirmados.split(','); // Dividindo a string de IDs em um array
-  
-      console.log('Lista de IDs de confirmados:', confirmadosIds);
-  
-      // Buscar os alunos confirmados com base nos IDs fornecidos
-      for (const alunoId of confirmadosIds) {
-        console.log('Buscando aluno com ID:', alunoId);
-  
-        const alunoData = await getAlunosById(alunoId); // Busca o aluno pelo ID
-        console.log('Dados do aluno retornados:', alunoData);
-  
-        if (alunoData) {
-          alunosConfirmados.push(alunoData); // Adiciona o aluno retornado
-        } else {
-          console.error('Nenhum aluno encontrado para o ID:', alunoId);
-        }
+      // Buscar todos os alunos
+      const allAlunos = await getAllAlunos();
+      setAlunos(allAlunos);
+      setFilteredAlunos(allAlunos.slice(0, 10));
+
+      // Definir os alunos confirmados com base nos IDs fornecidos
+      if (confirmadosParam) {
+        const confirmadosIds = confirmadosParam.split(',');
+        setConfirmados(confirmadosIds);
       }
-  
-      if (alunosConfirmados.length === 0) {
-        console.warn('Nenhum aluno confirmado foi encontrado.');
-      }
-  
-      setAlunos(alunosConfirmados);
-      setFilteredAlunos(alunosConfirmados.slice(0, 10)); // Mostra os primeiros 10
     } catch (error) {
-      console.error('Erro ao buscar alunos confirmados:', error);
-      Alert.alert('Erro', 'Não foi possível carregar os alunos confirmados');
+      console.error('Erro ao buscar alunos:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os alunos');
+    }
+  };
+
+  const handleSelectAluno = (id) => {
+    if (confirmados.includes(id)) {
+      setConfirmados(confirmados.filter((confirmadoId) => confirmadoId !== id));
+    } else {
+      setConfirmados([...confirmados, id]);
     }
   };
 
@@ -63,6 +58,18 @@ const VerRelacionados = () => {
       setFilteredAlunos(filtered);
     }
   };
+
+  const handleSave = async () => {
+    try {
+      await updateEventConfirmados(eventId, confirmados);
+      Alert.alert('Sucesso', 'Lista de confirmados atualizada com sucesso');
+      router.back();
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível salvar as alterações');
+    }
+  };
+
+  const isEditable = user?.role === 'admin' || user?.role === 'professor';
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
@@ -81,20 +88,26 @@ const VerRelacionados = () => {
         data={filteredAlunos}
         keyExtractor={(item) => item.$id.toString()}
         renderItem={({ item }) => (
-          <View
+          <TouchableOpacity
+            disabled={!isEditable}
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
               padding: 10,
-              backgroundColor: 'white',
+              backgroundColor: confirmados.includes(item.$id) ? 'lightgray' : 'white',
             }}
+            onPress={() => isEditable && handleSelectAluno(item.$id)}
           >
             <Text>{item.username}</Text>
-          </View>
+            <Text style={{ fontSize: 18 }}>{confirmados.includes(item.$id) ? '✓' : '○'}</Text>
+          </TouchableOpacity>
         )}
       />
+
+      {isEditable && (
+        <CustomButton title="Salvar Alterações" handlePress={handleSave} />
+      )}
     </SafeAreaView>
   );
 };
-
 export default VerRelacionados;
