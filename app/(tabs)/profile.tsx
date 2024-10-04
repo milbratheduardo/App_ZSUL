@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import PDFView from 'react-native-pdf';  // Verifique se essa importação está correta
-import { signOut, getAlunosByUserId, atualizarDiaCobranca, gerarPdfContrato } from '@/lib/appwrite';  // Certifique-se que todas as funções estão exportadas corretamente
+import { signOut, getAlunosByUserId, getPdfUrl, updateAlunoContrato, getUsersByUserId } from '@/lib/appwrite';  // Certifique-se que todas as funções estão exportadas corretamente
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { icons } from '@/constants';
 import EmptyState from '@/components/EmptyState';  // Verifique se é export default
 import InfoBox from '@/components/InfoBox';  // Verifique se é export default
 import CustomButton from '@/components/CustomButton';  // Verifique se é export default
-import { router } from 'expo-router';  // Verifique se a versão do `expo-router` está correta para suportar o uso de `router`
+import { router } from 'expo-router';  // Verifique se a versão do expo-router está correta para suportar o uso de router
+import * as Linking from 'expo-linking'; // Para abrir o PDF no navegador
 
 const Profile = () => {
   const { user, setUser, setIsLoggedIn } = useGlobalContext();
@@ -16,9 +16,9 @@ const Profile = () => {
   const [alunos, setAlunos] = useState([]);
   const [loadingLogout, setLoadingLogout] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalSignVisible, setModalSignVisible] = useState(false);
   const [selectedAlunoId, setSelectedAlunoId] = useState(null);
-  const [tipoContrato, setTipoContrato] = useState('');
-  const [diaCobranca, setDiaCobranca] = useState('');
+  const [selectedAluno, setSelectedAluno] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -56,25 +56,97 @@ const Profile = () => {
 
   const handleAssinarContrato = (alunoId) => {
     setSelectedAlunoId(alunoId);
-    setTipoContrato('');
-    setDiaCobranca('');
     setModalVisible(true);
   };
 
-  const iniciarAssinatura = async () => {
+  const getFileIdByTipoContrato = (tipoContrato) => {
+    switch (tipoContrato) {
+      case 'mensal':
+        return '66fee6250006b255421f';
+      case 'semestral':
+        return '66fee60e00368e53ba2e';
+      case 'anual':
+        return '66fee5fb003461b55364';
+      default:
+        return null;
+    }
+  };
+
+  const iniciarAssinatura = async (tipoContrato, alunoId) => {
     try {
-      const dia = parseInt(diaCobranca, 10);
-      if (isNaN(dia) || dia < 1 || dia > 31) {
-        Alert.alert('Erro', 'Por favor, insira um dia válido (1-31).');
+      const fileId = getFileIdByTipoContrato(tipoContrato);
+      if (!fileId) {
+        Alert.alert('Erro', 'Tipo de contrato inválido.');
         return;
       }
-  
-      await atualizarDiaCobranca(selectedAlunoId, diaCobranca);
-  
+
+      await updateAlunoContrato(alunoId, { tipo_contrato: tipoContrato, indice_fluxo: '1' });
+
+      const pdfUrl = await getPdfUrl(fileId);
       setModalVisible(false);
+      if (pdfUrl) {
+        Linking.openURL(pdfUrl);
+      } else {
+        Alert.alert('Erro', 'Não foi possível carregar o contrato.');
+      }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível iniciar o processo de assinatura.');
-      console.error('Erro ao iniciar assinatura:', error);
+      Alert.alert('Erro', 'Não foi possível carregar o contrato.');
+      console.error('Erro ao carregar o contrato:', error);
+    }
+  };
+
+  const cancelarMatricula = async (alunoId) => {
+    console.log('ALUNO: ', alunoId)
+    try {
+      await updateAlunoContrato(alunoId.id, { tipo_contrato: null, indice_fluxo: null });
+      setModalSignVisible(false);
+      Alert.alert('Matrícula cancelada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao cancelar matrícula:', error);
+      Alert.alert('Erro', 'Não foi possível cancelar a matrícula.');
+    }
+  };
+  
+
+  const handleSign = async (alunoId) => {    
+    try {
+      const aluno = alunos.find(a => a.$id === alunoId);      
+      const userData = await getUsersByUserId(aluno.createdByUserId);      
+      setSelectedAluno({
+        id: aluno.$id,
+        username: aluno.username,
+        rg: aluno.rg,
+        createdByUsername: userData.username,
+        createdByCpf: userData.cpf,
+      });
+      setModalSignVisible(true);
+    } catch (error) {
+      console.error('Erro ao buscar dados do aluno e do usuário:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os dados para assinatura.');
+    }
+  };
+
+  const assinarContrato = async () => {
+    try {
+      
+      const aluno = alunos.find(a => a.$id === selectedAluno);
+
+      const tipoContrato = aluno.tipo_contrato;
+
+      const pdfUrl = await getPdfUrl(getFileIdByTipoContrato(ti)); // exemplo com contrato mensal
+      if (!pdfUrl) {
+        Alert.alert('Erro', 'Não foi possível carregar o contrato.');
+        return;
+      }
+
+      // Aqui você pode implementar a lógica para adicionar a marca d'água no PDF
+      // Por exemplo, uma função para modificar o PDF, adicionando as informações necessárias
+
+      setModalSignVisible(false);
+      Linking.openURL(pdfUrl); // Abre o PDF depois de adicionar a marca d'água
+    } catch (error) {
+      console.error('Erro ao assinar o contrato:', error);
+      Alert.alert('Erro', 'Não foi possível assinar o contrato.');
     }
   };
 
@@ -95,19 +167,22 @@ const Profile = () => {
       <Text style={{ fontSize: 16, color: 'gray' }}>{item.escola}</Text>
       <Text style={{ fontSize: 16, color: 'gray' }}>{item.ano}</Text>
 
-      {item.assinado === null || item.assinado === '' ? (
+      {item.indice_fluxo === null || item.indice_fluxo === '' ? (
         <CustomButton
-          title="Assinar Contrato"
+          title="Matricular Aluno"
           handlePress={() => handleAssinarContrato(item.$id)}
           containerStyles="p-3 mt-5"
         />
-      ) : item.assinado === 'sim' ? (
-        <Text style={{ fontSize: 16, color: 'green', marginTop: 10 }}>{item.tipo_contrato}</Text>
+      ) : item.indice_fluxo === '1' ? (
+        <CustomButton
+          title="Assinar Contrato"
+          handlePress={() => handleSign(item.$id)}
+          containerStyles="p-3 mt-5"
+        />
       ) : null}
     </View>
   );
 
-  // Se estiver em processo de logout, mostrar um indicador de carregamento
   if (loadingLogout) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -186,34 +261,36 @@ const Profile = () => {
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <View style={{ width: 300, backgroundColor: 'white', borderRadius: 10, padding: 20 }}>
-            {tipoContrato === '' ? (
-              <>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
-                  Escolha o Tipo de Contrato
-                </Text>
-                <CustomButton title="Contrato Mensal" handlePress={() => setTipoContrato('mensal')} containerStyles="mb-4" />
-                <CustomButton title="Contrato Semestral" handlePress={() => setTipoContrato('semestral')} containerStyles="mb-4" />
-                <CustomButton title="Contrato Anual" handlePress={() => setTipoContrato('anual')} containerStyles="mb-4" />
-              </>
-            ) : (
-              <>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
-                  Tipo de Contrato Selecionado: {tipoContrato.charAt(0).toUpperCase() + tipoContrato.slice(1)}
-                </Text>
-                <TextInput
-                  placeholder="Digite o dia da cobrança (1-31)"
-                  keyboardType="numeric"
-                  value={diaCobranca}
-                  onChangeText={setDiaCobranca}
-                  style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 5, padding: 10, marginBottom: 20 }}
-                />
-                <CustomButton title="Confirmar" handlePress={iniciarAssinatura} containerStyles="mb-4" />
-              </>
-            )}
+            <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
+              Escolha o Tipo de Contrato
+            </Text>
+            <CustomButton title="Contrato Mensal" handlePress={() => iniciarAssinatura('mensal', selectedAlunoId)} containerStyles="mb-4" />
+            <CustomButton title="Contrato Semestral" handlePress={() => iniciarAssinatura('semestral', selectedAlunoId)} containerStyles="mb-4" />
+            <CustomButton title="Contrato Anual" handlePress={() => iniciarAssinatura('anual', selectedAlunoId)} containerStyles="mb-4" />
             <CustomButton title="Cancelar" handlePress={() => setModalVisible(false)} />
           </View>
         </View>
       </Modal>
+
+      {/* Modal para ações do aluno (Assinar ou Trocar Matrícula) */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalSignVisible}
+        onRequestClose={() => setModalSignVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ width: 300, backgroundColor: 'white', borderRadius: 10, padding: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
+              Ações do Aluno {selectedAluno?.username}
+            </Text>
+            <CustomButton title="Assinar" handlePress={assinarContrato()} containerStyles="mb-4" />
+            <CustomButton title="Trocar Matrícula" handlePress={() => cancelarMatricula(selectedAluno)} containerStyles="mb-4" />
+            <CustomButton title="Cancelar" handlePress={() => setModalSignVisible(false)} />
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
