@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert, ActivityIndicator, Modal } from 'react-native';
+import { Image, Text, TouchableOpacity, View, FlatList, RefreshControl, Alert, ActivityIndicator, Modal, TouchableHighlight } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { signOut, getAlunosByUserId, getPdfUrl, updateAlunoContrato, getUsersByUserId } from '@/lib/appwrite';  // Certifique-se que todas as funções estão exportadas corretamente
+import { signOut, getAlunosByUserId, getPdfUrl, updateAlunoContrato, getUsersByUserId, updateAlunoFluxo, updateAlunoFatura, createCustomer, createInvoicesForContract} from '@/lib/appwrite';  
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { icons } from '@/constants';
-import EmptyState from '@/components/EmptyState';  // Verifique se é export default
-import InfoBox from '@/components/InfoBox';  // Verifique se é export default
-import CustomButton from '@/components/CustomButton';  // Verifique se é export default
-import { router } from 'expo-router';  // Verifique se a versão do expo-router está correta para suportar o uso de router
-import * as Linking from 'expo-linking'; // Para abrir o PDF no navegador
+import EmptyState from '@/components/EmptyState';  
+import InfoBox from '@/components/InfoBox';  
+import CustomButton from '@/components/CustomButton'; 
+import { router } from 'expo-router';  
+import * as Linking from 'expo-linking'; 
+import { PDFDocument, rgb } from 'pdf-lib';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { Buffer } from 'buffer';
+
+
 
 const Profile = () => {
   const { user, setUser, setIsLoggedIn } = useGlobalContext();
@@ -17,6 +23,7 @@ const Profile = () => {
   const [loadingLogout, setLoadingLogout] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalSignVisible, setModalSignVisible] = useState(false);
+  const [modalFaturaVisible, setModalFaturaVisible] = useState(false);
   const [selectedAlunoId, setSelectedAlunoId] = useState(null);
   const [selectedAluno, setSelectedAluno] = useState(null);
 
@@ -59,6 +66,65 @@ const Profile = () => {
     setModalVisible(true);
   };
 
+  const handleFatura = (alunoId) => {
+    setSelectedAlunoId(alunoId);
+    setModalFaturaVisible(true);
+  };
+
+  const salvarDiaFatura = async (dia) => {
+    try {
+      // Salva o dia da fatura no banco de dados do aluno
+      await updateAlunoFatura(selectedAlunoId, { dia_cobranca: String(dia) });
+      setModalFaturaVisible(false);
+  
+      const aluno = alunos.find(a => a.$id === selectedAlunoId);
+      // Busca as informações do aluno para criar o cliente na Stripe
+      const userInfo = await getUsersByUserId(user.userId);
+  
+      // Configura o corpo da solicitação que será enviado para o webhook
+      const requestBody = {
+        username: userInfo.username,
+        email: userInfo.email,
+        cpf: userInfo.cpf,
+        tipoContrato: aluno.tipo_contrato,
+        diaCobranca: dia,
+      };
+  
+      console.log('Body: ', requestBody);
+  
+      // Envia os dados para o webhook usando uma solicitação HTTP POST
+      const response = await fetch('https://67043cc10d94757fffc7.appwrite.global/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      // Lê a resposta como texto para entender o que está sendo retornado
+      const responseText = await response.text();
+      console.log('Response Text: ', responseText);
+  
+      // Verifica se a resposta foi bem-sucedida
+      if (!response.ok) {
+        throw new Error(`Erro ao criar faturas: ${responseText}`);
+      }
+  
+      // Tenta analisar a resposta como JSON
+      const responseData = JSON.parse(responseText);
+  
+      if (responseData.success) {
+        Alert.alert('Sucesso', 'As faturas foram criadas e enviadas por e-mail.');
+      } else {
+        throw new Error(responseData.error || 'Erro desconhecido');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar dia da fatura e criar faturas:', error);
+      Alert.alert('Erro', 'Não foi possível salvar o dia da fatura e criar os boletos.');
+    }
+  };
+  
+
   const getFileIdByTipoContrato = (tipoContrato) => {
     switch (tipoContrato) {
       case 'mensal':
@@ -96,7 +162,6 @@ const Profile = () => {
   };
 
   const cancelarMatricula = async (alunoId) => {
-    console.log('ALUNO: ', alunoId)
     try {
       await updateAlunoContrato(alunoId.id, { tipo_contrato: null, indice_fluxo: null });
       setModalSignVisible(false);
@@ -118,6 +183,7 @@ const Profile = () => {
         rg: aluno.rg,
         createdByUsername: userData.username,
         createdByCpf: userData.cpf,
+        tipoContrato: aluno.tipo_contrato
       });
       setModalSignVisible(true);
     } catch (error) {
@@ -126,29 +192,121 @@ const Profile = () => {
     }
   };
 
-  const assinarContrato = async () => {
+  const gerarTokenContrato = () => {
+    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < 15; i++) {
+      token += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+    return token;
+  };
+
+  const assinarContrato = async (selectedAluno) => {
     try {
-      
-      const aluno = alunos.find(a => a.$id === selectedAluno);
-
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Mês começa do zero
+      const year = today.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+      const aluno = alunos.find(a => a.$id === selectedAluno.id);
       const tipoContrato = aluno.tipo_contrato;
-
-      const pdfUrl = await getPdfUrl(getFileIdByTipoContrato(ti)); // exemplo com contrato mensal
+      const tokenContrato = gerarTokenContrato();
+  
+      const pdfUrl = await getPdfUrl(getFileIdByTipoContrato(tipoContrato));
       if (!pdfUrl) {
         Alert.alert('Erro', 'Não foi possível carregar o contrato.');
         return;
       }
+  
+      // Faz o download do PDF do contrato para o sistema de arquivos local
+      const localPdfPath = `${FileSystem.documentDirectory}contrato-original.pdf`;
+      await FileSystem.downloadAsync(pdfUrl, localPdfPath);
+  
+      // Lê o arquivo PDF baixado como Base64
+      const pdfBase64 = await FileSystem.readAsStringAsync(localPdfPath, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+  
+      // Carrega o PDF para edição usando o conteúdo Base64
+      const pdfDoc = await PDFDocument.load(pdfBase64, { updateMetadata: true });
+  
+      // Cria um novo PDF para a assinatura
+      const signaturePdfDoc = await PDFDocument.create();
+      const page = signaturePdfDoc.addPage([600, 200]);
+      page.drawText('Assinado por: ', {
+        x: 50,
+        y: 150,
+        size: 14,
+        color: rgb(0, 0, 0),
+      });
+      page.drawText(`Responsável: ${selectedAluno.createdByUsername}, CPF: ${selectedAluno.createdByCpf}`, {
+        x: 50,
+        y: 120,
+        size: 14,
+        color: rgb(0, 0, 0),
+      });
+      page.drawText(`Aluno: ${selectedAluno.username}, RG: ${selectedAluno.rg}`, {
+        x: 50,
+        y: 90,
+        size: 14,
+        color: rgb(0, 0, 0),
+      });
+      page.drawText(`Data da Assinatura: ${formattedDate}`, {
+        x: 50,
+        y: 60,
+        size: 14,
+        color: rgb(0, 0, 0),
+      });
+      page.drawText(`Token de Assinatura: ${tokenContrato}`, {
+        x: 50,
+        y: 30,
+        size: 14,
+        color: rgb(0, 0, 0),
+      });
+  
+      const signaturePdfBytes = await signaturePdfDoc.save();
+  
+      // Carrega o PDF da assinatura usando o Base64
+      const signaturePdf = await PDFDocument.load(signaturePdfBytes);
+  
+      // Cria um novo documento que irá mesclar os PDFs
+      const mergedPdfDoc = await PDFDocument.create();
+  
+      // Copia todas as páginas do contrato para o novo PDF
+      const contractPages = await mergedPdfDoc.copyPages(pdfDoc, pdfDoc.getPageIndices());
+      contractPages.forEach((page) => mergedPdfDoc.addPage(page));
+  
+      // Copia a página da assinatura para o novo PDF
+      const signaturePages = await mergedPdfDoc.copyPages(signaturePdf, [0]);
+      signaturePages.forEach((page) => mergedPdfDoc.addPage(page));
+  
+      // Salva o PDF mesclado como Base64
+      const mergedPdfBytes = await mergedPdfDoc.save();
+      const mergedPdfBuffer = Buffer.from(mergedPdfBytes);
 
-      // Aqui você pode implementar a lógica para adicionar a marca d'água no PDF
-      // Por exemplo, uma função para modificar o PDF, adicionando as informações necessárias
+      // Compartilhar ou abrir o PDF utilizando expo-sharing
+      const mergedPdfPath = `${FileSystem.documentDirectory}contrato-assinado.pdf`;
+      await FileSystem.writeAsStringAsync(mergedPdfPath, mergedPdfBuffer.toString('base64'), {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(mergedPdfPath);
+      } else {
+        Alert.alert('Erro', 'Compartilhamento não está disponível no dispositivo.');
+      }
+
+      await updateAlunoFluxo(selectedAluno.id, { indice_fluxo: '2', token_contrato: tokenContrato });
+
+
+  
       setModalSignVisible(false);
-      Linking.openURL(pdfUrl); // Abre o PDF depois de adicionar a marca d'água
     } catch (error) {
       console.error('Erro ao assinar o contrato:', error);
       Alert.alert('Erro', 'Não foi possível assinar o contrato.');
     }
   };
+
 
   const renderAluno = ({ item }) => (
     <View style={{
@@ -179,6 +337,12 @@ const Profile = () => {
           handlePress={() => handleSign(item.$id)}
           containerStyles="p-3 mt-5"
         />
+      ) : item.indice_fluxo === '2' ? (
+        <CustomButton
+        title="Dia da Fatura"
+        handlePress={() => handleFatura(item.$id)}
+        containerStyles="p-3 mt-5"
+      />
       ) : null}
     </View>
   );
@@ -284,13 +448,41 @@ const Profile = () => {
             <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
               Ações do Aluno {selectedAluno?.username}
             </Text>
-            <CustomButton title="Assinar" handlePress={assinarContrato()} containerStyles="mb-4" />
+            <CustomButton title="Assinar" handlePress={() => assinarContrato(selectedAluno)} containerStyles="mb-4" />
             <CustomButton title="Trocar Matrícula" handlePress={() => cancelarMatricula(selectedAluno)} containerStyles="mb-4" />
             <CustomButton title="Cancelar" handlePress={() => setModalSignVisible(false)} />
           </View>
         </View>
       </Modal>
 
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalFaturaVisible}
+        onRequestClose={() => setModalFaturaVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ width: 300, height: 400, backgroundColor: 'white', borderRadius: 10, padding: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
+              Selecione o Dia da Fatura
+            </Text>
+            <FlatList
+              data={Array.from({ length: 30 }, (_, i) => i + 1)}
+              keyExtractor={(item) => String(item)}
+              renderItem={({ item }) => (
+                <TouchableHighlight
+                  underlayColor="#DDDDDD"
+                  onPress={() => salvarDiaFatura(item)}
+                  style={{ padding: 10, marginVertical: 4, backgroundColor: '#F5F5F5', borderRadius: 5 }}
+                >
+                  <Text style={{ textAlign: 'center', fontSize: 16 }}>{item}</Text>
+                </TouchableHighlight>
+              )}
+            />
+            <CustomButton title="Cancelar" handlePress={() => setModalFaturaVisible(false)} containerStyles="mt-4" />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
