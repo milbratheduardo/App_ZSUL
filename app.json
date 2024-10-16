@@ -17,9 +17,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/aicon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.milbratheduardo.escola_sp"
     },
     "web": {
       "bundler": "metro",
@@ -31,6 +32,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "owner": "milbrathdudu",
+    "extra": {
+      "eas": {
+        "projectId": "4da4b964-df0b-48cc-b16f-71e5e35f4ec7"
+      }
     }
   }
 }
