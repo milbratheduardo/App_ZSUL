@@ -95,7 +95,7 @@ const VerChamadas = () => {
               <Text className="text-primary text-lg font-pregular mb-1">
                 Chamadas da Turma {turmaTitle}
               </Text>
-              {user.role === 'admin' && (
+              {user.role === 'admin' || user.role === 'professor' && (
                 <View classname='mt-4'>
                     <CustomButton 
                     title="Cadastrar Chamada"

@@ -20,6 +20,12 @@ module.exports = {
         },
         golden:{
           DEFAULT: '#A3935E'
+        },
+        verde:{
+          DEFAULT: '#126046'
+        },
+        vermelho:{
+          DEFAULT: '#D30A0C'
         }
       },
       fontFamily: {

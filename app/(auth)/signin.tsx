@@ -62,14 +62,6 @@ const SignIn = () => {
     <SafeAreaView className="bg-white h-full">
       <ScrollView>
         <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
-          <Image
-            source={images.logo_zsul}
-            className='w-[115px] h-[35px]'
-          />
-          <Text className='text-2xl text-black text-semibold mt-10 font-psemibold'>
-            Login ZSUL
-          </Text>
-
           <FormField
             title='Email'
             value={form.email}
@@ -82,14 +74,13 @@ const SignIn = () => {
           />
 
           <FormField
-            title='Senha'
-            value={form.password}
-            handleChangeText={(e) => setForm({
-              ...form,
-              password: e
-            })}
-            otherStyles='mt-7'
-            keyboardType='email-address'
+             title='Senha'
+             value={form.password}
+             handleChangeText={(e) => setForm({
+               ...form,
+               password: e
+             })}
+             otherStyles='mt-7'
           />
 
           <CustomButton
@@ -103,7 +94,7 @@ const SignIn = () => {
             <Text className='text-lg text-black-100 font-pregular'>
               Não possui conta?
             </Text>
-            <Link href='/signup' className='text-lg font-psemibold text-golden'>
+            <Link href='/signup' className='text-lg font-psemibold text-verde'>
               Cadastre-se
             </Link>
           </View>

@@ -13,34 +13,32 @@ export default function App () {
                 height:'100%'
             }}>
                 <View className='w-full justify-center 
-                items-center min-h-[85vh] px-4'>
+                items-center min-h-[85vh] px-4 py-1'>
                     <Image 
-                        source={images.logo_zsul}
-                        className= 'w-[175px] h-[80px] mt-2'
-                        
+                        source={images.escola_sp}
+                        className= 'w-[112px] h-[150px]'
                     />
-
                     <Image 
                         source={images.cards3}
-                        className='max-w-[380px] w-full h-[300px]'
+                        className='max-w-[320px] w-full h-[300px] -mt-8' // Alterado para mt-1
                         resizeMode='contain'
                     />
 
-                    <View className='relative mt-5'>
+                    <View className='relative mt-2'>
                         <Text className='text-3xl text-black font-bold text-center'>
                         Venha participar da melhor escolinha de futebol de base da Região {' '}
-                        <Text className="text-golden">SUL</Text>
+                        <Text className="text-vermelho">SUL</Text>
                         </Text>
                     </View>
 
-                    <Text className='text-sm font-pregular text-black-100 mt-7 text-center'>
+                    <Text className='text-sm font-pregular text-black-100 mt-5 text-center'>
                     Trabalhamos com categorias do Sub-9 ao Sub-17.
                     </Text>
 
                     <CustomButton 
                         title='Entrar'
                         handlePress= {() => router.push('/signin')}
-                        containerStyles='w-full mt-7'
+                        containerStyles='w-full mt-5'
                     />
                 </View>
 
@@ -51,4 +49,3 @@ export default function App () {
         </SafeAreaView>
     )
 }
-

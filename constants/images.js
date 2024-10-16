@@ -7,5 +7,6 @@ import logoSmall from "../assets/images/logo-small.png";
 import empty from "../assets/images/empty.png";
 import logo_zsul from "../assets/images/logo_zsul.png";
 import cards3 from "../assets/images/cards3.png";
+import escola_sp from "../assets/images/escola_sp.png";
 
-export default { profile, thumbnail, cards, cards3, path, logo, logo_zsul, logoSmall, empty };
+export default { profile, thumbnail, cards, cards3, path, logo, logo_zsul, logoSmall, empty, escola_sp };

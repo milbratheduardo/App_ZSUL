@@ -22,7 +22,7 @@ const CadastrarAlunos = () => {
     try {
       const alunosData = await getAllAlunos(); // Função para pegar todos os alunos
       // Filtra alunos cujo turma_id seja null
-      const alunosComTurmaIdNull = alunosData.filter((aluno) => aluno.turma_id === null);
+      const alunosComTurmaIdNull = alunosData.filter((aluno) => aluno.turma_id === null && aluno.indice_fluxo == '2');
       setAlunos(alunosComTurmaIdNull);
       setFilteredAlunos(alunosComTurmaIdNull.slice(0, 10)); // Iniciar com 10 alunos
     } catch (error) {

@@ -14,7 +14,7 @@ const FormField = ({ title, value, placeholder, handleChangeText, otherStyles, m
 
             <View className='border-2 border-gray-200 w-full 
             h-16 px-4 bg-gray-100 rounded-2xl 
-            focus:border-golden items-center flex-row'>
+            focus:border-black items-center flex-row'>
                 {maskType ? (
                     <TextInputMask
                         type={maskType} // Tipo da máscara

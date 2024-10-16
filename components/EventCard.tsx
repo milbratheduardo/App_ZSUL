@@ -8,6 +8,7 @@ const EventCard = ({ event }) => {
   const [imageUrl, setImageUrl] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [userRole, setUserRole] = useState(''); // Adicionei para armazenar o papel do usuário
 
   useEffect(() => {
     // Buscar imagem do evento
@@ -29,6 +30,7 @@ const EventCard = ({ event }) => {
       try {
         const currentUser = await getCurrentUser(); // Supondo que getCurrentUser retorne o ID do usuário
         setUserId(currentUser.$id);
+        setUserRole(currentUser.role); // Adicionando o papel do usuário
         checkIfConfirmed(currentUser.$id);
       } catch (error) {
         console.error("Erro ao buscar o usuário atual:", error);
@@ -89,6 +91,19 @@ const EventCard = ({ event }) => {
     });
   };
 
+  // Função para ver confirmados (para o admin)
+  const handleViewConfirmados = () => {
+    // Lógica para ver confirmados (pode ser similar ao handleViewRelated)
+    router.push({
+      pathname: '/ver_confirmados', // Nome da rota para a tela 'Ver Confirmados'
+      params: {
+        confirmados: event.Confirmados.join(','), // Passa os IDs como uma string separada por vírgula
+        eventTitle: event.Title, // Passando também o título do evento
+        eventId: event.$id
+      }
+    });
+  };
+
   return (
     <View style={{ marginBottom: 16, borderRadius: 8, backgroundColor: '#fff', padding: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
       {/* Imagem do evento */}
@@ -133,6 +148,15 @@ const EventCard = ({ event }) => {
         <CustomButton
           title="Confirmar Presença"
           handlePress={handleConfirmPresence}
+          containerStyles="mt-4 p-3 bg-golden"
+        />
+      )}
+
+      {/* Botão adicional para admin */}
+      {userRole === 'admin' && event.Type === 'evento' && (
+        <CustomButton
+          title="Ver Confirmados"
+          handlePress={handleViewConfirmados}
           containerStyles="mt-4 p-3 bg-golden"
         />
       )}
