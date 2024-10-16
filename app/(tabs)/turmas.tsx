@@ -2,7 +2,7 @@ import { View, Text, FlatList, Image, RefreshControl, Alert, Modal } from 'react
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from '@/constants';
-import { getAllTurmas } from '@/lib/appwrite';
+import { getAllTurmas, deletarTurma } from '@/lib/appwrite';
 import EmptyState from '@/components/EmptyState';
 import TurmasCard from '@/components/TurmaCard';
 import CustomButton from '@/components/CustomButton';
@@ -80,10 +80,10 @@ const Turmas = () => {
             <View className="justify-between items-start flex-row mb-2">
               <View>
                 <Text className="font-pmedium text-sm text-primary">Bem Vindo</Text>
-                <Text className="text-2xl font-psemibold text-golden">{firstName}</Text>
+                <Text className="text-2xl font-psemibold text-verde">{firstName}</Text>
               </View>
               <View className="mt-1.5">
-                <Image source={images.logo_zsul} className="w-[115px] h-[35px]" />
+                <Image source={images.escola_sp_transparente} className="w-[115px] h-[90px]" />
               </View>
             </View>
             <View className="w-full flex-row items-center justify-between pt-5 pb-2">
@@ -122,6 +122,7 @@ const Turmas = () => {
           <View className="flex-1 justify-center items-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <View className="bg-white p-6 rounded-lg w-[90%]">
               <Text className="text-xl font-semibold mb-4 text-center">{selectedTurma.title}</Text>
+              {(user.role == 'admin' || user.role == 'professor') && (
               <CustomButton 
                 title="Ver Alunos" 
                 containerStyles="ml-10 mr-10 p-4"
@@ -133,6 +134,7 @@ const Turmas = () => {
                   });
                 }} 
               />
+              )}
                  <CustomButton 
                       title="Chamadas" 
                       containerStyles="ml-10 mr-10 p-4 mt-4"
@@ -144,7 +146,7 @@ const Turmas = () => {
                         });
                       }} 
                     />
-              {user.role === 'admin' && (
+              {(user.role == 'admin' || user.role == 'professor') && (
                   <>
                     <CustomButton 
                       title="Cadastrar Alunos" 
@@ -158,6 +160,22 @@ const Turmas = () => {
                       }} 
                     />
                   </>
+                )}
+                {(user.role == 'admin' || user.role == 'professor') && (
+                  <CustomButton 
+                    title="Encerrar Turma" 
+                    containerStyles="ml-10 mr-10 p-4 mt-4 bg-red-700"
+                    handlePress={async () => {
+                      try {
+                        await deletarTurma(selectedTurma.$id); // Chama a função deletarTurma passando o ID da turma
+                        closeModal(); // Fecha o modal
+                        fetchData();  // Atualiza a lista de turmas
+                        Alert.alert('Sucesso', 'Turma encerrada com sucesso!');
+                      } catch (error) {
+                        Alert.alert('Erro', error.message);
+                      }
+                    }} 
+                  />
                 )}
               <CustomButton 
                 title="Fechar" 

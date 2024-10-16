@@ -1,4 +1,4 @@
-import { View, Text, Image, Alert } from 'react-native';
+import { View, Text, Image, Alert, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -6,7 +6,8 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import { images } from '@/constants'; 
 import CustomButton from '@/components/CustomButton'; 
 import { router } from 'expo-router';
-import { getAllEvents } from '@/lib/appwrite'; // Certifique-se de que essa função retorna corretamente os eventos
+import { getAllEvents } from '@/lib/appwrite'; 
+import { AntDesign, Feather } from '@expo/vector-icons';// Certifique-se de que essa função retorna corretamente os eventos
 
 // Configurar o calendário para Português
 LocaleConfig.locales['pt'] = {
@@ -67,7 +68,7 @@ const Eventos = () => {
   const markedDates = events.reduce((acc, event) => {
     const date = event.isoDate; // Usa a data convertida
     if (!acc[date]) {
-      acc[date] = { marked: true, dotColor: '#A3935E' };
+      acc[date] = { marked: true, dotColor: '#D30A0C' };
     }
     return acc;
   }, {});
@@ -75,6 +76,13 @@ const Eventos = () => {
   const convertDateToDMY = (dateString) => {
     const [year, month, day] = dateString.split('-');
     return `${day}-${month}-${year}`;
+  };
+
+  const today = new Date().toISOString().split('T')[0]; // Pega a data de hoje no formato YYYY-MM-DD
+  markedDates[today] = {
+    selected: true,
+    selectedColor: '#126046', // Definindo o dia atual em verde
+    selectedTextColor: 'white',
   };
   
 
@@ -94,22 +102,31 @@ const Eventos = () => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <View>
             <Text className="font-pmedium text-sm text-primary">Bem Vindo</Text>
-            <Text className="text-2xl font-psemibold text-golden">{firstName}</Text>
+            <Text className="text-2xl font-psemibold text-verde">{firstName}</Text>
           </View>
-          <Image source={images.logo_zsul} className="w-[115px] h-[35px]" />
+          <Image source={images.escola_sp_transparente} className="w-[115px] h-[90px]" />
         </View>
       </View>
-
+      {user.role === 'admin' && (
+      <View style={{ position: 'absolute', bottom: 80, right: 30 }}>
+        <TouchableOpacity
+          onPress={() => router.push({
+            pathname: '/cadastro_eventos',
+          })}
+          style={{
+            backgroundColor: '#126046',
+            borderRadius: 50,
+            padding: 20,
+            elevation: 5,
+          }}
+        >
+          <AntDesign name="plus" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+      )}
       <View style={{ paddingHorizontal: 16 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Text className="text-primary text-lg font-pregular mb-1">Eventos</Text>
-          {user.role === 'admin' && (
-            <CustomButton 
-              title="Criar Evento"
-              handlePress={() => router.push('/cadastro_eventos')}
-              containerStyles="ml-4 p-3"
-            />
-          )}
         </View>
 
         {/* Calendário */}
@@ -117,9 +134,11 @@ const Eventos = () => {
           markedDates={markedDates} // Marca as datas com eventos
           onDayPress={handleDayPress} // Redireciona para a tela eventos_dia ao clicar no dia
           theme={{
-            selectedDayBackgroundColor: '#A3935E',
-            todayTextColor: '#A3935E',
-            arrowColor: '#A3935E',
+            todayTextColor: '#126046', // Verde para o dia atual
+            arrowColor: '#126046', // Verde para as setas
+            selectedDayBackgroundColor: '#126046', // Verde para o dia selecionado
+            selectedDayTextColor: 'white', // Cor do texto do dia selecionado
+            dotColor: '#D30A0C', // Cor vermelha para os eventos
           }}
         />
       </View>

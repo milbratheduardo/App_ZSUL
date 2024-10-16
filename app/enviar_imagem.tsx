@@ -5,6 +5,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import CustomButton from '@/components/CustomButton';
 import { salvarImagem } from '@/lib/appwrite'; // Importar a função salvarImagem
 import { useGlobalContext } from '@/context/GlobalProvider';
+import { Feather } from '@expo/vector-icons';
 
 const EnviarImagem = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -56,10 +57,11 @@ const EnviarImagem = () => {
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
       <Text className="text-xl font-semibold mb-4 text-center">Galeria de Alunos</Text>
-      
+
       <TouchableOpacity onPress={pickImage} style={{ marginBottom: 20 }}>
-        <View style={{ padding: 20, backgroundColor: 'lightgray', borderRadius: 8 }}>
-          <Text>Selecionar Imagem</Text>
+        <View style={{ padding: 20, backgroundColor: 'lightgray', borderRadius: 8, alignItems: 'center' }}>
+          {/* Substitui o texto pelo ícone de pasta */}
+          <Feather name="folder" size={24} color="black" />
         </View>
       </TouchableOpacity>
 
@@ -76,7 +78,7 @@ const EnviarImagem = () => {
         style={{ padding: 10, borderWidth: 1, borderColor: 'gray', borderRadius: 5, marginBottom: 20 }}
       />
 
-      <CustomButton title="Salvar na Galeria" handlePress={saveImageToGallery} />
+      <CustomButton title="Salvar" handlePress={saveImageToGallery} />
     </SafeAreaView>
   );
 };

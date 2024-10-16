@@ -14,7 +14,7 @@ const FormField = ({ title, value, placeholder, handleChangeText, otherStyles, m
 
             <View className='border-2 border-gray-200 w-full 
             h-16 px-4 bg-gray-100 rounded-2xl 
-            focus:border-black items-center flex-row'>
+            focus:border-verde items-center flex-row'>
                 {maskType ? (
                     <TextInputMask
                         type={maskType} // Tipo da máscara
@@ -24,6 +24,7 @@ const FormField = ({ title, value, placeholder, handleChangeText, otherStyles, m
                         className='flex-1 text-black font-psemibold text-base'
                         placeholder={placeholder}
                         placeholderTextColor='#A3935E'
+                        selectionColor='black'
                         {...props}
                     />
                 ) : (
@@ -31,9 +32,10 @@ const FormField = ({ title, value, placeholder, handleChangeText, otherStyles, m
                         className='flex-1 text-black font-psemibold text-base'
                         value={value}
                         placeholder={placeholder}
-                        placeholderTextColor='#A3935E'
+                        placeholderTextColor='#126046'
                         onChangeText={handleChangeText}
                         secureTextEntry={title === 'Senha' && !showPassword}
+                        selectionColor='black'
                         {...props}
                     />
                 )}

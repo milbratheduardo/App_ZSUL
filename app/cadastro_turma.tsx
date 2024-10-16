@@ -1,10 +1,11 @@
 import { View, Text, ScrollView, Image, Alert, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { images } from '../constants';
+import { Picker } from '@react-native-picker/picker'; // Biblioteca para o select
+import { TextInputMask } from 'react-native-masked-text'; // Biblioteca para a máscara de horários
 import FormField from '@/components/FormField';
 import CustomButton from '@/components/CustomButton';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { createTurma } from '../lib/appwrite';
 import { useGlobalContext } from "../context/GlobalProvider";
 
@@ -13,7 +14,7 @@ const CadastroTurma = () => {
   const [form, setForm] = useState({
     title: '',
     Qtd_Semana: '1',
-    Dia1: '',
+    Dia1: 'Segunda-feira',
     Dia2: '',
     Dia3: '',
     Local: '',
@@ -23,6 +24,8 @@ const CadastroTurma = () => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
   const handleSubmit = async () => {
     if (form.title === '' || form.Qtd_Semana === '' || form.Dia1 === '' ||  
@@ -58,35 +61,50 @@ const CadastroTurma = () => {
     const dias = [];
     if (form.Qtd_Semana >= 1) {
       dias.push(
-        <FormField
-          key="dia1"
-          title="Dia 1"
-          value={form.Dia1}
-          handleChangeText={(e) => setForm({ ...form, Dia1: e })}
-          otherStyles="mt-10"
-        />
+        <View key="dia1" className="mt-10">
+          <Text className="text-base text-black-100 font-pmedium">Dia 1</Text>
+          <Picker
+            selectedValue={form.Dia1}
+            onValueChange={(itemValue) => setForm({ ...form, Dia1: itemValue })}
+            style={{ height: 50, backgroundColor: '#f0f0f0', borderRadius: 10 }}
+          >
+            {dayNames.map((day) => (
+              <Picker.Item key={day} label={day} value={day} />
+            ))}
+          </Picker>
+        </View>
       );
     }
     if (form.Qtd_Semana >= 2) {
       dias.push(
-        <FormField
-          key="dia2"
-          title="Dia 2"
-          value={form.Dia2}
-          handleChangeText={(e) => setForm({ ...form, Dia2: e })}
-          otherStyles="mt-10"
-        />
+        <View key="dia2" className="mt-10">
+          <Text className="text-base text-black-100 font-pmedium">Dia 2</Text>
+          <Picker
+            selectedValue={form.Dia2}
+            onValueChange={(itemValue) => setForm({ ...form, Dia2: itemValue })}
+            style={{ height: 50, backgroundColor: '#f0f0f0', borderRadius: 10 }}
+          >
+            {dayNames.map((day) => (
+              <Picker.Item key={day} label={day} value={day} />
+            ))}
+          </Picker>
+        </View>
       );
     }
     if (form.Qtd_Semana >= 3) {
       dias.push(
-        <FormField
-          key="dia3"
-          title="Dia 3"
-          value={form.Dia3}
-          handleChangeText={(e) => setForm({ ...form, Dia3: e })}
-          otherStyles="mt-10"
-        />
+        <View key="dia3" className="mt-10">
+          <Text className="text-base text-black-100 font-pmedium">Dia 3</Text>
+          <Picker
+            selectedValue={form.Dia3}
+            onValueChange={(itemValue) => setForm({ ...form, Dia3: itemValue })}
+            style={{ height: 50, backgroundColor: '#f0f0f0', borderRadius: 10 }}
+          >
+            {dayNames.map((day) => (
+              <Picker.Item key={day} label={day} value={day} />
+            ))}
+          </Picker>
+        </View>
       );
     }
     return dias;
@@ -96,10 +114,6 @@ const CadastroTurma = () => {
     <SafeAreaView className="bg-white h-full">
       <ScrollView>
         <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
-          <Image 
-            source={images.logo_zsul}
-            className='w-[115px] h-[35px]'
-          />
           <Text className='text-2xl text-black text-semibold mt-10 font-psemibold'>
             Cadastre uma Nova Turma
           </Text>
@@ -116,7 +130,7 @@ const CadastroTurma = () => {
             <TouchableOpacity 
               onPress={() => setForm({ ...form, Qtd_Semana: '1' })}
               style={{
-                backgroundColor: form.Qtd_Semana === '1' ? '#A3935E' : '#E0E0E0',
+                backgroundColor: form.Qtd_Semana === '1' ? '#126046' : '#E0E0E0',
                 padding: 10,
                 borderRadius: 5,
                 width: 50,
@@ -129,7 +143,7 @@ const CadastroTurma = () => {
             <TouchableOpacity 
               onPress={() => setForm({ ...form, Qtd_Semana: '2' })}
               style={{
-                backgroundColor: form.Qtd_Semana === '2' ? '#A3935E' : '#E0E0E0',
+                backgroundColor: form.Qtd_Semana === '2' ? '#126046' : '#E0E0E0',
                 padding: 10,
                 borderRadius: 5,
                 width: 50,
@@ -142,7 +156,7 @@ const CadastroTurma = () => {
             <TouchableOpacity 
               onPress={() => setForm({ ...form, Qtd_Semana: '3' })}
               style={{
-                backgroundColor: form.Qtd_Semana === '3' ? '#A3935E' : '#E0E0E0',
+                backgroundColor: form.Qtd_Semana === '3' ? '#126046' : '#E0E0E0',
                 padding: 10,
                 borderRadius: 5,
                 width: 50,
@@ -168,19 +182,38 @@ const CadastroTurma = () => {
             handleChangeText={(e) => setForm({ ...form, MaxAlunos: e })}
             otherStyles='mt-10'
           />
-          <FormField 
-            title='Horário de Início'
-            value={form.Horario_de_inicio}
-            handleChangeText={(e) => setForm({ ...form, Horario_de_inicio: e })}
-            otherStyles='mt-10'
-          />
 
-          <FormField 
-            title='Horário de Término'
-            value={form.Horario_de_termino}
-            handleChangeText={(e) => setForm({ ...form, Horario_de_termino: e })}
-            otherStyles='mt-10'
-          />
+          {/* Campo com máscara para Horário de Início */}
+          <View className='mt-10'>
+            <Text className='text-base text-black-100 font-pmedium'>Horário de Início</Text>
+            <TextInputMask
+              type={'custom'}
+              options={{
+                mask: '99:99'
+              }}
+              value={form.Horario_de_inicio}
+              onChangeText={(e) => setForm({ ...form, Horario_de_inicio: e })}
+              className='border-2 border-gray-200 w-full h-16 px-4 bg-gray-100 rounded-2xl text-black font-psemibold text-base'
+              placeholder='HH:MM'
+              placeholderTextColor='#126046'
+            />
+          </View>
+
+          {/* Campo com máscara para Horário de Término */}
+          <View className='mt-10'>
+            <Text className='text-base text-black-100 font-pmedium'>Horário de Término</Text>
+            <TextInputMask
+              type={'custom'}
+              options={{
+                mask: '99:99'
+              }}
+              value={form.Horario_de_termino}
+              onChangeText={(e) => setForm({ ...form, Horario_de_termino: e })}
+              className='border-2 border-gray-200 w-full h-16 px-4 bg-gray-100 rounded-2xl text-black font-psemibold text-base'
+              placeholder='HH:MM'
+              placeholderTextColor='#126046'
+            />
+          </View>
 
           <CustomButton 
             title='Cadastrar'

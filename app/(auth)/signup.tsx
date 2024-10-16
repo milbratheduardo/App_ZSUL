@@ -13,14 +13,15 @@ const SignUp = () => {
   
   const [role, setRole] = useState('');
   const [form, setForm] = useState({
-    username:'',
-    cpf:'',
-    rg:'',
-    email:'',
-    password:'',
-    endereco:'',
-    bairro:'',
-    whatsapp:''
+    username: '',
+    cpf: '',
+    rg: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    endereco: '',
+    bairro: '',
+    whatsapp: ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +31,11 @@ const SignUp = () => {
       form.email === '' || form.password === '' || 
       form.whatsapp === '') {
       Alert.alert('Error', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      Alert.alert('Error', 'As senhas não coincidem');
       return;
     }
 
@@ -54,6 +60,11 @@ const SignUp = () => {
       form.email === '' || form.password === '' || 
       form.endereco === '' || form.bairro === '' || form.whatsapp === '') {
       Alert.alert('Error', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      Alert.alert('Error', 'As senhas não coincidem');
       return;
     }
 
@@ -85,152 +96,127 @@ const SignUp = () => {
   };
 
   const renderFormFields = () => {
-    if (role === 'professor') {
-      return (
-        <>
-          <FormField 
-            title='Nome Completo'
-            value={form.username}
-            handleChangeText={(e) => setForm({ ...form, username: e })}
-            otherStyles='mt-10'
-          />
-          <FormField 
-            title='CPF'
-            value={form.cpf}
-            handleChangeText={(e) => setForm({ ...form, cpf: e })}
-            otherStyles='mt-10'
-            maskType={'cpf'}
-          />
-          <FormField 
-            title='Whatsapp'
-            value={form.whatsapp}
-            handleChangeText={(e) => setForm({ ...form, whatsapp: e })}
-            otherStyles='mt-10'
-          />
-          <FormField 
-            title='Email'
-            value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
-            otherStyles='mt-10'
-            keyboardType='email-address'
-          />
-          <FormField 
-            title='Senha'
-            value={form.password}
-            handleChangeText={(e) => setForm({ ...form, password: e })}
-            otherStyles='mt-10'
-            keyboardType='email-address'
-          />
-          {/* Campos específicos para Professor */}
-        </>
-      );
-    } else if (role === 'responsavel') {
-      return (
-        <>
-          <FormField 
-            title='Nome Completo'
-            value={form.username}
-            handleChangeText={(e) => setForm({ ...form, username: e })}
-            otherStyles='mt-10'
-          />
-          <FormField 
-            title='CPF'
-            value={form.cpf}
-            handleChangeText={(e) => setForm({ ...form, cpf: e })}
-            otherStyles='mt-10'
-            maskType={'cpf'}
-          />
-          <FormField 
-            title='RG'
-            value={form.rg}
-            handleChangeText={(e) => setForm({ ...form, rg: e })}
-            otherStyles='mt-10'
-          />
-          <FormField 
-            title='Endereço'
-            value={form.endereco}
-            handleChangeText={(e) => setForm({ ...form, endereco: e })}
-            otherStyles='mt-10'
-          />
-          <FormField 
-            title='Bairro'
-            value={form.bairro}
-            handleChangeText={(e) => setForm({ ...form, bairro: e })}
-            otherStyles='mt-10'
-          />
-          <FormField 
-            title='Whatsapp'
-            value={form.whatsapp}
-            handleChangeText={(e) => setForm({ ...form, whatsapp: e })}
-            otherStyles='mt-10'
-          />
-          <FormField 
-            title='Email'
-            value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
-            otherStyles='mt-10'
-            keyboardType='email-address'
-          />
-          <FormField 
-            title='Senha'
-            value={form.password}
-            handleChangeText={(e) => setForm({ ...form, password: e })}
-            otherStyles='mt-10'
-            keyboardType='email-address'
-          />
-          {/* Campos específicos para Responsável */}
-        </>
-      );
-    }
-    return null;
+    return (
+      <>
+        <FormField 
+          title='Nome Completo'
+          value={form.username}
+          handleChangeText={(e) => setForm({ ...form, username: e })}
+          otherStyles='mt-10'
+        />
+        <FormField 
+          title='CPF'
+          value={form.cpf}
+          handleChangeText={(e) => setForm({ ...form, cpf: e })}
+          otherStyles='mt-10'
+          maskType={'cpf'}
+        />
+        {role === 'responsavel' && (
+          <>
+            <FormField 
+              title='RG'
+              value={form.rg}
+              handleChangeText={(e) => setForm({ ...form, rg: e })}
+              otherStyles='mt-10'
+            />
+            <FormField 
+              title='Endereço'
+              value={form.endereco}
+              handleChangeText={(e) => setForm({ ...form, endereco: e })}
+              otherStyles='mt-10'
+            />
+            <FormField 
+              title='Bairro'
+              value={form.bairro}
+              handleChangeText={(e) => setForm({ ...form, bairro: e })}
+              otherStyles='mt-10'
+            />
+          </>
+        )}
+        <FormField 
+          title='Whatsapp'
+          value={form.whatsapp}
+          handleChangeText={(e) => setForm({ ...form, whatsapp: e })}
+          otherStyles='mt-10'
+          maskType={'cel-phone'}
+          options={{
+            maskType: 'BRL', // Máscara para Brasil
+            withDDD: true, // Inclui o DDD
+            dddMask: '(99) ' // Define o formato do DDD
+          }}
+        />
+        <FormField 
+          title='Email'
+          value={form.email}
+          handleChangeText={(e) => setForm({ ...form, email: e })}
+          otherStyles='mt-10'
+          keyboardType='email-address'
+        />
+        <FormField 
+          title='Senha'
+          placeholder={'Insira no mínimo 8 caracteres'}
+          value={form.password}
+          handleChangeText={(e) => setForm({ ...form, password: e })}
+          otherStyles='mt-10'
+        />
+        <FormField 
+          title='Confirmar Senha'
+          value={form.confirmPassword}
+          handleChangeText={(e) => setForm({ ...form, confirmPassword: e })}
+          otherStyles='mt-10'
+          secureTextEntry
+        />
+      </>
+    );
   };
 
   return (
     <SafeAreaView className="bg-white h-full">
       <ScrollView>
         <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
-            <Image 
-              source={images.logo_zsul}
-              className='w-[115px] h-[35px]'
-            />
-            <Text className='text-2xl text-black text-semibold mt-10 font-psemibold'>
-              Registre-se
+          <Text className='text-2xl text-black text-semibold font-psemibold'>
+            Registre-se
+          </Text>
+          <Text className='text-sm text-black text-semibold mt-5 font-psemibold'>
+            Selecione uma das opções abaixo:
+          </Text>
+
+          <View className='flex-row justify-around mt-10'>
+            <TouchableOpacity 
+              className={`p-4 ${role === 'professor' ? 'bg-verde' : 'bg-gray-200'}`}
+              onPress={() => setRole('professor')}
+            >
+              <Text className={`text-lg ${role === 'professor' ? 'text-white' : 'text-black'}`}>
+                Sou Professor
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              className={`p-4 ${role === 'responsavel' ? 'bg-verde' : 'bg-gray-200'}`}
+              onPress={() => setRole('responsavel')}
+            >
+              <Text className={`text-lg ${role === 'responsavel' ? 'text-white' : 'text-black'}`}>
+                Sou Responsável
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {renderFormFields()}
+
+          <CustomButton 
+            title='Cadastrar'
+            handlePress={handleSubmit}
+            containerStyles='mt-7'
+            isLoading={isSubmitting}
+          />
+
+          <View className='justify-center pt-5 flex-row gap-2'>
+            <Text className='text-lg text-black-100 font-pregular'>
+              Já possui uma conta?
             </Text>
-
-            <View className='flex-row justify-around mt-10'>
-              <TouchableOpacity 
-                className={`p-4 ${role === 'professor' ? 'bg-golden' : 'bg-gray-200'}`}
-                onPress={() => setRole('professor')}
-              >
-                <Text className={`text-lg ${role === 'professor' ? 'text-white' : 'text-black'}`}>
-                  Sou Professor
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                className={`p-4 ${role === 'responsavel' ? 'bg-golden' : 'bg-gray-200'}`}
-                onPress={() => setRole('responsavel')}
-              >
-                <Text className={`text-lg ${role === 'responsavel' ? 'text-white' : 'text-black'}`}>Sou Responsável</Text>
-              </TouchableOpacity>
-            </View>
-
-            {renderFormFields()}
-
-            <CustomButton 
-              title='Cadastrar'
-              handlePress={handleSubmit}
-              containerStyles='mt-7'
-              isLoading={isSubmitting}
-            />
-
-            <View className='justify-center pt-5 flex-row gap-2'>
-                <Text className='text-lg text-black-100 font-pregular'>
-                    Já possui uma conta?
-                </Text>
-                <Link href='/signin' className='text-lg font-psemibold text-golden'>
-                  Login
-                </Link>
-            </View>
+            <Link href='/signin' className='text-lg font-psemibold text-verde'>
+              Login
+            </Link>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

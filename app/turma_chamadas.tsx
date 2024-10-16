@@ -63,9 +63,11 @@ const TurmaChamadas = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
-      <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-        Registrar Chamada da Turma {turmaTitle}
-      </Text>
+      <View classname="w-full pt-5 pb-2 items-center">
+        <Text className="text-primary text-sm font-pbold mb-3">
+          Registrar Chamada da Turma {turmaTitle}
+        </Text>
+      </View>
 
       {/* Campo de Input com máscara de data */}
       <MaskedTextInput
@@ -76,6 +78,9 @@ const TurmaChamadas = () => {
         keyboardType="numeric"
         style={{ padding: 10, borderWidth: 1, borderColor: 'gray', borderRadius: 5, marginBottom: 10 }}
       />
+      <Text className="text-primary text-sm font-pregular mb-5 mt-3">
+          Selecione apenas os presentes
+        </Text>
 
       <FlatList
         data={filteredAlunos}

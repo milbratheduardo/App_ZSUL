@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, FlatList, Image, RefreshControl, Alert, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from '@/constants';
-import { getAllImages, getImageUrl, getUsersById } from '@/lib/appwrite';
+import { getAllImages, getImageUrl, getUsersById, deleteImageByImageId } from '@/lib/appwrite'; // Verifique se deleteImage está corretamente importada
 import * as FileSystem from 'expo-file-system';
 import * as Notifications from 'expo-notifications';
 import * as Sharing from 'expo-sharing';
@@ -11,6 +11,7 @@ import EmptyState from '@/components/EmptyState';
 import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { router } from 'expo-router';
+import { AntDesign, Feather } from '@expo/vector-icons'; 
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -29,7 +30,6 @@ const Galeria = () => {
   const { user } = useGlobalContext();
   const navigation = useNavigation();
 
-  // Referência à notificação recebida para tratar a ação de abertura
   const notificationListener = useRef();
   const responseListener = useRef();
 
@@ -73,11 +73,22 @@ const Galeria = () => {
         })
       );
 
-      setData(imagesWithDetails);
+      setData(imagesWithDetails.reverse());
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteImage = async (imageId) => {
+    try {
+      await deleteImageByImageId(imageId); // Certifique-se de que deleteImage está corretamente implementada
+      Alert.alert("Sucesso", "A imagem foi deletada com sucesso!");
+      fetchData(); // Atualiza a galeria após deletar a imagem
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível deletar a imagem.");
+      console.error(error);
     }
   };
 
@@ -139,7 +150,7 @@ const Galeria = () => {
         keyExtractor={(item) => item.imageId}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => handleImagePress(item)}>
-            <View style={{ padding: 10, backgroundColor: 'white', marginVertical: 5, borderRadius: 8 }}>
+            <View style={{ padding: 10, alignItems: 'center', backgroundColor: 'white', marginVertical: 5, borderRadius: 8 }}>
               {item.uri ? (
                 <Image
                   source={{ uri: item.uri }}
@@ -150,12 +161,37 @@ const Galeria = () => {
                 <Text style={{ fontSize: 14, color: 'gray' }}>Imagem não disponível</Text>
               )}
               <Text style={{ fontWeight: 'bold', marginTop: 5 }}>{item.title}</Text>
-              <Text style={{ color: 'gray' }}>Enviado por: {item.username}</Text>
-              <CustomButton
-                title="Compartilhar"
-                handlePress={() => handleDownloadAndShareImage(item.imageId)}
-                containerStyles="p-3 mt-2"
-              />
+              <Text style={{ color: 'gray', marginTop: 5 }}>Enviado por: {item.username}</Text>
+              
+              <TouchableOpacity
+                onPress={() => handleDownloadAndShareImage(item.imageId)}
+                style={{
+                  backgroundColor: '#126046',
+                  borderRadius: 12,
+                  padding: 10,
+                  alignItems: 'center',
+                  width: 80,
+                  marginTop: 10,
+                }}
+              >
+                <Feather name="send" size={24} color="white" />
+              </TouchableOpacity>
+
+              {(user.role === 'admin' || user.role === 'professor') && (
+                <TouchableOpacity
+                  onPress={() => handleDeleteImage(item.imageId)}
+                  style={{
+                    backgroundColor: '#D30A0C',
+                    borderRadius: 8,
+                    padding: 10,
+                    marginTop: 10,
+                    alignItems: 'center',
+                    width: 80,
+                  }}
+                >
+                  <AntDesign name="delete" size={24} color="white" />
+                </TouchableOpacity>
+              )}
             </View>
           </TouchableOpacity>
         )}
@@ -164,20 +200,27 @@ const Galeria = () => {
           <View style={{ marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <Text className="font-pmedium text-sm text-primary">Bem Vindo</Text>
-                <Text className="text-2xl font-psemibold text-golden">
+                <Text style={{ fontSize: 16, color: '#333' }}>Bem Vindo</Text>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#126046' }}>
                   {user?.username.split(' ')[0]}
                 </Text>
               </View>
-              <Image source={images.logo_zsul} style={{ width: 115, height: 35 }} />
+              <Image source={images.escola_sp_transparente} style={{ width: 115, height: 90 }} />
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
               <Text style={{ fontSize: 18, fontWeight: '500', color: '#333' }}>Galeria de Imagens</Text>
-              <CustomButton
-                title="Enviar Imagem"
-                handlePress={() => router.push('/enviar_imagem')}
-                containerStyles="ml-1 p-2"
-              />
+              <TouchableOpacity
+                onPress={() => router.push('/enviar_imagem')}
+                style={{
+                  backgroundColor: '#126046',
+                  borderRadius: 12,
+                  padding: 10,
+                  alignItems: 'center',
+                  width: 80,
+                }}
+              >
+                <Feather name="camera" size={24} color="white" />
+              </TouchableOpacity>
             </View>
           </View>
         )}

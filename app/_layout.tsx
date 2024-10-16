@@ -50,6 +50,7 @@ const RootLayout = () => {
         <Stack.Screen name="enviar_imagem" options={{headerShown: false}} />
         <Stack.Screen name="pagamento" options={{headerShown: false}} />
         <Stack.Screen name="ver_confirmados" options={{headerShown: false}} />
+        <Stack.Screen name="aprovar_pagamentos" options={{headerShown: false}} />
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>
     </GlobalProvider>

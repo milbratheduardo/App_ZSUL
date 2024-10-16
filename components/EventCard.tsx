@@ -133,7 +133,7 @@ const EventCard = ({ event }) => {
         <CustomButton
           title="Ver Relacionados"
           handlePress={handleViewRelated}
-          containerStyles="mt-4 p-3 bg-primary"
+          containerStyles="mt-4 p-3 bg-verde"
         />
       ) : isConfirmed ? (
         <>
@@ -141,14 +141,14 @@ const EventCard = ({ event }) => {
           <CustomButton
             title="Cancelar Presença"
             handlePress={handleCancelPresence}
-            containerStyles="mt-4 p-3 bg-red-500"
+            containerStyles="mt-4 p-3 bg-red-700"
           />
         </>
       ) : (
         <CustomButton
           title="Confirmar Presença"
           handlePress={handleConfirmPresence}
-          containerStyles="mt-4 p-3 bg-golden"
+          containerStyles="mt-4 p-3 bg-verde"
         />
       )}
 
@@ -157,7 +157,7 @@ const EventCard = ({ event }) => {
         <CustomButton
           title="Ver Confirmados"
           handlePress={handleViewConfirmados}
-          containerStyles="mt-4 p-3 bg-golden"
+          containerStyles="mt-4 p-3 bg-verde"
         />
       )}
     </View>

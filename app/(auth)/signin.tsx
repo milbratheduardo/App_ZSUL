@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, Image, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Image, Modal, TouchableOpacity, Alert } from 'react-native'; // Adicione Alert
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { images, icons } from '../../constants'; // Certifique-se de ter o ícone de sucesso.
+import { images, icons } from '../../constants'; 
 import FormField from '@/components/FormField';
 import CustomButton from '@/components/CustomButton';
 import { Link, router } from 'expo-router';
@@ -52,7 +52,11 @@ const SignIn = () => {
       // Mostrar modal de sucesso
       setShowSuccessModal(true);
     } catch (error) {
-      Alert.alert('Error', error.message);
+      if (error.message.includes('Invalid credentials')) {
+        Alert.alert('Erro', 'Email e/ou senha incorretos');
+      } else {
+        Alert.alert('Erro', error.message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -134,7 +138,7 @@ const SignIn = () => {
             </Text>
             <TouchableOpacity
               style={{
-                backgroundColor: '#A3935E',
+                backgroundColor: '#126046',
                 paddingHorizontal: 20,
                 paddingVertical: 10,
                 borderRadius: 5,

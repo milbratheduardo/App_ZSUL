@@ -8,5 +8,6 @@ import empty from "../assets/images/empty.png";
 import logo_zsul from "../assets/images/logo_zsul.png";
 import cards3 from "../assets/images/cards3.png";
 import escola_sp from "../assets/images/escola_sp.png";
+import escola_sp_transparente from "../assets/images/escola_sp_transparente.png";
 
-export default { profile, thumbnail, cards, cards3, path, logo, logo_zsul, logoSmall, empty, escola_sp };
+export default { profile, thumbnail, cards, cards3, path, logo, logo_zsul, logoSmall, empty, escola_sp, escola_sp_transparente };

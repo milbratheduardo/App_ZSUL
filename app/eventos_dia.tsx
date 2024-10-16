@@ -49,7 +49,7 @@ const EventosDia = () => {
             <View className="justify-between items-start flex-row mb-2">
               <View>
                 <Text className="font-pmedium text-sm text-primary">Eventos do dia</Text>
-                <Text className="text-2xl font-psemibold text-golden">{date}</Text>
+                <Text className="text-2xl font-psemibold text-verde">{date}</Text>
               </View>
             </View>
             <View className="w-full flex-row items-center justify-between pt-5 pb-2">

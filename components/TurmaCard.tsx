@@ -22,7 +22,7 @@ const TurmasCard = ({ turma: { turmaId, title, Qtd_Semana, Dia1, Dia2, Dia3, Loc
   return (
     <TouchableOpacity 
       activeOpacity={0.7} 
-      className="flex-col items-start p-4 mb-6 bg-gray-800 rounded-lg shadow-md pb-6"
+      className="flex-col items-start p-4 mb-6 bg-verde rounded-lg shadow-md pb-6"
       onPress={onPress}
       style={{
         width: '90%', // Define a largura dos cards como 90% da largura da tela
