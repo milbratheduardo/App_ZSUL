@@ -314,11 +314,18 @@ const Profile = () => {
               titleStyles="text-lg"
             />
              {user.role === 'admin' && (
+              <>
               <CustomButton
                 title="Aprovar pagamentos"
                 handlePress={() => router.push('/aprovar_pagamentos')}
                 containerStyles="p-3 mt-10"
               />
+              <CustomButton
+                title="Teste Checkout"
+                handlePress={() => router.push('/teste_checkout')}
+                containerStyles="p-3 mt-10"
+              />
+              </>
             )}
 
             {user.role === 'responsavel' && (
