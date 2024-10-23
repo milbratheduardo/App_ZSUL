@@ -1,49 +1,65 @@
-import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
+import { View, TextInput, TouchableOpacity, Image } from 'react-native';
 import React, { useState } from 'react';
 import { TextInputMask } from 'react-native-masked-text';
 import { icons } from '@/constants';
 
-const FormField = ({ title, value, placeholder, handleChangeText, otherStyles, maskType, options, ...props }) => {
+const FormField = ({ value, placeholder, handleChangeText, maskType, options, ...props }) => {
     const [showPassword, setShowPassword] = useState(false);
 
     return (
-        <View className={`space-y-2 ${otherStyles}`}>
-            <Text className='text-base text-black-100 font-pmedium'>
-                {title}
-            </Text>
-
-            <View className='border-2 border-gray-200 w-full 
-            h-16 px-4 bg-gray-100 rounded-2xl 
-            focus:border-verde items-center flex-row'>
+        <View style={{ marginVertical: 8 }}>
+            <View style={{
+                borderWidth: 1,
+                borderColor: '#EFEFEF',  // cor clara para o contorno
+                borderRadius: 10,
+                backgroundColor: '#F8F8F8',  // cor de fundo similar ao print
+                paddingHorizontal: 10,  // margem interna
+                height: 48,  // altura do campo para ficar mais compacto
+                flexDirection: 'row',  // permitir ícone e input lado a lado
+                alignItems: 'center',  // centralizar verticalmente o conteúdo
+                shadowColor: "#000", // Cor da sombra
+                shadowOffset: { width: 0, height: 2 }, // Posição da sombra (abaixo)
+                shadowOpacity: 0.2, // Opacidade da sombra
+                shadowRadius: 4, // Difusão da sombra
+                elevation: 5,
+            }}>
                 {maskType ? (
                     <TextInputMask
-                        type={maskType} // Tipo da máscara
-                        options={options} // Configurações específicas para o tipo de máscara
+                        type={maskType} 
+                        options={options}
                         value={value}
                         onChangeText={handleChangeText}
-                        className='flex-1 text-black font-psemibold text-base'
+                        style={{
+                            flex: 1,
+                            fontSize: 16,
+                            color: '#000',
+                        }}
                         placeholder={placeholder}
-                        placeholderTextColor='#A3935E'
+                        placeholderTextColor='#B5B5B5'  // cor mais suave para o placeholder
                         selectionColor='black'
                         {...props}
                     />
                 ) : (
-                    <TextInput 
-                        className='flex-1 text-black font-psemibold text-base'
+                    <TextInput
+                        style={{
+                            flex: 1,
+                            fontSize: 16,
+                            color: '#000',
+                        }}
                         value={value}
                         placeholder={placeholder}
-                        placeholderTextColor='#126046'
+                        placeholderTextColor='#B5B5B5'  // cor mais suave para o placeholder
                         onChangeText={handleChangeText}
-                        secureTextEntry={title === 'Senha' && !showPassword}
+                        secureTextEntry={placeholder === 'Senha' && !showPassword}  // verificar se é campo de senha
                         selectionColor='black'
                         {...props}
                     />
                 )}
-                {title === 'Senha' && (
+                {placeholder === 'Senha' && (
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                         <Image 
                             source={!showPassword ? icons.eye : icons.eyeHide}
-                            className='w-6 h-6'
+                            style={{ width: 24, height: 24 }}  // tamanho do ícone
                             resizeMode='contain'
                         />
                     </TouchableOpacity>

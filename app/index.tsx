@@ -38,7 +38,7 @@ export default function App () {
                     <CustomButton 
                         title='Entrar'
                         handlePress= {() => router.push('/signin')}
-                        containerStyles='w-full mt-5'
+                        containerStyles='w-full mt-5 h-[55px]'
                     />
                 </View>
 

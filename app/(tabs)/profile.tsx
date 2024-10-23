@@ -42,7 +42,7 @@ const Profile = () => {
 
   const handlePayment = async (alunoId) => {
     try {
-      const checkoutUrl = 'https://buy.stripe.com/test_8wMeWJ5JMg5X4mcaEE';  // URL gerada no dashboard do Stripe
+      const checkoutUrl = 'https://buy.stripe.com/test_8wMeWJ5JMg5X4mcaEE'; 
   
       // Redireciona para o link de pagamento
       Linking.openURL(checkoutUrl);
