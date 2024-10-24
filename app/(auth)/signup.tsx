@@ -1,21 +1,27 @@
-import { View, Text, ScrollView, Alert, TouchableOpacity, Button, Modal, ActivityIndicator, Image } from 'react-native';
+import { View, Text, ScrollView, Alert, TouchableOpacity, Button, Modal, Switch, ActivityIndicator, Image } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FormField from '@/components/FormField';
 import CustomButton from '@/components/CustomButton';
 import { router } from 'expo-router';
-import { createUserProfessor, createUserResponsavel } from '../../lib/appwrite';
+import { createUserProfessor, createUserResponsavel, createUserAtleta} from '../../lib/appwrite';
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { Picker } from '@react-native-picker/picker';
 import Slider from '@react-native-community/slider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { images } from '../../constants';
+import DatePicker from 'react-native-date-picker';
+import { TextInputMask } from 'react-native-masked-text';
+import { getPdfUrl } from "@/lib/appwrite";
+import * as Linking from 'expo-linking';
+import { useLocalSearchParams } from 'expo-router'; // Para pegar a data passada como parâmetro
+
 
 const SignUp = () => {
   const { setUser, setIsLoggedIn } = useGlobalContext();
 
-  const [role, setRole] = useState('professor');
+  const { role } = useLocalSearchParams();
   const [form, setForm] = useState({
     username: '',
     cpf: '',
@@ -26,21 +32,30 @@ const SignUp = () => {
     endereco: '',
     bairro: '',
     whatsapp: '',
-    horarios: [] 
+    contatoalternativo: '', // Novo campo adicionado para contato alternativo
+    birthDate: '', // Data de nascimento
+    horarios: [], // Horários de trabalho
+    faixa_etaria: '', // Faixa etária de trabalho
+    modalidades: '', // Modalidade esportiva
+    profession: '', // Profissão
+    parentesco: '' // Parentesco, no caso de responsável
   });
 
+  const [date, setDate] = useState(new Date());
+  const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const minAge = 7;
   const [maxAge, setMaxAge] = useState(65);
   const [currentDay, setCurrentDay] = useState('');
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [startTime, setStartTime] = useState(new Date(2024, 1, 1, 15, 0)); 
-  const [endTime, setEndTime] = useState(new Date(2024, 1, 1, 17, 0)); 
+  const [startTime, setStartTime] = useState(new Date(2024, 1, 1, 15, 0));
+  const [endTime, setEndTime] = useState(new Date(2024, 1, 1, 17, 0));
   const [loadingIconIndex, setLoadingIconIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [isAccepted, setIsAccepted] = useState(false); // Aceitação dos termos de compromisso
 
   useEffect(() => {
     let iconInterval;
@@ -60,7 +75,7 @@ const SignUp = () => {
 
   const handleAgeChange = (value) => {
     setMaxAge(Math.floor(value));
-    setForm({ ...form, faixa_etaria: `${minAge}-${Math.floor(value)}` }); // Atualiza faixa etária no formulário
+    setForm({ ...form, faixa_etaria: `${minAge}-${Math.floor(value)}` });
   };
 
   const handleAddHorario = () => {
@@ -76,13 +91,13 @@ const SignUp = () => {
 
   const submitProfessor = async () => {
     if (
-      form.username === '' || 
-      form.cpf === '' || 
-      form.email === '' || 
-      form.password === '' || 
-      form.whatsapp === '' || 
-      form.profession === '' || 
-      form.modalidades === '' || 
+      form.username === '' ||
+      form.cpf === '' ||
+      form.email === '' ||
+      form.password === '' ||
+      form.whatsapp === '' ||
+      form.profession === '' ||
+      form.modalidades === '' ||
       form.faixa_etaria === ''
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
@@ -100,17 +115,17 @@ const SignUp = () => {
 
     try {
       const result = await createUserProfessor(
-        form.email, 
-        form.password, 
-        form.username, 
-        form.cpf, 
-        form.whatsapp, 
-        form.profession,  
-        form.modalidades,  
+        form.email,
+        form.password,
+        form.username,
+        form.cpf,
+        form.whatsapp,
+        form.profession,
+        form.modalidades,
         form.faixa_etaria,
         form.horarios
       );
-      
+
       setUser(result);
       setIsLoggedIn(true);
 
@@ -123,16 +138,14 @@ const SignUp = () => {
     }
   };
 
-  const submitResponsavel = async () => {
+
+const submitAtleta = async () => {
     if (
-      form.username === '' || 
-      form.cpf === '' || 
-      form.rg === '' || 
-      form.email === '' || 
-      form.password === '' || 
-      form.endereco === '' || 
-      form.bairro === '' || 
-      form.whatsapp === ''
+      form.username === '' ||
+      form.cpf === '' ||
+      form.email === '' ||
+      form.password === '' ||
+      form.whatsapp === '' 
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
       setShowErrorModal(true);
@@ -148,15 +161,105 @@ const SignUp = () => {
     setIsSubmitting(true);
 
     try {
+      const result = await createUserAtleta(
+        form.email,
+        form.password,
+        form.username,
+        form.cpf,
+        form.whatsapp,
+        form.rg,                // RG
+        form.endereco,          // Endereço
+        form.nomeResponsavel,    // Nome do responsável
+        form.posicao,            // Posição
+        form.peDominante,        // Pé Dominante
+        form.altura,             // Altura
+        form.peso,               // Peso
+        form.objetivo,           // Objetivo
+        form.birthDate,          // Data de Nascimento
+        form.alergias,           // Alergias ou Restrições
+        form.condicoesMedicas,   // Condições Médicas
+        form.lesoesAnteriores,   // Lesões Anteriores
+        form.primeiraEscola,     // Primeira Escola de Futebol (Sim/Não)
+        form.anoEscolar          // Ano Escolar
+      );
+      setUser(result);
+      setIsLoggedIn(true);
+
+      router.replace('/turmas');
+    } catch (error) {
+      setErrorMessage(error.message);
+      setShowErrorModal(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenTerms = async () => {
+    try {
+      const pdfUrl = await getPdfUrl("670f26c80037cfdd8729");
+      Linking.openURL(pdfUrl);
+      if (!pdfUrl) {
+        Alert.alert('Erro', 'Não foi possível carregar o contrato.');
+        return;
+      }
+    } catch (error) {
+      console.error("Erro ao abrir os termos de compromisso", error);
+    }
+  };
+
+  const commonInputStyle = {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 20,
+  };
+
+  const submitResponsavel = async () => {
+    if (
+      form.username === '' ||
+      form.cpf === '' ||
+      form.rg === '' ||
+      form.email === '' ||
+      form.password === '' ||
+      form.endereco === '' ||
+      form.bairro === '' ||
+      form.whatsapp === '' ||
+      form.contatoalternativo === '' // Validando campo de contato alternativo
+    ) {
+      setErrorMessage('Por favor, preencha todos os campos');
+      setShowErrorModal(true);
+      return;
+    }
+
+    if (!isAccepted) {
+      setErrorMessage('Você precisa aceitar os termos de compromisso antes de continuar.');
+      setShowErrorModal(true);
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setErrorMessage('As senhas não coincidem');
+      setShowErrorModal(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
       const result = await createUserResponsavel(
-        form.email, 
-        form.password, 
-        form.username, 
-        form.cpf, 
-        form.endereco, 
-        form.bairro, 
-        form.rg, 
-        form.whatsapp, 
+        form.email,
+        form.password,
+        form.username,
+        form.cpf,
+        form.endereco,
+        form.bairro,
+        form.rg,
+        form.whatsapp,
+        form.birthDate,
+        form.contatoalternativo,
+        form.parentesco,
         role
       );
 
@@ -177,7 +280,9 @@ const SignUp = () => {
       submitProfessor();
     } else if (role === 'responsavel') {
       submitResponsavel();
-    } else {
+    } else if (role === 'atleta'){
+      submitAtleta();
+    }else{
       setErrorMessage('Por favor, selecione uma opção: Sou Professor ou Sou Responsável');
       setShowErrorModal(true);
     }
@@ -198,24 +303,29 @@ const SignUp = () => {
     "Futebol"
   ];
 
+  const parentesco = [
+    "Pai", "Mãe", "Tio", "Tia", "Irmão", "Irmã", "Avó", "Avô", "Madrasta", "Padrasto", "Outro",
+  ];
+
   const renderFormFields = () => {
     return (
       <>
+        {/* Campos comuns */}
         <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Nome Completo</Text>
         <FormField 
           title='Nome Completo'
           value={form.username}
           handleChangeText={(e) => setForm({ ...form, username: e })}
-          otherStyles='mt-10'
         />
+
         <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">CPF</Text>
         <FormField 
           title='CPF'
           value={form.cpf}
           handleChangeText={(e) => setForm({ ...form, cpf: e })}
-          otherStyles='mt-10'
           maskType={'cpf'}
         />
+
         {role === 'responsavel' && (
           <>
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">RG</Text>
@@ -223,166 +333,369 @@ const SignUp = () => {
               title='RG'
               value={form.rg}
               handleChangeText={(e) => setForm({ ...form, rg: e })}
-              otherStyles='mt-10'
             />
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento</Text>
+            <View style={commonInputStyle}>
+              <TextInputMask
+                type={'datetime'}
+                options={{ format: 'DD/MM/YYYY' }}
+                value={form.birthDate}
+                onChangeText={(e) => setForm({ ...form, birthDate: e })}
+                placeholder="DD/MM/YYYY"
+              />
+            </View>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2">Contato Alternativo</Text>
+            <FormField 
+              title='Contato Alternativo'
+              value={form.contatoalternativo}
+              handleChangeText={(e) => setForm({ ...form, contatoalternativo: e })}
+              maskType={'cel-phone'}
+              options={{
+                maskType: 'BRL',
+                withDDD: true,
+                dddMask: '(99) '
+              }}
+            />
+
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Endereço</Text>
             <FormField 
               title='Endereço'
               value={form.endereco}
               handleChangeText={(e) => setForm({ ...form, endereco: e })}
-              otherStyles='mt-10'
             />
+
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Bairro</Text>
             <FormField 
               title='Bairro'
               value={form.bairro}
               handleChangeText={(e) => setForm({ ...form, bairro: e })}
-              otherStyles='mt-10'
             />
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Parentesco</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.parentesco}
+                onValueChange={(itemValue) => setForm({ ...form, parentesco: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                {parentesco.map((parentesco, index) => (
+                  <Picker.Item key={index} label={parentesco} value={parentesco} />
+                ))}
+              </Picker>
+            </View>
           </>
         )}
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Modalidade</Text>
-        <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
-          <Picker
-            selectedValue={form.modalidades}
-            onValueChange={(itemValue, itemIndex) =>
-              setForm({ ...form, modalidades: itemValue })
-            }
-            style={{ height: 50, width: '100%', padding: 10 }}
-          >
-            <Picker.Item label="Selecione" value="" />
-            {modalidades.map((modalidade, index) => (
-              <Picker.Item key={index} label={modalidade} value={modalidade} />
-            ))}
-          </Picker>
-        </View>
 
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Profissão</Text>
-        <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
-          <Picker
-            selectedValue={form.profession}
-            onValueChange={(itemValue, itemIndex) =>
-              setForm({ ...form, profession: itemValue })
-            }
-            style={{ height: 50, width: '100%', padding: 10 }}
-          >
-            <Picker.Item label="Selecione" value="" />
-            {professions.map((profession, index) => (
-              <Picker.Item key={index} label={profession} value={profession} />
-            ))}
-          </Picker>
-        </View>
+        {role === 'atleta' && (
+          <>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">RG</Text>
+            <FormField 
+              title='RG'
+              value={form.rg}
+              handleChangeText={(e) => setForm({ ...form, rg: e })}
+            />
 
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Faixa Etária de Trabalho</Text>
-        <View style={{ marginBottom: 20 }}>
-        <Text>Idade Mínima: {minAge}</Text>
-        <Text>Idade Máxima: {maxAge}</Text>
-        <Slider
-          value={maxAge}
-          onValueChange={handleAgeChange}
-          minimumValue={minAge}
-          maximumValue={65}
-          step={1}
-          minimumTrackTintColor="#126046"  
-          maximumTrackTintColor="#ccc"
-          thumbTintColor="#126046"
-        />
-        </View>
-        <Text className='mb-3'>Faixa Etária Selecionada: {form.faixa_etaria}</Text>
-
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Dias da Semana de Trabalho</Text>
-        <View style={{ flexDirection: 'row', marginBottom: 10, alignItems: 'center' }}>
-          <View style={{ flex: 1 }}>
-            <Picker
-              selectedValue={currentDay}
-              onValueChange={(itemValue) => setCurrentDay(itemValue)}
-              style={{ height: 50, width: '100%', padding: 10 }}
-            >
-              <Picker.Item label="Dia" value="" />
-              {dias.map((dia, index) => (
-                <Picker.Item key={index} label={dia} value={dia} />
-              ))}
-            </Picker>
-          </View>
-
-          <View style={{ flex: 1, flexDirection: 'row', marginLeft: 30, justifyContent: 'space-between' }}>
-            <TouchableOpacity
-              style={{ backgroundColor: '#1E3A8A', padding: 10, borderRadius: 5, flex: 1, marginRight: 5 }} // Cor bg-blue-900, flex 1 para ocupar a tela
-              onPress={() => setShowStartPicker(true)}
-            >
-              <Text style={{ color: 'white', textAlign: 'center' }}>
-                {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            </TouchableOpacity>
-
-            {showStartPicker && (
-              <DateTimePicker
-                value={startTime}
-                mode="time"
-                is24Hour={true}
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowStartPicker(false);
-                  if (selectedDate) {
-                    setStartTime(selectedDate);
-                  }
-                }}
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento</Text>
+            <View style={commonInputStyle}>
+              <TextInputMask
+                type={'datetime'}
+                options={{ format: 'DD/MM/YYYY' }}
+                value={form.birthDate}
+                onChangeText={(e) => setForm({ ...form, birthDate: e })}
+                placeholder="DD/MM/YYYY"
               />
-            )}
+            </View>
 
-            <TouchableOpacity
-              style={{ backgroundColor: '#1E3A8A', padding: 10, borderRadius: 5, flex: 1, marginLeft: 5 }} // Cor bg-blue-900, flex 1 para ocupar a tela
-              onPress={() => setShowEndPicker(true)}
-            >
-              <Text style={{ color: 'white', textAlign: 'center' }}>
-                {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            </TouchableOpacity>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Endereço</Text>
+            <FormField 
+              title='Endereço'
+              value={form.endereco}
+              handleChangeText={(e) => setForm({ ...form, endereco: e })}
+            />
 
-            {showEndPicker && (
-              <DateTimePicker
-                value={endTime}
-                mode="time"
-                is24Hour={true}
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowEndPicker(false);
-                  if (selectedDate) {
-                    setEndTime(selectedDate);
-                  }
-                }}
+            {/* Informações Esportivas */}
+            <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações Esportivas</Text>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2">Posição</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.posicao}
+                onValueChange={(itemValue) => setForm({ ...form, posicao: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                {/* Add more positions as needed */}
+                <Picker.Item label="Atacante" value="atacante" />
+                <Picker.Item label="Goleiro" value="goleiro" />
+                {/* ... */}
+              </Picker>
+            </View>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Pé Dominante</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.peDominante}
+                onValueChange={(itemValue) => setForm({ ...form, peDominante: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Direito" value="direito" />
+                <Picker.Item label="Esquerdo" value="esquerdo" />
+                <Picker.Item label="Ambidestro" value="ambidestro" />
+              </Picker>
+            </View>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Altura (em cm)</Text>
+            <FormField 
+              title='Altura'
+              value={form.altura}
+              handleChangeText={(e) => setForm({ ...form, altura: e })}
+              keyboardType='numeric'
+            />
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Peso (em kg)</Text>
+            <FormField 
+              title='Peso'
+              value={form.peso}
+              handleChangeText={(e) => setForm({ ...form, peso: e })}
+              keyboardType='numeric'
+            />
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Objetivo</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.objetivo}
+                onValueChange={(itemValue) => setForm({ ...form, objetivo: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Desenvolvimento Pessoal" value="desenvolvimento-pessoal" />
+                <Picker.Item label="Tornar-se Jogador Profissional" value="jogador-profissional" />
+              </Picker>
+            </View>
+
+            {/* Informações de Saúde */}
+            <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações de Saúde</Text>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Alergias ou Restrições</Text>
+            <FormField 
+              title='Alergias ou Restrições'
+              value={form.alergias}
+              handleChangeText={(e) => setForm({ ...form, alergias: e })}
+            />
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Condições Médicas</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.condicoesMedicas}
+                onValueChange={(itemValue) => setForm({ ...form, condicoesMedicas: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Asma" value="asma" />
+                <Picker.Item label="Diabetes" value="diabetes" />
+                {/* Add more options as needed */}
+              </Picker>
+            </View>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Lesões Anteriores</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.lesoesAnteriores}
+                onValueChange={(itemValue) => setForm({ ...form, lesoesAnteriores: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Entorse de Tornozelo" value="entorse-tornozelo" />
+                <Picker.Item label="Fratura Óssea" value="fratura-ossea" />
+                {/* Add more options as needed */}
+              </Picker>
+            </View>
+
+            {/* Informações Educacionais e Familiares */}
+            <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações Educacionais e Familiares</Text>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Nome do Responsável</Text>
+            <FormField 
+              title='Nome do Responsável'
+              value={form.nomeResponsavel}
+              handleChangeText={(e) => setForm({ ...form, nomeResponsavel: e })}
+            />
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Primeira Escola de Futebol?</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.primeiraEscola}
+                onValueChange={(itemValue) => setForm({ ...form, primeiraEscola: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Sim" value="sim" />
+                <Picker.Item label="Não" value="nao" />
+              </Picker>
+            </View>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Ano Escolar</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.anoEscolar}
+                onValueChange={(itemValue) => setForm({ ...form, anoEscolar: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Fundamental - 1º Ano" value="fundamental-1ano" />
+                <Picker.Item label="Ensino Médio - 1º Ano" value="ensino-medio-1ano" />
+                {/* Add more options as needed */}
+              </Picker>
+            </View>
+          </>
+        )}
+
+
+        {role === 'professor' && (
+          <>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Modalidade</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.modalidades}
+                onValueChange={(itemValue) => setForm({ ...form, modalidades: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                {modalidades.map((modalidade, index) => (
+                  <Picker.Item key={index} label={modalidade} value={modalidade} />
+                ))}
+              </Picker>
+            </View>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Profissão</Text>
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
+              <Picker
+                selectedValue={form.profession}
+                onValueChange={(itemValue) => setForm({ ...form, profession: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Selecione" value="" />
+                {professions.map((profession, index) => (
+                  <Picker.Item key={index} label={profession} value={profession} />
+                ))}
+              </Picker>
+            </View>
+
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Faixa Etária de Trabalho</Text>
+            <View style={{ marginBottom: 20 }}>
+              <Text>Idade Mínima: {minAge}</Text>
+              <Text>Idade Máxima: {maxAge}</Text>
+              <Slider
+                value={maxAge}
+                onValueChange={handleAgeChange}
+                minimumValue={minAge}
+                maximumValue={65}
+                step={1}
+                minimumTrackTintColor="#126046"
+                maximumTrackTintColor="#ccc"
+                thumbTintColor="#126046"
               />
-            )}
-          </View>
+            </View>
+            <Text className='mb-3'>Faixa Etária Selecionada: {form.faixa_etaria}</Text>
 
-        </View>
-
-        <TouchableOpacity
-          onPress={handleAddHorario}
-          style={{ backgroundColor: '#126046', padding: 10, marginVertical: 10, borderRadius: 5 }}
-        >
-          <Text style={{ color: 'white', textAlign: 'center' }}>Adicionar Horário</Text>
-        </TouchableOpacity>
-
-        <View>
-          <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Horários Adicionados</Text>
-          {form.horarios.length > 0 ? (
-            form.horarios.map((horario, index) => (
-              <View key={index} style={{ marginBottom: 10 }}>
-                <Text>{horario.dia}: {horario.start} - {horario.end}</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Dias da Semana de Trabalho</Text>
+            <View style={{ flexDirection: 'row', marginBottom: 10, alignItems: 'center' }}>
+              <View style={{ flex: 1 }}>
+                <Picker
+                  selectedValue={currentDay}
+                  onValueChange={(itemValue) => setCurrentDay(itemValue)}
+                  style={{ height: 50, width: '100%', padding: 10 }}
+                >
+                  <Picker.Item label="Dia" value="" />
+                  {dias.map((dia, index) => (
+                    <Picker.Item key={index} label={dia} value={dia} />
+                  ))}
+                </Picker>
               </View>
-            ))
-          ) : (
-            <Text className='text-black-700 text-sm font-pregular mb-3 mt-3'>Nenhum horário adicionado</Text>
-          )}
-        </View>
 
+              <View style={{ flex: 1, flexDirection: 'row', marginLeft: 30, justifyContent: 'space-between' }}>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#1E3A8A', padding: 10, borderRadius: 5, flex: 1, marginRight: 5 }}
+                  onPress={() => setShowStartPicker(true)}
+                >
+                  <Text style={{ color: 'white', textAlign: 'center' }}>
+                    {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {showStartPicker && (
+                  <DateTimePicker
+                    value={startTime}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowStartPicker(false);
+                      if (selectedDate) {
+                        setStartTime(selectedDate);
+                      }
+                    }}
+                  />
+                )}
+
+                <TouchableOpacity
+                  style={{ backgroundColor: '#1E3A8A', padding: 10, borderRadius: 5, flex: 1, marginLeft: 5 }}
+                  onPress={() => setShowEndPicker(true)}
+                >
+                  <Text style={{ color: 'white', textAlign: 'center' }}>
+                    {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {showEndPicker && (
+                  <DateTimePicker
+                    value={endTime}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowEndPicker(false);
+                      if (selectedDate) {
+                        setEndTime(selectedDate);
+                      }
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={handleAddHorario}
+              style={{ backgroundColor: '#126046', padding: 10, marginVertical: 10, borderRadius: 5 }}
+            >
+              <Text style={{ color: 'white', textAlign: 'center' }}>Adicionar Horário</Text>
+            </TouchableOpacity>
+
+            <View>
+              <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Horários Adicionados</Text>
+              {form.horarios.length > 0 ? (
+                form.horarios.map((horario, index) => (
+                  <View key={index} style={{ marginBottom: 10 }}>
+                    <Text>{horario.dia}: {horario.start} - {horario.end}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text className='text-black-700 text-sm font-pregular mb-3 mt-3'>Nenhum horário adicionado</Text>
+              )}
+            </View>
+          </>
+        )}
+
+        {/* Campo de WhatsApp */}
         <Text className="text-black-700 text-sm font-pbold mb-2">Whatsapp</Text>
         <FormField 
           title='Whatsapp'
           value={form.whatsapp}
           handleChangeText={(e) => setForm({ ...form, whatsapp: e })}
-          otherStyles='mt-10'
           maskType={'cel-phone'}
           options={{
             maskType: 'BRL',
@@ -391,30 +704,50 @@ const SignUp = () => {
           }}
         />
 
+        {/* Campo de Email e Senha */}
         <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Email</Text>
         <FormField 
           title='Email'
           value={form.email}
           handleChangeText={(e) => setForm({ ...form, email: e })}
-          otherStyles='mt-10'
           keyboardType='email-address'
         />
+
         <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Senha</Text>
         <FormField 
           title='Senha'
           placeholder={'Insira no mínimo 8 caracteres'}
           value={form.password}
           handleChangeText={(e) => setForm({ ...form, password: e })}
-          otherStyles='mt-10'
         />
+
         <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Confirmar Senha</Text>
         <FormField 
           title='Confirmar Senha'
           value={form.confirmPassword}
           handleChangeText={(e) => setForm({ ...form, confirmPassword: e })}
-          otherStyles='mt-10'
           secureTextEntry
         />
+
+        {/* Termos de compromisso */}
+        {role === "responsavel" && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+            <Switch
+              value={isAccepted}
+              onValueChange={(value) => setIsAccepted(value)}
+              thumbColor={isAccepted ? "#fff" : "#fff"}
+              trackColor={{ false: "#333", true: "#1e5f49" }}
+            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+              <Text>Eu li e aceito os </Text>
+              <TouchableOpacity onPress={handleOpenTerms}>
+                <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>
+                  termos de compromisso
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </>
     );
   };
@@ -426,25 +759,6 @@ const SignUp = () => {
           <Text className='text-2xl text-black text-semibold font-psemibold'>
             Cadastre-se
           </Text>
-          <Text className='text-sm text-black text-semibold mt-5 font-psemibold'>
-            Você é um Profissional?
-          </Text>
-
-          <View className='flex-row justify-around mt-5 mb-5'>
-            <CustomButton
-              title="Sim"
-              handlePress={() => setRole('professor')}
-              containerStyles={`px-6 py-2 rounded-lg w-[150px] h-[40px] ${role === 'professor' ? 'bg-verde' : 'bg-gray-200'}`}
-              textStyles={`text-lg ${role === 'professor' ? 'text-white' : 'text-black'}`}
-            />
-            
-            <CustomButton
-              title="Não"
-              handlePress={() => setRole('responsavel')}
-              containerStyles={`px-6 py-2 rounded-lg w-[150px] h-[40px] ${role === 'responsavel' ? 'bg-verde' : 'bg-gray-200'}`}
-              textStyles={`text-lg ${role === 'responsavel' ? 'text-white' : 'text-black'}`}
-            />
-          </View>
 
           {renderFormFields()}
 
@@ -481,8 +795,9 @@ const SignUp = () => {
           </View>
         </View>
       </ScrollView>
+
       <Modal
-        visible={showErrorModal} // Certifique-se de que `showErrorModal` é `true` quando há erro
+        visible={showErrorModal}
         transparent={true}
         animationType="slide"
         onRequestClose={() => setShowErrorModal(false)}

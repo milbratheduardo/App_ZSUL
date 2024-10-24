@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'; // Adicionar ícones da biblioteca
 import { images } from '../../constants'; // Certifique-se de que o caminho das imagens está correto
 
+
 const SignIn = () => {
   const { setUser, setIsLoggedIn } = useGlobalContext();
   const [form, setForm] = useState({
@@ -22,6 +23,7 @@ const SignIn = () => {
   const [hasError, setHasError] = useState(false); // Para controlar erros
   const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
   const [showErrorModal, setShowErrorModal] = useState(false); // Exibir modal de erro
+  const [showChoiceModal, setShowChoiceModal] = useState(false); // Exibir modal de erro
 
   const loadingIcons = [
     <FontAwesome name="soccer-ball-o" size={48} color="#126046" />,
@@ -45,6 +47,11 @@ const SignIn = () => {
     };
     checkSession();
   }, []);
+
+  const modal_escolha = async () => {
+    setErrorMessage('Por favor, preencha todos os campos');
+    setShowChoiceModal(true); // Exibir modal de erro
+  }
 
   // Alternar ícones durante o carregamento
   useEffect(() => {
@@ -164,7 +171,7 @@ const SignIn = () => {
                   Não possui conta?
                 </Text>              
                 <TouchableOpacity
-                  onPress={() => router.push('/signup')} // Navega para a rota /signup
+                  onPress={() => modal_escolha()} // Navega para a rota /signup
                   disabled={isSubmitting}
                   className={`px-6 py-2 rounded-lg w-[150px] h-[40px] ${isSubmitting ? 'bg-blue-700' : 'bg-blue-900'}`}
                 >
@@ -224,6 +231,125 @@ const SignIn = () => {
           </View>
         </View>
       </Modal>
+
+      
+<Modal
+  visible={showChoiceModal}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={() => setShowChoiceModal(false)}
+>
+  <View style={{
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  }}>
+    <View style={{
+      backgroundColor: 'white',
+      padding: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      width: '80%',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 5,
+    }}>
+      <Text style={{ color: 'black', fontSize: 22, fontWeight: 'bold', marginVertical: 15 }}>
+        Escolha uma opção
+      </Text>
+
+      {/* Botão Clicável - Treinador */}
+      <TouchableOpacity
+        onPress={() => {
+          setShowChoiceModal(false); // Fechar o modal
+          router.push({
+            pathname: '/signup',
+            params: { role: 'professor' },
+          });
+        }}
+        style={{
+          backgroundColor: '#5f1c1c',
+          paddingVertical: 15,
+          paddingHorizontal: 30,
+          borderRadius: 10,
+          marginBottom: 15,
+          width: '80%',
+          alignItems: 'center',
+          flexDirection: 'row' // Exibe o ícone e texto lado a lado
+        }}
+        activeOpacity={0.7}
+      >
+        <MaterialCommunityIcons name="whistle" size={30} color="white" style={{ marginRight: 20 }} />
+        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+          Treinador
+        </Text>
+      </TouchableOpacity>
+
+      {/* Botão Clicável - Atleta */}
+      <TouchableOpacity 
+        onPress={() => {
+          setShowChoiceModal(false); // Fechar o modal
+          router.push({
+            pathname: '/signup',
+            params: { role: "atleta" },
+          });
+        }}
+        style={{
+          backgroundColor: '#126046',
+          paddingVertical: 15,
+          paddingHorizontal: 30,
+          borderRadius: 10,
+          marginBottom: 15,
+          width: '80%',
+          alignItems: 'center',
+          flexDirection: 'row' // Exibe o ícone e texto lado a lado
+        }}
+        activeOpacity={0.7}
+      >
+        <MaterialCommunityIcons name="soccer" size={30} color="white" style={{ marginRight: 20 }} />
+        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+          Atleta
+        </Text>
+      </TouchableOpacity>
+
+      {/* Botão Clicável - Responsável */}
+      <TouchableOpacity 
+        onPress={() => {
+          setShowChoiceModal(false); // Fechar o modal
+          router.push({
+            pathname: '/signup',
+            params: { role: "responsavel" },
+          });
+        }}
+        style={{
+          backgroundColor: '#FFA500',
+          paddingVertical: 15,
+          paddingHorizontal: 30,
+          borderRadius: 10,
+          marginBottom: 15,
+          width: '80%',
+          alignItems: 'center',
+          flexDirection: 'row' // Exibe o ícone e texto lado a lado
+        }}
+        activeOpacity={0.7}
+      >
+        <MaterialCommunityIcons name="account-child" size={30} color="white" style={{ marginRight: 20 }} />
+        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+          Responsável
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+
+
+
+
+
     </SafeAreaView>
   );
 };
