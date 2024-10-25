@@ -32,7 +32,7 @@ const SignUp = () => {
     endereco: '',
     bairro: '',
     whatsapp: '',
-    contatoalternativo: '', // Novo campo adicionado para contato alternativo
+    contatoalternativo: '',  //Novo campo adicionado para contato alternativo
     birthDate: '', // Data de nascimento
     horarios: [], // Horários de trabalho
     faixa_etaria: '', // Faixa etária de trabalho
@@ -143,9 +143,23 @@ const submitAtleta = async () => {
     if (
       form.username === '' ||
       form.cpf === '' ||
-      form.email === '' ||
+      form.rg === '' ||
+      form.birthDate === '' ||
+      form.endereco === '' ||
+      form.posicao === '' ||
+      form.peDominante === '' ||
+      form.altura === '' ||
+      form.peso === '' ||
+      form.objetivo === '' ||
+      form.alergias === '' ||
+      form.condicoesMedicas === '' ||
+      form.lesoesAnteriores === '' ||
+      form.nomeResponsavel === '' ||
+      form.primeiraEscola === '' ||
+      form.anoEscolar === '' ||
+      form.whatsapp === '' ||
       form.password === '' ||
-      form.whatsapp === '' 
+      form.confirmPassword === ''
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
       setShowErrorModal(true);
@@ -196,7 +210,7 @@ const submitAtleta = async () => {
 
   const handleOpenTerms = async () => {
     try {
-      const pdfUrl = await getPdfUrl("670f26c80037cfdd8729");
+      const pdfUrl = await getPdfUrl("671ab31a002242cb4a49");
       Linking.openURL(pdfUrl);
       if (!pdfUrl) {
         Alert.alert('Erro', 'Não foi possível carregar o contrato.');
@@ -258,9 +272,7 @@ const submitAtleta = async () => {
         form.rg,
         form.whatsapp,
         form.birthDate,
-        form.contatoalternativo,
         form.parentesco,
-        role
       );
 
       setUser(result);
@@ -332,8 +344,14 @@ const submitAtleta = async () => {
             <FormField 
               title='RG'
               value={form.rg}
-              handleChangeText={(e) => setForm({ ...form, rg: e })}
+              handleChangeText={(e) => {
+                // Remove qualquer caractere que não seja número
+                const onlyNumbers = e.replace(/[^0-9]/g, '');
+                setForm({ ...form, rg: onlyNumbers });
+              }}
+              keyboardType="numeric" // Abre o teclado numérico no celular
             />
+
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento</Text>
             <View style={commonInputStyle}>
@@ -345,19 +363,6 @@ const submitAtleta = async () => {
                 placeholder="DD/MM/YYYY"
               />
             </View>
-
-            <Text className="text-black-700 text-sm font-pbold mb-2">Contato Alternativo</Text>
-            <FormField 
-              title='Contato Alternativo'
-              value={form.contatoalternativo}
-              handleChangeText={(e) => setForm({ ...form, contatoalternativo: e })}
-              maskType={'cel-phone'}
-              options={{
-                maskType: 'BRL',
-                withDDD: true,
-                dddMask: '(99) '
-              }}
-            />
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Endereço</Text>
             <FormField 
@@ -395,8 +400,14 @@ const submitAtleta = async () => {
             <FormField 
               title='RG'
               value={form.rg}
-              handleChangeText={(e) => setForm({ ...form, rg: e })}
+              handleChangeText={(e) => {
+                // Remove qualquer caractere que não seja número
+                const onlyNumbers = e.replace(/[^0-9]/g, '');
+                setForm({ ...form, rg: onlyNumbers });
+              }}
+              keyboardType="numeric" // Abre o teclado numérico no celular
             />
+
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento</Text>
             <View style={commonInputStyle}>
@@ -417,20 +428,27 @@ const submitAtleta = async () => {
             />
 
             {/* Informações Esportivas */}
-            <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações Esportivas</Text>
-
-            <Text className="text-black-700 text-sm font-pbold mb-2">Posição</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Posição</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
-                selectedValue={form.posicao}
-                onValueChange={(itemValue) => setForm({ ...form, posicao: itemValue })}
-                style={{ height: 50, width: '100%', padding: 10 }}
+              selectedValue={form.posicao}
+              onValueChange={(itemValue) => setForm({ ...form, posicao: itemValue })}
+              style={{ height: 50, width: '100%', padding: 10 }}
               >
                 <Picker.Item label="Selecione" value="" />
-                {/* Add more positions as needed */}
-                <Picker.Item label="Atacante" value="atacante" />
                 <Picker.Item label="Goleiro" value="goleiro" />
-                {/* ... */}
+                <Picker.Item label="Zagueiro Central" value="zagueiro-central" />
+                <Picker.Item label="Lateral Direito" value="lateral-direito" />
+                <Picker.Item label="Lateral Esquerdo" value="lateral-esquerdo" />
+                <Picker.Item label="Volante" value="volante" />
+                <Picker.Item label="Meia Central" value="meia-central" />
+                <Picker.Item label="Meia Ofensivo" value="meia-ofensivo" />
+                <Picker.Item label="Meia Defensivo" value="meia-defensivo" />
+                <Picker.Item label="Ponta Direita" value="ponta-direita" />
+                <Picker.Item label="Ponta Esquerda" value="ponta-esquerda" />
+                <Picker.Item label="Atacante" value="atacante" />
+                <Picker.Item label="Centroavante" value="centroavante" />
+                <Picker.Item label="Segundo Atacante" value="segundo-atacante" />
               </Picker>
             </View>
 
@@ -452,17 +470,26 @@ const submitAtleta = async () => {
             <FormField 
               title='Altura'
               value={form.altura}
-              handleChangeText={(e) => setForm({ ...form, altura: e })}
-              keyboardType='numeric'
+              handleChangeText={(e) => {
+                // Remove qualquer caractere que não seja número e limita a 3 dígitos
+                const onlyNumbers = e.replace(/[^0-9]/g, '').slice(0, 3);
+                setForm({ ...form, altura: onlyNumbers });
+              }}
+              keyboardType='numeric' // Abre o teclado numérico no celular
             />
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Peso (em kg)</Text>
             <FormField 
               title='Peso'
               value={form.peso}
-              handleChangeText={(e) => setForm({ ...form, peso: e })}
-              keyboardType='numeric'
+              handleChangeText={(e) => {
+                // Remove qualquer caractere que não seja número e limita a 3 dígitos
+                const onlyNumbers = e.replace(/[^0-9]/g, '').slice(0, 3);
+                setForm({ ...form, peso: onlyNumbers });
+              }}
+              keyboardType='numeric' // Abre o teclado numérico no celular
             />
+
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Objetivo</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
@@ -471,21 +498,49 @@ const submitAtleta = async () => {
                 onValueChange={(itemValue) => setForm({ ...form, objetivo: itemValue })}
                 style={{ height: 50, width: '100%', padding: 10 }}
               >
-                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Nenhum" value="Nenhum" />
                 <Picker.Item label="Desenvolvimento Pessoal" value="desenvolvimento-pessoal" />
+                <Picker.Item label="Competir em Campeonatos Locais" value="campeonatos-locais" />
                 <Picker.Item label="Tornar-se Jogador Profissional" value="jogador-profissional" />
+                <Picker.Item label="Melhorar Condicionamento Físico" value="condicionamento-fisico" />
+                <Picker.Item label="Aprimorar Habilidades Técnicas" value="habilidades-tecnicas" />
+                <Picker.Item label="Socializar e Fazer Amigos" value="socializar" />
+                <Picker.Item label="Ganhar Bolsa Esportiva" value="bolsa-esportiva" />
+                <Picker.Item label="Aprimorar Consciência Tática" value="consciencia-tatica" />
               </Picker>
             </View>
+
 
             {/* Informações de Saúde */}
             <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações de Saúde</Text>
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Alergias ou Restrições</Text>
-            <FormField 
-              title='Alergias ou Restrições'
-              value={form.alergias}
-              handleChangeText={(e) => setForm({ ...form, alergias: e })}
-            />
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>  
+              <Picker
+                selectedValue={form.alergias}
+                onValueChange={(itemValue) => setForm({ ...form, alergias: itemValue })}
+                style={{ height: 50, width: '100%', padding: 10 }}
+              >
+                <Picker.Item label="Nenhuma" value="Nenhuma" />
+                <Picker.Item label="Glúten" value="gluten" />
+                <Picker.Item label="Lactose" value="lactose" />
+                <Picker.Item label="Amendoim" value="amendoim" />
+                <Picker.Item label="Frutos do Mar" value="frutos_do_mar" />
+                <Picker.Item label="Ovos" value="ovos" />
+                <Picker.Item label="Nozes" value="nozes" />
+                <Picker.Item label="Pólen" value="polen" />
+                <Picker.Item label="Soja" value="soja" />
+                <Picker.Item label="Medicamentos" value="medicamentos" />
+                <Picker.Item label="Picadas de insetos" value="picadas_insetos" />
+                <Picker.Item label="Vegetariano" value="vegetariano" />
+                <Picker.Item label="Vegano" value="vegano" />
+                <Picker.Item label="Baixo teor de sódio" value="baixo_sodio" />
+                <Picker.Item label="Sem açúcar" value="sem_acucar" />
+                <Picker.Item label="Sem carne vermelha" value="sem_carne_vermelha" />
+                <Picker.Item label="Dieta cetogênica" value="cetogenica" />
+                <Picker.Item label="Dieta baixa em carboidratos" value="baixo_carboidrato" />
+              </Picker>
+            </View>
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Condições Médicas</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
@@ -494,10 +549,16 @@ const submitAtleta = async () => {
                 onValueChange={(itemValue) => setForm({ ...form, condicoesMedicas: itemValue })}
                 style={{ height: 50, width: '100%', padding: 10 }}
               >
-                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Nenhuma" value="nenhuma" />
                 <Picker.Item label="Asma" value="asma" />
                 <Picker.Item label="Diabetes" value="diabetes" />
-                {/* Add more options as needed */}
+                <Picker.Item label="Hipertensão" value="hipertensao" />
+                <Picker.Item label="Problemas Cardíacos" value="problemas-cardiacos" />
+                <Picker.Item label="Alergias Severas" value="alergias-severas" />
+                <Picker.Item label="Deficiência Visual" value="deficiencia-visual" />
+                <Picker.Item label="Deficiência Auditiva" value="deficiencia-auditiva" />
+                <Picker.Item label="Distúrbios Musculoesqueléticos" value="disturbios-musculoesqueleticos" />
+                <Picker.Item label="Autista" value="Autista" />
               </Picker>
             </View>
 
@@ -508,17 +569,26 @@ const submitAtleta = async () => {
                 onValueChange={(itemValue) => setForm({ ...form, lesoesAnteriores: itemValue })}
                 style={{ height: 50, width: '100%', padding: 10 }}
               >
-                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Nenhuma" value="nenhuma" />
                 <Picker.Item label="Entorse de Tornozelo" value="entorse-tornozelo" />
+                <Picker.Item label="Ruptura de Ligamento (Joelho)" value="ruptura-ligamento-joelho" />
                 <Picker.Item label="Fratura Óssea" value="fratura-ossea" />
-                {/* Add more options as needed */}
+                <Picker.Item label="Lesão Muscular" value="lesao-muscular" />
+                <Picker.Item label="Hérnia de Disco" value="hernia-de-disco" />
+                <Picker.Item label="Tendinite" value="tendinite" />
+                <Picker.Item label="Lesão no Menisco" value="lesao-menisco" />
+                <Picker.Item label="Concussão (Traumatismo Craniano)" value="concussao" />
+                <Picker.Item label="Luxação" value="luxacao" />
+                <Picker.Item label="Distensão Muscular" value="distensao-muscular" />
+                <Picker.Item label="Pubalgia" value="pubalgia" />
               </Picker>
             </View>
+
 
             {/* Informações Educacionais e Familiares */}
             <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações Educacionais e Familiares</Text>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Nome do Responsável</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Nome do Seu Responsável</Text>
             <FormField 
               title='Nome do Responsável'
               value={form.nomeResponsavel}
@@ -547,8 +617,17 @@ const submitAtleta = async () => {
               >
                 <Picker.Item label="Selecione" value="" />
                 <Picker.Item label="Fundamental - 1º Ano" value="fundamental-1ano" />
+                <Picker.Item label="Fundamental - 2º Ano" value="fundamental-2ano" />
+                <Picker.Item label="Fundamental - 3º Ano" value="fundamental-3ano" />
+                <Picker.Item label="Fundamental - 4º Ano" value="fundamental-4ano" />
+                <Picker.Item label="Fundamental - 5º Ano" value="fundamental-5ano" />
+                <Picker.Item label="Fundamental - 6º Ano" value="fundamental-6ano" />
+                <Picker.Item label="Fundamental - 7º Ano" value="fundamental-7ano" />
+                <Picker.Item label="Fundamental - 8º Ano" value="fundamental-8ano" />
+                <Picker.Item label="Fundamental - 9º Ano" value="fundamental-9ano" />
                 <Picker.Item label="Ensino Médio - 1º Ano" value="ensino-medio-1ano" />
-                {/* Add more options as needed */}
+                <Picker.Item label="Ensino Médio - 2º Ano" value="ensino-medio-2ano" />
+                <Picker.Item label="Ensino Médio - 3º Ano" value="ensino-medio-3ano" />
               </Picker>
             </View>
           </>
@@ -705,6 +784,8 @@ const submitAtleta = async () => {
         />
 
         {/* Campo de Email e Senha */}
+        
+        
         <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Email</Text>
         <FormField 
           title='Email'
@@ -712,6 +793,7 @@ const submitAtleta = async () => {
           handleChangeText={(e) => setForm({ ...form, email: e })}
           keyboardType='email-address'
         />
+        
 
         <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Senha</Text>
         <FormField 
@@ -742,7 +824,7 @@ const submitAtleta = async () => {
               <Text>Eu li e aceito os </Text>
               <TouchableOpacity onPress={handleOpenTerms}>
                 <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>
-                  termos de compromisso
+                  Termos de Compromisso
                 </Text>
               </TouchableOpacity>
             </View>

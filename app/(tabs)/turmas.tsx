@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Image, RefreshControl, Alert, Modal } from 'react-native';
+import { View, Text, FlatList, Image, RefreshControl, Alert, TouchableOpacity, Modal } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from '@/constants';
@@ -16,6 +16,32 @@ const Turmas = () => {
   const [selectedTurma, setSelectedTurma] = useState(null); // Estado para a turma selecionada
   const [isModalVisible, setIsModalVisible] = useState(false); // Estado para exibir o modal
   const { user } = useGlobalContext();
+
+  // Obter a data atual (número)
+  const today = new Date();
+  const currentDate = today.getDate(); // Ex: 24 se hoje for o dia 24 do mês
+  const currentDay = today.getDay(); // Obtem o dia da semana (0 = domingo, 1 = segunda, etc.)
+  const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+
+  const [selectedDay, setSelectedDay] = useState(currentDate); // Inicializa o dia selecionado com a data atual
+
+  // Função para gerar os dias dinamicamente com base na data atual
+  const generateDays = () => {
+    const days = [];
+    for (let i = -3; i <= 3; i++) { // Gera 7 dias (3 antes e 3 depois da data atual)
+      const date = new Date(today);
+      date.setDate(today.getDate() + i); // Adiciona/subtrai dias da data atual
+
+      days.push({
+        id: i + 4, // Um ID único para cada item
+        day: daysOfWeek[date.getDay()], // Nome do dia da semana
+        date: date.getDate() // Número do dia do mês
+      });
+    }
+    return days;
+  };
+
+  const days = generateDays();
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -40,7 +66,7 @@ const Turmas = () => {
     fetchData();
   }, []);
 
-  const firstName = user?.username.split(' ')[0];
+  const firstName = user.nome.split(' ')[0];
 
   const handleTurmaPress = (turma) => {
     setSelectedTurma(turma); // Define a turma selecionada
@@ -51,6 +77,27 @@ const Turmas = () => {
     setIsModalVisible(false); // Fecha o modal
     setSelectedTurma(null); // Limpa a turma selecionada
   };
+
+  // Função para renderizar os dias da semana com a lógica de estilo original
+  const renderDayItem = ({ item }) => (
+    <TouchableOpacity onPress={() => setSelectedDay(item.date)}>
+      <View style={{
+        padding: 10,
+        borderRadius: 5,
+        backgroundColor: selectedDay === item.date ? '#1E3A8A' : '#f0f0f0', // Azul para o dia selecionado
+        marginHorizontal: 1,
+        alignItems: 'center',
+        minWidth: 50, // Define a largura mínima para manter o estilo dos blocos
+      }}>
+        <Text style={{ fontSize: 16, fontWeight: 'bold', color: selectedDay === item.date ? '#fff' : '#000' }}>
+          {item.date}
+        </Text>
+        <Text style={{ color: selectedDay === item.date ? '#fff' : '#000', fontSize: 10 }}>  
+          {item.day}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView className="bg-gray h-full">
@@ -86,6 +133,17 @@ const Turmas = () => {
                 <Image source={images.escola_sp_transparente} className="w-[115px] h-[90px]" />
               </View>
             </View>
+
+            {/* Lista horizontal de dias da semana */}
+            <FlatList
+              data={days}
+              horizontal
+              keyExtractor={item => item.id.toString()}
+              renderItem={renderDayItem}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingVertical: 10 }}
+            />
+
             <View className="w-full flex-row items-center justify-between pt-5 pb-2">
               <Text className="text-primary text-lg font-pregular mb-1">
                 Turmas Disponíveis
@@ -135,17 +193,17 @@ const Turmas = () => {
                 }} 
               />
               )}
-                 <CustomButton 
-                      title="Chamadas" 
-                      containerStyles="ml-10 mr-10 p-4 mt-4"
-                      handlePress={() => {
-                        closeModal();
-                        router.push({
-                          pathname: `/ver_chamadas`,
-                          params: { turmaId: selectedTurma.$id, turmaTitle: selectedTurma.title },                        
-                        });
-                      }} 
-                    />
+              <CustomButton 
+                title="Chamadas" 
+                containerStyles="ml-10 mr-10 p-4 mt-4"
+                handlePress={() => {
+                  closeModal();
+                  router.push({
+                    pathname: `/ver_chamadas`,
+                    params: { turmaId: selectedTurma.$id, turmaTitle: selectedTurma.title },                        
+                  });
+                }} 
+              />
               {(user.role == 'admin' || user.role == 'professor') && (
                   <>
                     <CustomButton 
