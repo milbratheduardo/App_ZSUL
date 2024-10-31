@@ -129,7 +129,7 @@ const SignUp = () => {
       setUser(result);
       setIsLoggedIn(true);
 
-      router.replace('/turmas');
+      router.replace('/signin');
     } catch (error) {
       setErrorMessage(error.message);
       setShowErrorModal(true);
@@ -199,7 +199,7 @@ const submitAtleta = async () => {
       setUser(result);
       setIsLoggedIn(true);
 
-      router.replace('/turmas');
+      router.replace('/signin');
     } catch (error) {
       setErrorMessage(error.message);
       setShowErrorModal(true);
@@ -278,7 +278,7 @@ const submitAtleta = async () => {
       setUser(result);
       setIsLoggedIn(true);
 
-      router.replace('/turmas');
+      router.replace('/signin');
     } catch (error) {
       setErrorMessage(error.message);
       setShowErrorModal(true);
@@ -401,7 +401,6 @@ const submitAtleta = async () => {
               title='RG'
               value={form.rg}
               handleChangeText={(e) => {
-                // Remove qualquer caractere que não seja número
                 const onlyNumbers = e.replace(/[^0-9]/g, '');
                 setForm({ ...form, rg: onlyNumbers });
               }}

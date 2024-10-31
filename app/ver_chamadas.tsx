@@ -1,12 +1,16 @@
-import { View, Text, FlatList, Alert, Modal, RefreshControl, TouchableOpacity, TextInput, Animated } from 'react-native';
+import { View, Text, FlatList, Alert, Modal, RefreshControl, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getChamadasByTurmaId, getAlunosById, deleteChamadaById } from '@/lib/appwrite'; // Função para buscar e deletar chamadas
+import { getChamadasByTurmaId, getAlunosById, deleteChamadaById } from '@/lib/appwrite';
 import EmptyState from '@/components/EmptyState';
 import CustomButton from '@/components/CustomButton';
+import TurmasCard2 from '@/components/TurmaCard2';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { router, useLocalSearchParams } from 'expo-router';
-import { AntDesign, Feather } from '@expo/vector-icons'; // Biblioteca de ícones
+import { AntDesign, Feather } from '@expo/vector-icons';
 
 const VerChamadas = () => {
   const [chamadas, setChamadas] = useState([]);
@@ -15,21 +19,20 @@ const VerChamadas = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [selectedChamada, setSelectedChamada] = useState(null); // Estado para a chamada selecionada
-  const [isModalVisible, setIsModalVisible] = useState(false); // Estado para exibir o modal
-  const [presentesNomes, setPresentesNomes] = useState([]); // Nomes dos presentes
-  const [ausentesNomes, setAusentesNomes] = useState([]); // Nomes dos ausentes
+  const [selectedChamada, setSelectedChamada] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [presentesNomes, setPresentesNomes] = useState([]);
+  const [ausentesNomes, setAusentesNomes] = useState([]);
   const { user } = useGlobalContext();
-  
-  // Pegando turmaId e turmaTitle da rota
+
   const { turmaId, turmaTitle } = useLocalSearchParams();
 
   const fetchChamadas = async () => {
     setIsLoading(true);
     try {
-      const response = await getChamadasByTurmaId(turmaId); // Busca todas as chamadas da turma
+      const response = await getChamadasByTurmaId(turmaId);
       setChamadas(response.reverse());
-      setFilteredChamadas(response.reverse()); // Inicia com todas as chamadas
+      setFilteredChamadas(response.reverse());
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
@@ -47,67 +50,55 @@ const VerChamadas = () => {
     fetchChamadas();
   }, [turmaId]);
 
-  // Função para buscar o nome de um aluno pelo ID
-  const fetchAlunosNomes = async (alunosIds, setAlunosNomes) => {
+  const fetchAlunosNomes = async (alunosUserIds, setAlunosNomes) => {
     try {
       const nomes = await Promise.all(
-        alunosIds.map(async (alunoId) => {
-          const alunoData = await getAlunosById(alunoId);
-          return alunoData.username;
+        alunosUserIds.map(async (userId) => {
+          const alunoData = await getAlunosById(userId);
+          return alunoData.nome;
         })
       );
       setAlunosNomes(nomes);
     } catch (error) {
-      console.error('Erro ao buscar nomes dos alunos:', error);
       Alert.alert('Erro', 'Não foi possível carregar os nomes dos alunos');
     }
   };
 
-  // Função para deletar a chamada por ID
   const handleDeleteChamada = async (chamadaId) => {
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Tem certeza que deseja excluir esta chamada?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
+    Alert.alert("Confirmar Exclusão", "Tem certeza que deseja excluir esta chamada?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        onPress: async () => {
+          try {
+            await deleteChamadaById(chamadaId);
+            fetchChamadas();
+            Alert.alert("Sucesso", "Chamada excluída com sucesso!");
+          } catch (error) {
+            Alert.alert("Erro", "Não foi possível excluir a chamada.");
+          }
         },
-        {
-          text: "Excluir",
-          onPress: async () => {
-            try {
-              await deleteChamadaById(chamadaId); // Função que deleta a chamada
-              fetchChamadas(); // Atualiza a lista de chamadas
-              Alert.alert("Sucesso", "Chamada excluída com sucesso!");
-            } catch (error) {
-              Alert.alert("Erro", "Não foi possível excluir a chamada.");
-            }
-          },
-          style: "destructive",
-        }
-      ]
-    );
+        style: "destructive",
+      },
+    ]);
   };
 
   const handleChamadaPress = (chamada) => {
-    setSelectedChamada(chamada); // Define a chamada selecionada
-    setIsModalVisible(true); // Abre o modal
-
-    // Buscar os nomes dos alunos presentes e ausentes
+    setSelectedChamada(chamada);
+    setIsModalVisible(true);
     fetchAlunosNomes(chamada.presentes, setPresentesNomes);
     fetchAlunosNomes(chamada.ausentes, setAusentesNomes);
   };
 
   const closeModal = () => {
-    setIsModalVisible(false); // Fecha o modal
-    setSelectedChamada(null); // Limpa a chamada selecionada
-    setPresentesNomes([]); // Limpa os nomes
-    setAusentesNomes([]); // Limpa os nomes
+    setIsModalVisible(false);
+    setSelectedChamada(null);
+    setPresentesNomes([]);
+    setAusentesNomes([]);
   };
 
   const handleSearchToggle = () => {
-    setSearchVisible(!searchVisible); // Alterna a exibição da barra de pesquisa
+    setSearchVisible(!searchVisible);
   };
 
   const handleSearch = (text) => {
@@ -116,151 +107,365 @@ const VerChamadas = () => {
     setFilteredChamadas(filtered);
   };
 
-  return (
-    <SafeAreaView className="bg-gray h-full">
-  <FlatList
-    data={filteredChamadas}
-    keyExtractor={(item) => item.$id}
-    renderItem={({ item }) => (
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', marginVertical: 5, borderRadius: 20, padding: 10 }}>
-        <TouchableOpacity style={{ flex: 1 }} onPress={() => handleChamadaPress(item)}>
-          <View>
-            <Text style={{ fontWeight: 'bold' }}>{item.data}</Text>
-            <Text>Presentes: {item.presentes.length}</Text>
-            <Text>Ausentes: {item.ausentes.length}</Text>
-          </View>
-        </TouchableOpacity>
-        
-        {/* Ícone de Lixeira para deletar a chamada */}
-        {(user.role == 'admin' || user.role == 'professor') && (
-        <TouchableOpacity onPress={() => handleDeleteChamada(item.$id)} style={{ marginLeft: 10 }}>
-          <AntDesign name="delete" size={24} color="red" />
-        </TouchableOpacity>
-        )}
-      </View>
-    )}
-    contentContainerStyle={{ paddingBottom: 63 }}
-    ListHeaderComponent={() => (
-      <View className="my-6 px-4 space-y-6">
-        <View className="w-full pt-5 pb-2 items-center">
-          <Text className="text-primary text-sm font-pregular mb-1">
-            Chamadas da Turma {turmaTitle}
-          </Text>
-        </View>
-      </View>
-    )}
-    ListEmptyComponent={() => (
-      <EmptyState
-        title="Nenhuma Chamada Encontrada"
-        subtitle="Não há chamadas registradas para esta turma"
-      />
-    )}
-    refreshControl={
-      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+  const exportToPdf = async () => {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([595.28, 841.89]);
+
+      const { width, height } = page.getSize();
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontSize = 12;
+
+      page.drawText(`Chamada do dia: ${selectedChamada.data}`, {
+        x: 50,
+        y: height - 50,
+        size: 18,
+        font,
+        color: rgb(0.1, 0.2, 0.5),
+      });
+
+      page.drawText("Presentes:", { x: 50, y: height - 80, size: 14, font, color: rgb(0, 0, 0) });
+      presentesNomes.forEach((nome, index) => {
+        page.drawText(`- ${nome}`, { x: 70, y: height - 100 - index * 20, size: fontSize, font });
+      });
+
+      page.drawText("Ausentes:", { x: 50, y: height - 120 - presentesNomes.length * 20, size: 14, font, color: rgb(0, 0, 0) });
+      ausentesNomes.forEach((nome, index) => {
+        page.drawText(`- ${nome}`, {
+          x: 70,
+          y: height - 140 - presentesNomes.length * 20 - index * 20,
+          size: fontSize,
+          font,
+        });
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const filePath = `${FileSystem.documentDirectory}chamada-${selectedChamada.data}.pdf`;
+
+      await FileSystem.writeAsStringAsync(filePath, pdfBytes, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      await Sharing.shareAsync(filePath);
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      Alert.alert('Erro', 'Não foi possível exportar o PDF');
     }
-  />
+  };
 
-  {/* Botão circular com '+' no canto inferior direito */}
-      {/* Container da barra de pesquisa e botão de lupa */}
-      <View style={{ position: 'absolute', bottom: 100, right: 30, flexDirection: 'row-reverse', alignItems: 'center' }}>
-  {/* Botão de Lupa */}
-  <TouchableOpacity
-    onPress={handleSearchToggle}
-    style={{
-      backgroundColor: '#126046',
-      borderRadius: 50,
-      padding: 20,
-      elevation: 5,
-    }}
-  >
-    <Feather name="search" size={24} color="white" />
-  </TouchableOpacity>
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={filteredChamadas}
+        keyExtractor={(item) => item.$id}
+        renderItem={({ item }) => (
+          <View style={styles.chamadaCard}>
+            <TouchableOpacity style={{ flex: 1 }} onPress={() => handleChamadaPress(item)}>
+              <View>
+                <Text style={styles.chamadaData}>{item.data}</Text>
+                <Text style={styles.chamadaText}>Presentes: {item.presentes.length}</Text>
+                <Text style={styles.chamadaText}>Ausentes: {item.ausentes.length}</Text>
+              </View>
+            </TouchableOpacity>
 
-  {/* Barra de Pesquisa */}
-  {searchVisible && (
-    <TextInput
-      placeholder="Pesquisar por data (dd-mm-yyyy)"
-      value={searchText}
-      onChangeText={handleSearch}
-      style={{
-        padding: 10,
-        borderRadius: 50,
-        backgroundColor: '#f0f0f0',
-        elevation: 5,
-        marginRight: 10,
-        width: 230, // Espaço entre a barra de pesquisa e o botão de lupa
-      }}
-    />
-  )}
-</View>
+            {(user.role === 'admin' || user.role === 'professor') && (
+              <TouchableOpacity onPress={() => handleDeleteChamada(item.$id)} style={styles.deleteButton}>
+                <AntDesign name="delete" size={24} color="red" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        contentContainerStyle={styles.listContainer}
+        ListHeaderComponent={() => (
+          <View style={styles.header}>
+            <Text style={styles.title}>Registro de Chamadas</Text>
+            <TurmasCard2
+              turma={{
+                turmaId,
+                title: turmaTitle,
+                Horario_de_inicio: '08:00',
+                Horario_de_termino: '10:00',
+                Local: 'Campo de Treinamento',
+                Dia1: 'Segunda-feira',
+                Dia2: 'Quarta-feira',
+                Dia3: 'Sexta-feira',
+                MaxAlunos: 20,
+              }}
+            />
+          </View>
+        )}
+        ListEmptyComponent={() => <EmptyState title="Nenhuma Chamada Encontrada" subtitle="Não há chamadas registradas para esta turma" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      />
 
-{/* Botão de '+' */}
-<View style={{ position: 'absolute', bottom: 30, right: 30 }}>
-  {(user.role == 'admin' || user.role == 'professor') && (
-    <TouchableOpacity
-      onPress={() =>
-        router.push({
-          pathname: '/turma_chamadas',
-          params: { turmaId, turmaTitle },
-        })
-      }
-      style={{
-        backgroundColor: '#126046',
-        borderRadius: 50,
-        padding: 20,
-        elevation: 5,
-      }}
-    >
-      <AntDesign name="plus" size={24} color="white" />
-    </TouchableOpacity>
-  )}
-</View>
-
-
-  {/* Modal */}
-  {selectedChamada && (
-    <Modal
-      transparent={true}
-      visible={isModalVisible}
-      onRequestClose={closeModal}
-      animationType="slide"
-    >
-      <View className="flex-1 justify-center items-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-        <View className="bg-white p-6 rounded-lg w-[90%]">
-          <Text className="text-xl font-semibold mb-4 text-center">Chamada de {selectedChamada.data}</Text>
-          <Text style={{ fontWeight: 'bold' }}>Presentes:</Text>
-          {presentesNomes.map((nome, index) => (
-            <Text key={index}>{nome}</Text> // Mostra o nome dos alunos presentes
-          ))}
-          <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Ausentes:</Text>
-          {ausentesNomes.map((nome, index) => (
-            <Text key={index}>{nome}</Text> // Mostra o nome dos alunos ausentes
-          ))}
-
-          {(user.role == 'admin' || user.role == 'professor') && (
-          <CustomButton 
-            title="Editar Chamada"
-            handlePress={() => router.push({
-                pathname: '/editar_chamadas',
-                params: { turmaId, chamadaId: selectedChamada.$id },
-            })}
-            containerStyles="ml-10 mr-10 p-4 mt-10"
+      <View style={styles.searchContainer}>
+        <TouchableOpacity onPress={handleSearchToggle} style={styles.searchButton}>
+          <Feather name="search" size={24} color="white" />
+        </TouchableOpacity>
+        {searchVisible && (
+          <TextInput
+            placeholder="Pesquisar por data (dd-mm-yyyy)"
+            value={searchText}
+            onChangeText={handleSearch}
+            style={styles.searchInput}
           />
         )}
-
-          <CustomButton 
-            title="Fechar" 
-            containerStyles="ml-10 mr-10 p-4 mt-4"
-            handlePress={closeModal} 
-          />
-        </View>
       </View>
-    </Modal>
-  )}
-</SafeAreaView>
 
+      <View style={styles.addButtonContainer}>
+        {(user.role === 'admin' || user.role === 'profissional') && (
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: '/turma_chamadas', params: { turmaId, turmaTitle } })}
+            style={styles.addButton}
+          >
+            <AntDesign name="plus" size={24} color="white" />
+          </TouchableOpacity>
+        )}
+      </View>
 
+      {selectedChamada && (
+        <Modal transparent={true} visible={isModalVisible} onRequestClose={closeModal} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Chamada do dia {selectedChamada.data}</Text>
+
+              {/* Adicionando ScrollView para permitir rolagem de conteúdo */}
+              <ScrollView style={styles.modalScroll}>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSubtitle}>Presentes:</Text>
+                  {presentesNomes.length > 0 ? (
+                    presentesNomes.map((nome, index) => (
+                      <View key={index} style={styles.modalItem}>
+                        <AntDesign name="checkcircle" size={14} color="green" style={styles.icon} />
+                        <Text style={styles.modalText}>{nome}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={styles.modalEmptyText}>Nenhum presente registrado.</Text>
+                  )}
+                </View>
+
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSubtitle}>Ausentes:</Text>
+                  {ausentesNomes.length > 0 ? (
+                    ausentesNomes.map((nome, index) => (
+                      <View key={index} style={styles.modalItem}>
+                        <AntDesign name="closecircle" size={14} color="red" style={styles.icon} />
+                        <Text style={styles.modalText}>{nome}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={styles.modalEmptyText}>Nenhum ausente registrado.</Text>
+                  )}
+                </View>
+              </ScrollView>
+
+              <View style={styles.buttonContainer}>
+                <CustomButton title="Exportar para PDF" handlePress={exportToPdf} containerStyles="rounded-lg w-[180px] h-[40px] mt-5" />
+                {(user.role === 'admin' || user.role === 'profissional') && (
+                  <CustomButton title="Editar Chamada" handlePress={() => router.push({ pathname: '/editar_chamadas', params: { turmaId, chamadaId: selectedChamada.$id } })} containerStyles="rounded-lg w-[180px] h-[40px] mt-5" />
+                )}
+                <CustomButton title="Fechar" containerStyles="rounded-lg w-[180px] h-[40px] mt-5" handlePress={closeModal} />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </SafeAreaView>
   );
 };
+
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    width: '90%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#126046',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalSection: {
+    width: '100%',
+    marginBottom: 15,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    paddingBottom: 4,
+  },
+  modalText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 10,
+    marginTop: 4,
+  },
+  modalEmptyText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  modalButton: {
+    width: '80%',
+    paddingVertical: 10,
+    marginTop: 12,
+    borderRadius: 8,
+  },
+  buttonContainer: {
+    alignItems: 'center', // Centraliza horizontalmente
+    marginTop: 15,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#126046',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  chamadaCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    marginVertical: 5,
+    marginHorizontal: 16,
+    borderRadius: 10,
+    padding: 12,
+    elevation: 1,
+  },
+  chamadaData: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#333',
+  },
+  chamadaText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  deleteButton: {
+    marginLeft: 10,
+  },
+  listContainer: {
+    paddingBottom: 63,
+  },
+  searchContainer: {
+    position: 'absolute',
+    bottom: 100,
+    right: 30,
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+  },
+  searchButton: {
+    backgroundColor: '#126046',
+    borderRadius: 50,
+    padding: 20,
+    elevation: 5,
+  },
+  searchInput: {
+    padding: 10,
+    borderRadius: 50,
+    backgroundColor: '#f0f0f0',
+    elevation: 5,
+    marginRight: 10,
+    width: 230,
+  },
+  addButtonContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+  },
+  addButton: {
+    backgroundColor: '#126046',
+    borderRadius: 50,
+    padding: 20,
+    elevation: 5,
+  },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      paddingVertical: 20,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      width: '90%',
+      alignItems: 'center',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#126046',
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    modalSection: {
+      width: '100%',
+      marginBottom: 15,
+      alignItems: 'center',
+    },
+    modalSubtitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#333',
+      marginBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#ddd',
+      paddingBottom: 4,
+      textAlign: 'center',
+    },
+    modalItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 4,
+    },
+    icon: {
+      marginRight: 8,
+    },
+    modalText: {
+      fontSize: 14,
+      color: '#666',
+    },
+    modalEmptyText: {
+      fontSize: 14,
+      color: '#999',
+      textAlign: 'center',
+      fontStyle: 'italic',
+      marginTop: 4,
+    },
+    buttonContainer: {
+      alignItems: 'center',
+      marginTop: 15,
+    },
+  });
 
 export default VerChamadas;

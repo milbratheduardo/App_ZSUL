@@ -65,13 +65,16 @@ const Galeria = () => {
         images.map(async (image) => {
           const imageUrl = await getImageUrl(image.imageId);
           const userDetail = await getUsersById(image.userId);
+
           return {
             ...image,
             uri: imageUrl,
-            username: userDetail?.username || 'Usuário Desconhecido',
+            username: userDetail?.username|| 'Usuário Desconhecido',
           };
         })
       );
+
+      console.log(imagesWithDetails)
 
       setData(imagesWithDetails.reverse());
     } catch (error) {
@@ -97,6 +100,8 @@ const Galeria = () => {
     await fetchData();
     setRefreshing(false);
   };
+
+  console.log(user)
 
   const handleImagePress = (image) => {
     setSelectedImage(image);
@@ -202,7 +207,7 @@ const Galeria = () => {
               <View>
                 <Text style={{ fontSize: 16, color: '#333' }}>Bem Vindo</Text>
                 <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#126046' }}>
-                  {user?.username.split(' ')[0]}
+                  {user?.nome.split(' ')[0]}
                 </Text>
               </View>
               <Image source={images.escola_sp_transparente} style={{ width: 115, height: 90 }} />

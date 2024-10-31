@@ -109,7 +109,7 @@ const EditarChamadas = () => {
             }}
             onPress={() => handleSelectAluno(item.$id)}
           >
-            <Text>{item.username}</Text>
+            <Text>{item.nome}</Text>
             <Text style={{ fontSize: 18 }}>{presentes.includes(item.$id) ? '✓' : '○'}</Text>
           </TouchableOpacity>
         )}

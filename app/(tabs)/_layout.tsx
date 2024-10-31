@@ -5,13 +5,15 @@ import { useGlobalContext } from '../../context/GlobalProvider';
 
 import { icons } from '../../constants';
 
+
 const TabIcon = ({ icon, color, name, focused }) => {
+  const iconColor = focused ? '#126046' : '#808080';
   return (
     <View className="items-center justify-center gap-2">
       <Image 
         source={icon}
         resizeMode='contain'
-        tintColor={color}
+        style={{tintColor: iconColor}}
         className="w-6 h-6"
       />
       <Text className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs`}>
@@ -20,9 +22,9 @@ const TabIcon = ({ icon, color, name, focused }) => {
     </View>
   );
 }
-
 const TabsLayout = () => {
   const { user } = useGlobalContext(); 
+
   const [role, setRole] = useState('');
 
   useEffect(() => {
@@ -39,21 +41,24 @@ const TabsLayout = () => {
           tabBarStyle: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 63 }        }}
       >
 
-        <Tabs.Screen 
-          name='turmas'
-          options={{
-            title: 'Turmas',
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon 
-                icon={icons.alunos}
-                color={color}
-                name="Turmas"
-                focused={focused}
-              />
+      {user.role !== 'responsavel' && (
+              <Tabs.Screen 
+              name='eventos'
+              options={{
+                title: 'Eventos',
+                headerShown: false,
+                tabBarIcon: ({ color, focused }) => (
+                  <TabIcon 
+                    icon={icons.calendario}
+                    color={color}
+                    name="Eventos"
+                    focused={focused}
+                  />
             )
           }}
         />
+      )}
+      
         <Tabs.Screen 
           name='galeria'
           options={{
@@ -69,18 +74,18 @@ const TabsLayout = () => {
             )
           }}
         />
-        <Tabs.Screen 
-          name='eventos'
-          options={{
-            title: 'Eventos',
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon 
-                icon={icons.calendario}
-                color={color}
-                name="Eventos"
-                focused={focused}
-              />
+              <Tabs.Screen 
+              name='turmas'
+              options={{
+                title: 'Turmas',
+                headerShown: false,
+                tabBarIcon: ({ color, focused }) => (
+                  <TabIcon 
+                    icon={icons.alunos}
+                    color={color}
+                    name="Início"
+                    focused={focused}
+                  />
             )
           }}
         />
@@ -91,9 +96,9 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
-                icon={icons.trophy}
+                icon={icons.turmas}
                 color={color}
-                name="História"
+                name="Atleta"
                 focused={focused}
               />
             )

@@ -13,29 +13,26 @@ const Turmas = () => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTurma, setSelectedTurma] = useState(null); // Estado para a turma selecionada
-  const [isModalVisible, setIsModalVisible] = useState(false); // Estado para exibir o modal
+  const [selectedTurma, setSelectedTurma] = useState(null);
   const { user } = useGlobalContext();
 
-  // Obter a data atual (número)
   const today = new Date();
-  const currentDate = today.getDate(); // Ex: 24 se hoje for o dia 24 do mês
-  const currentDay = today.getDay(); // Obtem o dia da semana (0 = domingo, 1 = segunda, etc.)
-  const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+  const currentDate = today.getDate();
+  const currentDay = today.getDay();
+  const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
-  const [selectedDay, setSelectedDay] = useState(currentDate); // Inicializa o dia selecionado com a data atual
+  const [selectedDay, setSelectedDay] = useState(daysOfWeek[currentDay]);
 
-  // Função para gerar os dias dinamicamente com base na data atual
   const generateDays = () => {
     const days = [];
-    for (let i = -3; i <= 3; i++) { // Gera 7 dias (3 antes e 3 depois da data atual)
+    for (let i = -3; i <= 3; i++) {
       const date = new Date(today);
-      date.setDate(today.getDate() + i); // Adiciona/subtrai dias da data atual
+      date.setDate(today.getDate() + i);
 
       days.push({
-        id: i + 4, // Um ID único para cada item
-        day: daysOfWeek[date.getDay()], // Nome do dia da semana
-        date: date.getDate() // Número do dia do mês
+        id: i + 4,
+        day: daysOfWeek[date.getDay()],
+        date: date.getDate()
       });
     }
     return days;
@@ -43,12 +40,14 @@ const Turmas = () => {
 
   const days = generateDays();
 
-  const fetchData = async () => {
+  const fetchData = async (day = selectedDay) => {
     setIsLoading(true);
-
     try {
       const response = await getAllTurmas();
-      setData(response);
+      const filteredData = response.filter(
+        turma => turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day
+      );
+      setData(filteredData);
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
@@ -64,35 +63,28 @@ const Turmas = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedDay]);
 
   const firstName = user.nome.split(' ')[0];
 
   const handleTurmaPress = (turma) => {
-    setSelectedTurma(turma); // Define a turma selecionada
-    setIsModalVisible(true); // Abre o modal
+    setSelectedTurma(turma);
   };
 
-  const closeModal = () => {
-    setIsModalVisible(false); // Fecha o modal
-    setSelectedTurma(null); // Limpa a turma selecionada
-  };
-
-  // Função para renderizar os dias da semana com a lógica de estilo original
   const renderDayItem = ({ item }) => (
-    <TouchableOpacity onPress={() => setSelectedDay(item.date)}>
+    <TouchableOpacity onPress={() => setSelectedDay(item.day)}>
       <View style={{
         padding: 10,
         borderRadius: 5,
-        backgroundColor: selectedDay === item.date ? '#1E3A8A' : '#f0f0f0', // Azul para o dia selecionado
+        backgroundColor: selectedDay === item.day ? '#1E3A8A' : '#f0f0f0',
         marginHorizontal: 1,
         alignItems: 'center',
-        minWidth: 50, // Define a largura mínima para manter o estilo dos blocos
+        minWidth: 50,
       }}>
-        <Text style={{ fontSize: 16, fontWeight: 'bold', color: selectedDay === item.date ? '#fff' : '#000' }}>
+        <Text style={{ fontSize: 16, fontWeight: 'bold', color: selectedDay === item.day ? '#fff' : '#000' }}>
           {item.date}
         </Text>
-        <Text style={{ color: selectedDay === item.date ? '#fff' : '#000', fontSize: 10 }}>  
+        <Text style={{ color: selectedDay === item.day ? '#fff' : '#000', fontSize: 10 }}>
           {item.day}
         </Text>
       </View>
@@ -105,9 +97,9 @@ const Turmas = () => {
         data={data}
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (
-          <TurmasCard 
+          <TurmasCard
             turma={{
-              turmaId: item.$id, // Passa o ID da turma
+              turmaId: item.$id,
               title: item.title,
               Qtd_Semana: item.Qtd_Semana,
               Dia1: item.Dia1,
@@ -118,7 +110,7 @@ const Turmas = () => {
               Horario_de_inicio: item.Horario_de_inicio,
               Horario_de_termino: item.Horario_de_termino,
             }}
-            onPress={() => handleTurmaPress(item)} // Passa a função de clique
+            onPress={() => handleTurmaPress(item)}
           />
         )}
         contentContainerStyle={{ paddingBottom: 63 }}
@@ -134,7 +126,6 @@ const Turmas = () => {
               </View>
             </View>
 
-            {/* Lista horizontal de dias da semana */}
             <FlatList
               data={days}
               horizontal
@@ -149,7 +140,7 @@ const Turmas = () => {
                 Turmas Disponíveis
               </Text>
               {user.role === 'admin' && (
-                <CustomButton 
+                <CustomButton
                   title="Nova Turma"
                   handlePress={() => router.push('/cadastro_turma')}
                   containerStyles="ml-4 p-3"
@@ -168,82 +159,6 @@ const Turmas = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
-
-      {/* Modal */}
-      {selectedTurma && (
-        <Modal
-          transparent={true}
-          visible={isModalVisible}
-          onRequestClose={closeModal}
-          animationType="slide"
-        >
-          <View className="flex-1 justify-center items-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <View className="bg-white p-6 rounded-lg w-[90%]">
-              <Text className="text-xl font-semibold mb-4 text-center">{selectedTurma.title}</Text>
-              {(user.role == 'admin' || user.role == 'professor') && (
-              <CustomButton 
-                title="Ver Alunos" 
-                containerStyles="ml-10 mr-10 p-4"
-                handlePress={() => {
-                  closeModal();
-                  router.push({
-                    pathname: `/turma_alunos`,
-                    params: { turmaId: selectedTurma.$id, turmaTitle: selectedTurma.title },
-                  });
-                }} 
-              />
-              )}
-              <CustomButton 
-                title="Chamadas" 
-                containerStyles="ml-10 mr-10 p-4 mt-4"
-                handlePress={() => {
-                  closeModal();
-                  router.push({
-                    pathname: `/ver_chamadas`,
-                    params: { turmaId: selectedTurma.$id, turmaTitle: selectedTurma.title },                        
-                  });
-                }} 
-              />
-              {(user.role == 'admin' || user.role == 'professor') && (
-                  <>
-                    <CustomButton 
-                      title="Cadastrar Alunos" 
-                      containerStyles="ml-10 mr-10 p-4 mt-4"
-                      handlePress={() => {
-                        closeModal();
-                        router.push({
-                          pathname: `/cadastrar_alunos`,
-                          params: { turmaId: selectedTurma.$id, turmaTitle: selectedTurma.title },
-                        });
-                      }} 
-                    />
-                  </>
-                )}
-                {(user.role == 'admin' || user.role == 'professor') && (
-                  <CustomButton 
-                    title="Encerrar Turma" 
-                    containerStyles="ml-10 mr-10 p-4 mt-4 bg-red-700"
-                    handlePress={async () => {
-                      try {
-                        await deletarTurma(selectedTurma.$id); // Chama a função deletarTurma passando o ID da turma
-                        closeModal(); // Fecha o modal
-                        fetchData();  // Atualiza a lista de turmas
-                        Alert.alert('Sucesso', 'Turma encerrada com sucesso!');
-                      } catch (error) {
-                        Alert.alert('Erro', error.message);
-                      }
-                    }} 
-                  />
-                )}
-              <CustomButton 
-                title="Fechar" 
-                containerStyles="ml-10 mr-10 p-4 mt-4"
-                handlePress={closeModal} 
-              />
-            </View>
-          </View>
-        </Modal>
-      )}
     </SafeAreaView>
   );
 };
