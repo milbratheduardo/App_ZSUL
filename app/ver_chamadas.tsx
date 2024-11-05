@@ -4,7 +4,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getChamadasByTurmaId, getAlunosById, deleteChamadaById } from '@/lib/appwrite';
+import { getChamadasByTurmaId, getAlunosById, deleteChamadaById, getTurmaById } from '@/lib/appwrite';
 import EmptyState from '@/components/EmptyState';
 import CustomButton from '@/components/CustomButton';
 import TurmasCard2 from '@/components/TurmaCard2';
@@ -23,6 +23,7 @@ const VerChamadas = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [presentesNomes, setPresentesNomes] = useState([]);
   const [ausentesNomes, setAusentesNomes] = useState([]);
+  const [turma, setTurma] = useState(null);
   const { user } = useGlobalContext();
 
   const { turmaId, turmaTitle } = useLocalSearchParams();
@@ -31,8 +32,9 @@ const VerChamadas = () => {
     setIsLoading(true);
     try {
       const response = await getChamadasByTurmaId(turmaId);
-      setChamadas(response.reverse());
-      setFilteredChamadas(response.reverse());
+      const reversedResponse = response.reverse(); // Apenas uma reversão
+      setChamadas(reversedResponse);
+      setFilteredChamadas(reversedResponse);
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
@@ -48,6 +50,18 @@ const VerChamadas = () => {
 
   useEffect(() => {
     fetchChamadas();
+  }, [turmaId]);
+
+  useEffect(() => {
+    const fetchTurma = async () => {
+      try {
+        const turmaData = await getTurmaById(turmaId);
+        setTurma(turmaData);
+      } catch (error) {
+        console.error('Erro ao buscar turma:', error.message);
+      }
+    };
+    fetchTurma();
   }, [turmaId]);
 
   const fetchAlunosNomes = async (alunosUserIds, setAlunosNomes) => {
@@ -107,52 +121,6 @@ const VerChamadas = () => {
     setFilteredChamadas(filtered);
   };
 
-  const exportToPdf = async () => {
-    try {
-      const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([595.28, 841.89]);
-
-      const { width, height } = page.getSize();
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const fontSize = 12;
-
-      page.drawText(`Chamada do dia: ${selectedChamada.data}`, {
-        x: 50,
-        y: height - 50,
-        size: 18,
-        font,
-        color: rgb(0.1, 0.2, 0.5),
-      });
-
-      page.drawText("Presentes:", { x: 50, y: height - 80, size: 14, font, color: rgb(0, 0, 0) });
-      presentesNomes.forEach((nome, index) => {
-        page.drawText(`- ${nome}`, { x: 70, y: height - 100 - index * 20, size: fontSize, font });
-      });
-
-      page.drawText("Ausentes:", { x: 50, y: height - 120 - presentesNomes.length * 20, size: 14, font, color: rgb(0, 0, 0) });
-      ausentesNomes.forEach((nome, index) => {
-        page.drawText(`- ${nome}`, {
-          x: 70,
-          y: height - 140 - presentesNomes.length * 20 - index * 20,
-          size: fontSize,
-          font,
-        });
-      });
-
-      const pdfBytes = await pdfDoc.save();
-      const filePath = `${FileSystem.documentDirectory}chamada-${selectedChamada.data}.pdf`;
-
-      await FileSystem.writeAsStringAsync(filePath, pdfBytes, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      await Sharing.shareAsync(filePath);
-    } catch (error) {
-      console.error('Erro ao exportar PDF:', error);
-      Alert.alert('Erro', 'Não foi possível exportar o PDF');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -179,19 +147,22 @@ const VerChamadas = () => {
         ListHeaderComponent={() => (
           <View style={styles.header}>
             <Text style={styles.title}>Registro de Chamadas</Text>
-            <TurmasCard2
-              turma={{
-                turmaId,
-                title: turmaTitle,
-                Horario_de_inicio: '08:00',
-                Horario_de_termino: '10:00',
-                Local: 'Campo de Treinamento',
-                Dia1: 'Segunda-feira',
-                Dia2: 'Quarta-feira',
-                Dia3: 'Sexta-feira',
-                MaxAlunos: 20,
-              }}
-            />
+            {turma && (
+              <TurmasCard2
+                turma={{
+                  turmaId: turma.$id,
+                  title: turma.title,
+                  Qtd_Semana: turma.Qtd_Semana,
+                  Dia1: turma.Dia1,
+                  Dia2: turma.Dia2,
+                  Dia3: turma.Dia3,
+                  Local: turma.Local,
+                  MaxAlunos: turma.MaxAlunos,
+                  Horario_de_inicio: turma.Horario_de_inicio,
+                  Horario_de_termino: turma.Horario_de_termino,
+                }}
+              />
+            )}
           </View>
         )}
         ListEmptyComponent={() => <EmptyState title="Nenhuma Chamada Encontrada" subtitle="Não há chamadas registradas para esta turma" />}
@@ -261,9 +232,18 @@ const VerChamadas = () => {
               </ScrollView>
 
               <View style={styles.buttonContainer}>
-                <CustomButton title="Exportar para PDF" handlePress={exportToPdf} containerStyles="rounded-lg w-[180px] h-[40px] mt-5" />
                 {(user.role === 'admin' || user.role === 'profissional') && (
-                  <CustomButton title="Editar Chamada" handlePress={() => router.push({ pathname: '/editar_chamadas', params: { turmaId, chamadaId: selectedChamada.$id } })} containerStyles="rounded-lg w-[180px] h-[40px] mt-5" />
+                  <CustomButton
+                    title="Editar Chamada"
+                    handlePress={() => {
+                      router.push({
+                        pathname: '/editar_chamadas',
+                        params: { turmaId, chamadaId: selectedChamada.$id },
+                      });
+                      closeModal(); // Fecha o modal logo após o redirecionamento
+                    }}
+                    containerStyles="rounded-lg w-[180px] h-[40px] mt-5"
+                  />
                 )}
                 <CustomButton title="Fechar" containerStyles="rounded-lg w-[180px] h-[40px] mt-5" handlePress={closeModal} />
               </View>
@@ -407,65 +387,14 @@ const styles = StyleSheet.create({
     padding: 20,
     elevation: 5,
   },
-    modalOverlay: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-      backgroundColor: 'white',
-      paddingVertical: 20,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      width: '90%',
-      alignItems: 'center',
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: '#126046',
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    modalSection: {
-      width: '100%',
-      marginBottom: 15,
-      alignItems: 'center',
-    },
-    modalSubtitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#333',
-      marginBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: '#ddd',
-      paddingBottom: 4,
-      textAlign: 'center',
-    },
-    modalItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginVertical: 4,
-    },
-    icon: {
-      marginRight: 8,
-    },
-    modalText: {
-      fontSize: 14,
-      color: '#666',
-    },
-    modalEmptyText: {
-      fontSize: 14,
-      color: '#999',
-      textAlign: 'center',
-      fontStyle: 'italic',
-      marginTop: 4,
-    },
-    buttonContainer: {
-      alignItems: 'center',
-      marginTop: 15,
-    },
-  });
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  icon: {
+    marginRight: 8,
+  },
+});
 
 export default VerChamadas;

@@ -1,81 +1,145 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Alert, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import CustomButton from '@/components/CustomButton';
-import { salvarImagemTreino } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { Feather } from '@expo/vector-icons';
 
 const EnviarFotoTreino = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [title, setTitle] = useState('');
-  const { user } = useGlobalContext();
+  const { user, setSelectedImages } = useGlobalContext();
 
-  const pickImage = async () => {
+  const pickImages = async () => {
     try {
       let result = await DocumentPicker.getDocumentAsync({
         type: '*/*',
+        multiple: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const file = result.assets[0];
-        setSelectedFile(file); // Armazena o primeiro arquivo selecionado
-        console.log('Informações do arquivo selecionado:', file);
+        const files = result.assets;
+        setSelectedFiles([...selectedFiles, ...files]);
+        console.log('Arquivos selecionados:', files);
       } else {
         console.log('Seleção cancelada pelo usuário');
       }
     } catch (error) {
-      console.error('Erro ao selecionar arquivo:', error);
+      console.error('Erro ao selecionar arquivos:', error);
     }
   };
 
-  const saveImageToGallery = async () => {
-    if (!selectedFile || !title) {
-      Alert.alert('Erro', 'Por favor, selecione uma imagem e insira um título.');
+  const handleSetImagesForReport = () => {
+    if (selectedFiles.length === 0) {
+      Alert.alert('Erro', 'Por favor, selecione pelo menos uma imagem.');
       return;
     }
 
-    try {
-      const response = await salvarImagemTreino(selectedFile, title, user.userId);
-      console.log('Imagem salva na galeria:', response);
-      Alert.alert('Sucesso', 'Imagem salva com sucesso na galeria.');
-      
-      // Limpar estado e resetar
-      setSelectedFile(null);
-      setTitle('');
-    } catch (error) {
-      console.error('Erro ao salvar imagem na galeria:', error);
-      Alert.alert('Erro', 'Não foi possível salvar a imagem na galeria.');
-    }
+    const imagesToAdd = selectedFiles.map((file) => ({ ...file, title }));
+    setSelectedImages((prevImages) => [...prevImages, ...imagesToAdd]); // Adiciona as imagens ao estado global
+    Alert.alert('Sucesso', 'Imagens adicionadas ao relatório.');
+    setSelectedFiles([]);
+    setTitle('');
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 16 }}>
-      <Text className="text-xl font-semibold mb-4 text-center">Imagem do Treino</Text>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.headerText}>Imagem do Treino</Text>
 
-      <TouchableOpacity onPress={pickImage} style={{ marginBottom: 20 }}>
-        <View style={{ padding: 20, backgroundColor: 'lightgray', borderRadius: 8, alignItems: 'center' }}>
-          <Feather name="folder" size={24} color="black" />
+      <TouchableOpacity onPress={pickImages} style={styles.uploadButton}>
+        <View style={styles.iconContainer}>
+          <Feather name="folder" size={28} color="#006400" />
+          <Text style={styles.iconText}>Escolher Imagens</Text>
         </View>
       </TouchableOpacity>
 
-      {selectedFile && (
-        <View style={{ alignItems: 'center', marginBottom: 20 }}>
-          <Text>{selectedFile.name}</Text>
-        </View>
+      {selectedFiles.length > 0 && (
+        <FlatList
+          data={selectedFiles}
+          keyExtractor={(item) => item.uri}
+          renderItem={({ item }) => (
+            <View style={styles.fileInfo}>
+              <Text style={styles.fileName}>{item.name}</Text>
+            </View>
+          )}
+          style={{ marginBottom: 20 }}
+        />
       )}
 
       <TextInput
-        placeholder="Digite um título para a imagem"
+        placeholder="Digite um título para as imagens"
         value={title}
         onChangeText={setTitle}
-        style={{ padding: 10, borderWidth: 1, borderColor: 'gray', borderRadius: 5, marginBottom: 20 }}
+        style={styles.input}
       />
 
-      <CustomButton title="Salvar" handlePress={saveImageToGallery} />
+      <CustomButton title="Enviar" handlePress={handleSetImagesForReport} containerStyles={styles.addButton} />
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f8f8f8',
+    justifyContent: 'center',
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#333',
+    marginBottom: 30,
+  },
+  uploadButton: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  iconContainer: {
+    padding: 20,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    width: '80%',
+  },
+  iconText: {
+    marginTop: 10,
+    color: '#333',
+    fontSize: 16,
+  },
+  fileInfo: {
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  fileName: {
+    fontSize: 16,
+    color: '#555',
+  },
+  input: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    marginBottom: 20,
+    fontSize: 16,
+    width: '100%',
+    backgroundColor: '#fff',
+  },
+  addButton: {
+    marginTop: 20,
+    backgroundColor: '#006400',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+});
 
 export default EnviarFotoTreino;

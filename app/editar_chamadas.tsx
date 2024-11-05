@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '@/components/CustomButton';
 import { getChamadasByTurmaId, getAlunosById, getTurmaById, updateChamada } from '@/lib/appwrite';
@@ -11,7 +11,6 @@ const EditarChamadas = () => {
   const [presentes, setPresentes] = useState([]);
   const [ausentes, setAusentes] = useState([]);
   const [turma, setTurma] = useState(null); // Para armazenar os dados da turma
-  const [searchQuery, setSearchQuery] = useState('');
   const { turmaId, chamadaId } = useLocalSearchParams(); // Pegue o ID da turma e da chamada da rota
   const [chamada, setChamada] = useState(null); // Para armazenar a chamada selecionada
 
@@ -45,15 +44,15 @@ const EditarChamadas = () => {
   const fetchAlunos = async (presentesIds, ausentesIds) => {
     try {
       const presentesAlunos = await Promise.all(
-        presentesIds.map(async (id) => {
-          const aluno = await getAlunosById(id);
+        presentesIds.map(async (userId) => {
+          const aluno = await getAlunosById(userId);
           return aluno;
         })
       );
 
       const ausentesAlunos = await Promise.all(
-        ausentesIds.map(async (id) => {
-          const aluno = await getAlunosById(id);
+        ausentesIds.map(async (userId) => {
+          const aluno = await getAlunosById(userId);
           return aluno;
         })
       );
@@ -68,13 +67,13 @@ const EditarChamadas = () => {
     }
   };
 
-  const handleSelectAluno = (id) => {
-    if (presentes.includes(id)) {
-      setPresentes(presentes.filter((presentId) => presentId !== id));
-      setAusentes([...ausentes, id]);
-    } else if (ausentes.includes(id)) {
-      setAusentes(ausentes.filter((ausenteId) => ausenteId !== id));
-      setPresentes([...presentes, id]);
+  const handleSelectAluno = (userId) => {
+    if (presentes.includes(userId)) {
+      setPresentes(presentes.filter((presentId) => presentId !== userId));
+      setAusentes([...ausentes, userId]);
+    } else if (ausentes.includes(userId)) {
+      setAusentes(ausentes.filter((ausenteId) => ausenteId !== userId));
+      setPresentes([...presentes, userId]);
     }
   };
 
@@ -89,35 +88,89 @@ const EditarChamadas = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 16 }}>
-      {chamada && turma && (
-        <Text className="text-xl font-semibold mb-4 text-center">
-          Chamada do Dia {chamada.data} da {turma.title}
-        </Text>
-      )}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        {chamada && turma && (
+          <Text style={styles.title}>Chamada do Dia {chamada.data} da {turma.title}</Text>
+        )}
+      </View>
+
+      <Text style={styles.subtitle}>Selecione apenas os presentes</Text>
 
       <FlatList
         data={alunos}
-        keyExtractor={(item) => item.$id.toString()}
+        keyExtractor={(item) => item.userId.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              padding: 10,
-              backgroundColor: presentes.includes(item.$id) ? 'lightgray' : 'white',
-            }}
-            onPress={() => handleSelectAluno(item.$id)}
+            style={[
+              styles.alunoContainer,
+              presentes.includes(item.userId) && styles.alunoSelecionado,
+            ]}
+            onPress={() => handleSelectAluno(item.userId)}
           >
-            <Text>{item.nome}</Text>
-            <Text style={{ fontSize: 18 }}>{presentes.includes(item.$id) ? '✓' : '○'}</Text>
+            <Text style={styles.alunoText}>{item.nome}</Text>
+            <Text style={styles.checkmark}>{presentes.includes(item.userId) ? '✓' : '○'}</Text>
           </TouchableOpacity>
         )}
       />
 
-      <CustomButton title="Salvar Alterações" handlePress={handleSave} />
+      <View style={styles.buttonContainer}>
+        <CustomButton
+          containerStyles="rounded-lg w-[180px] h-[40px]"
+          title="Salvar Alterações"
+          handlePress={handleSave}
+        />
+      </View>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f8f8f8',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#126046',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  alunoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  alunoSelecionado: {
+    backgroundColor: '#d0f0d0',
+  },
+  alunoText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  checkmark: {
+    fontSize: 18,
+    color: '#126046',
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+});
 
 export default EditarChamadas;

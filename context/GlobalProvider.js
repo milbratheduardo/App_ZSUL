@@ -1,15 +1,14 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getCurrentUser } from '../lib/appwrite'
+import { getCurrentUser } from '../lib/appwrite';
 
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
 
-
 const GlobalProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState(false);
+    const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
+    const [selectedImages, setSelectedImages] = useState([]); 
 
     useEffect(() => {
         getCurrentUser()
@@ -22,15 +21,14 @@ const GlobalProvider = ({ children }) => {
                     setUser(null);
                 }
             })
-
             .catch((error) => {
                 console.log(error);
             })
-
             .finally(() => {
                 setIsLoading(false);
-            })
-    }, [])
+            });
+    }, []);
+
     return(
         <GlobalContext.Provider
             value={{
@@ -38,13 +36,14 @@ const GlobalProvider = ({ children }) => {
                 setIsLoggedIn,
                 user,
                 setUser,
-                isLoading
+                isLoading,
+                selectedImages, 
+                setSelectedImages 
             }}
-        
         >
             {children}
         </GlobalContext.Provider>
-    )
+    );
 }
 
 export default GlobalProvider;

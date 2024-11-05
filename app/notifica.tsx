@@ -1,26 +1,21 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native'; 
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import TurmaCard2 from '@/components/TurmaCard2';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { router, useLocalSearchParams } from 'expo-router';
-import { getTurmaById, salvarRelatorio, getMetodologias } from '@/lib/appwrite';
+import { getTurmaById, salvarRelatorio } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 
-const Relatorios = () => {
-  const { turmaId, turmaTitle } = useLocalSearchParams();
-  const [form, setForm] = useState({ data: new Date(), hora: new Date(), local: '' });
-  const [metodologias, setMetodologias] = useState([]);
-  const [selectedMetodologias, setSelectedMetodologias] = useState([]);
+const Notifica = () => {
+  const { turmaId } = useLocalSearchParams();
+  const [form, setForm] = useState({ data: new Date(), hora: new Date(), local: '', observacoes: '' });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [turma, setTurma] = useState(null);
+  const [selectedOption, setSelectedOption] = useState('Responsáveis'); // Estado para controlar a seleção
   const { user, selectedImages, setSelectedImages } = useGlobalContext();
   const [loading, setLoading] = useState(true);
-
-  const handleUploadImages = async () => {
-    router.push('/enviar_fotoTreino');
-  };
 
   const handleSaveRelatorio = async () => {
     try {
@@ -30,13 +25,13 @@ const Relatorios = () => {
         data: form.data.toLocaleDateString('pt-BR'),
         hora: form.hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         local: form.local,
-        metodologias: selectedMetodologias,
+        observacoes: form.observacoes,
+        tipo: selectedOption,
         imagens: selectedImages,
       };
 
-      const response = await salvarRelatorio(relatorioData);
+      await salvarRelatorio(relatorioData);
       Alert.alert('Sucesso', 'Relatório salvo com sucesso!');
-      console.log('Relatório salvo:', response);
       setSelectedImages([]);
     } catch (error) {
       Alert.alert('Erro', 'Falha ao salvar o relatório.');
@@ -44,61 +39,49 @@ const Relatorios = () => {
     }
   };
 
-  const toggleMetodologiaSelection = (metodologia) => {
-    setSelectedMetodologias((prev) => {
-      if (prev.includes(metodologia)) {
-        return prev.filter((item) => item !== metodologia);
-      } else {
-        return [...prev, metodologia];
-      }
-    });
-  };
-
   useEffect(() => {
-    const fetchMetodologias = async () => {
-      const metodologiasData = await getMetodologias(user.userId);
-      setMetodologias(metodologiasData.metodologias);
-    };
     const fetchTurma = async () => {
       const turmaData = await getTurmaById(turmaId);
       setTurma(turmaData);
       setLoading(false);
     };
 
-    fetchMetodologias();
     fetchTurma();
   }, [turmaId]);
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Notificação</Text>
         <View style={styles.cardContainer}>
           {loading ? (
             <ActivityIndicator size="large" color="#006400" />
           ) : turma ? (
-            <TurmaCard2
-              turma={{
-                turmaId: turma.$id,
-                title: turma.title,
-                Horario_de_inicio: turma.Horario_de_inicio,
-                Horario_de_termino: turma.Horario_de_termino,
-                Local: turma.Local,
-                Dia1: turma.Dia1,
-                Dia2: turma.Dia2,
-                Dia3: turma.Dia3,
-                MaxAlunos: turma.MaxAlunos,
-              }}
-            />
+            <TurmaCard2 turma={turma} />
           ) : (
             <Text>Carregando dados da turma...</Text>
           )}
         </View>
 
+        {/* Botões para selecionar entre Responsáveis e Atletas */}
+        <View style={styles.buttonGroup}>
+          <TouchableOpacity
+            style={[styles.optionButton, selectedOption === 'Responsáveis' && styles.selectedOptionButton]}
+            onPress={() => setSelectedOption('Responsáveis')}
+          >
+            <Text style={[styles.optionText, selectedOption === 'Responsáveis' && styles.selectedOptionText]}>Responsáveis</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.optionButton, selectedOption === 'Alunos' && styles.selectedOptionButton]}
+            onPress={() => setSelectedOption('Atletas')}
+          >
+            <Text style={[styles.optionText, selectedOption === 'Atletas' && styles.selectedOptionText]}>Alunos</Text>
+          </TouchableOpacity>
+        </View>
+
         <Text style={styles.label}>Data</Text>
         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.inputContainer}>
-          <Text style={styles.input}>
-            {form.data.toLocaleDateString('pt-BR')}
-          </Text>
+          <Text style={styles.input}>{form.data.toLocaleDateString('pt-BR')}</Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
@@ -131,18 +114,14 @@ const Relatorios = () => {
           />
         )}
 
-        <Text style={styles.label}>Selecione as Metodologias Aplicadas</Text>
-        <View style={[styles.metodologiasContainer, { flexWrap: 'wrap', maxHeight: 300 }]}>
-          {Array.isArray(metodologias) && metodologias.map((metodologia, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.metodologiaCard, selectedMetodologias.includes(metodologia) && styles.selectedCard]}
-              onPress={() => toggleMetodologiaSelection(metodologia)}
-            >
-              <Text style={styles.metodologiaText}>{metodologia}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.label}>Observações</Text>
+        <TextInput
+          placeholder="Digite as observações"
+          value={form.observacoes}
+          onChangeText={(text) => setForm({ ...form, observacoes: text })}
+          style={styles.textInput}
+          multiline
+        />
 
         {selectedImages.length > 0 && (
           <View style={styles.fileContainer}>
@@ -156,12 +135,8 @@ const Relatorios = () => {
         )}
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveRelatorio}>
-            <Icon name="save" size={24} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuButton} onPress={handleUploadImages}>
-            <Icon name="image" size={24} color="#fff" />
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveRelatorio}> 
+            <Icon name="send" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -175,12 +150,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
   },
   scrollContent: {
-    padding: 16,
+    padding: 30,
     flexGrow: 1,
   },
+  title: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 5,
+  },
   cardContainer: {
-    marginTop: 40,
+    marginTop: 20,
     width: '100%',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  optionButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: '#ccc',
+    marginHorizontal: 5,
+  },
+  selectedOptionButton: {
+    backgroundColor: '#006400',
+  },
+  optionText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  selectedOptionText: {
+    color: '#fff',
   },
   label: {
     fontSize: 18,
@@ -199,28 +202,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  metodologiasContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  metodologiaCard: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#e0e0e0',
+  textInput: {
+    backgroundColor: '#fff',
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 5,
-    elevation: 3,
-  },
-  selectedCard: {
-    backgroundColor: '#006400',
-  },
-  metodologiaText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    padding: 12,
+    fontSize: 16,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginBottom: 16,
+    textAlignVertical: 'top',
+    height: 100,
   },
   fileContainer: {
     marginTop: 10,
@@ -237,8 +228,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 20,
   },
   saveButton: {
@@ -254,19 +244,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  menuButton: {
-    backgroundColor: '#006400',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
 });
 
-export default Relatorios;
+export default Notifica;

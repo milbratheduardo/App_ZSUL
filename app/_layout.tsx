@@ -54,6 +54,7 @@ const RootLayout = () => {
         <Stack.Screen name="controle_turmas" options={{headerShown: false}} />
         <Stack.Screen name="relatorios" options={{headerShown: false}} />
         <Stack.Screen name="enviar_fotoTreino" options={{headerShown: false}} />
+        <Stack.Screen name="notifica" options={{headerShown: false}} />
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>
     </GlobalProvider>

@@ -47,6 +47,13 @@ const ControleTurmas = () => {
     });
   };
 
+  const toggleNotifica = () => {
+    router.push({
+      pathname: '/notifica',
+      params: { turmaId, turmaTitle: turma.title },
+    });
+  };
+
   const toggleChamadas = () => {
     router.push({
       pathname: '/ver_chamadas',
@@ -154,7 +161,7 @@ const ControleTurmas = () => {
       <Icon name="user-plus" size={18} color="#006400" style={styles.menuIcon} />
       <Text style={styles.menuText}>Inserir Atleta</Text>
     </TouchableOpacity>
-    <TouchableOpacity style={styles.menuOption}>
+    <TouchableOpacity style={styles.menuOption} onPress={toggleNotifica}>
       <Icon name="bell" size={18} color="#006400" style={styles.menuIcon} />
       <Text style={styles.menuText}>Notificação</Text>
     </TouchableOpacity>
