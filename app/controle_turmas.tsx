@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, TextInput } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import TurmasCard2 from '@/components/TurmaCard2';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -10,6 +10,9 @@ const ControleTurmas = () => {
   const [turma, setTurma] = useState(null);
   const [alunos, setAlunos] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [filteredAlunos, setFilteredAlunos] = useState([]);
 
   const { turmaId } = useLocalSearchParams();
 
@@ -27,6 +30,7 @@ const ControleTurmas = () => {
       try {
         const alunosData = await getAlunosByTurmaId(turmaId);
         setAlunos(alunosData);
+        setFilteredAlunos(alunosData); // Inicializa a lista filtrada com todos os alunos
       } catch (error) {
         console.error('Erro ao buscar alunos:', error.message);
       }
@@ -35,6 +39,20 @@ const ControleTurmas = () => {
     fetchTurma();
     fetchAlunos();
   }, [turmaId]);
+
+  const handleSearchToggle = () => {
+    setSearchVisible(!searchVisible);
+    setSearchText(''); // Limpa o campo de pesquisa
+    setFilteredAlunos(alunos); // Restaura a lista completa quando oculta a pesquisa
+  };
+
+  const handleSearch = (text) => {
+    setSearchText(text);
+    const filtered = alunos.filter((aluno) =>
+      aluno.nome.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredAlunos(filtered);
+  };
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -74,15 +92,13 @@ const ControleTurmas = () => {
     'zagueiro central': { abbreviation: 'ZC', color: '#1E90FF' },
     'lateral direito': { abbreviation: 'LD', color: '#1E90FF' },
     'lateral esquerdo': { abbreviation: 'LE', color: '#1E90FF' },
-    volante: { abbreviation: 'VOL', color: '#32CD32' },
+    'volante': { abbreviation: 'VOL', color: '#32CD32' },
     'meia central': { abbreviation: 'MC', color: '#32CD32' },
     'meia ofensivo': { abbreviation: 'MO', color: '#32CD32' },
     'meia defensivo': { abbreviation: 'MD', color: '#32CD32' },
     'ponta direita': { abbreviation: 'PD', color: '#FF6347' },
     'ponta esquerda': { abbreviation: 'PE', color: '#FF6347' },
-    atacante: { abbreviation: 'ATA', color: '#FF6347' },
-    centroavante: { abbreviation: 'CA', color: '#FF6347' },
-    'segundo atacante': { abbreviation: 'SA', color: '#FF6347' },
+    'centroavante': { abbreviation: 'CA', color: '#FF6347' },
   };
 
   const renderAluno = ({ item }) => {
@@ -90,8 +106,8 @@ const ControleTurmas = () => {
 
     const handleAlunoClick = () => {
       router.push({
-        pathname: '/detalhes_aluno',
-        params: { alunoId: item.$id },
+        pathname: '/detalhesAluno',
+        params: { alunoId: item.userId },
       });
     };
 
@@ -111,7 +127,7 @@ const ControleTurmas = () => {
   return (
     <View style={styles.container}>
       {menuOpen && <View style={styles.overlay} />}
-  
+
       <View style={styles.contentContainer}>
         {turma ? (
           <TurmasCard2
@@ -130,44 +146,52 @@ const ControleTurmas = () => {
         ) : (
           <Text>Carregando dados da turma...</Text>
         )}
-  
-        {alunos.length === 0 ? (
-          <Text style={ styles.noAlunosText}>Nenhum aluno cadastrado</Text>
+
+       
+          <TextInput
+            placeholder="Pesquisar por nome do atleta"
+            value={searchText}
+            onChangeText={handleSearch}
+            style={styles.searchInput}
+          />
+        
+
+        {filteredAlunos.length === 0 ? (
+          <Text style={styles.noAlunosText}>Nenhum aluno cadastrado</Text>
         ) : (
           <FlatList
-            data={alunos}
+            data={filteredAlunos}
             keyExtractor={(item) => item.$id}
             renderItem={renderAluno}
             style={styles.alunosList}
           />
         )}
       </View>
-  
+
       <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
         <Icon name="bars" size={24} color="#fff" />
       </TouchableOpacity>
-  
-      {menuOpen && (
-  <View style={styles.menuOptions}>
-    <TouchableOpacity style={styles.menuOption} onPress={toggleRelatorio}>
-      <Icon name="file-text" size={18} color="#006400" style={styles.menuIcon} />
-      <Text style={styles.menuText}>Relatório de Treino</Text>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.menuOption} onPress={toggleChamadas}>
-      <Icon name="check-square" size={18} color="#006400" style={styles.menuIcon} />
-      <Text style={styles.menuText}>Chamada</Text>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.menuOption} onPress={toggleAtleta}>
-      <Icon name="user-plus" size={18} color="#006400" style={styles.menuIcon} />
-      <Text style={styles.menuText}>Inserir Atleta</Text>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.menuOption} onPress={toggleNotifica}>
-      <Icon name="bell" size={18} color="#006400" style={styles.menuIcon} />
-      <Text style={styles.menuText}>Notificação</Text>
-    </TouchableOpacity>
-  </View>
-)}
 
+      {menuOpen && (
+        <View style={styles.menuOptions}>
+          <TouchableOpacity style={styles.menuOption} onPress={toggleRelatorio}>
+            <Icon name="file-text" size={18} color="#006400" style={styles.menuIcon} />
+            <Text style={styles.menuText}>Relatório de Treino</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuOption} onPress={toggleChamadas}>
+            <Icon name="check-square" size={18} color="#006400" style={styles.menuIcon} />
+            <Text style={styles.menuText}>Chamada</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuOption} onPress={toggleAtleta}>
+            <Icon name="user-plus" size={18} color="#006400" style={styles.menuIcon} />
+            <Text style={styles.menuText}>Inserir Atleta</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuOption} onPress={toggleNotifica}>
+            <Icon name="bell" size={18} color="#006400" style={styles.menuIcon} />
+            <Text style={styles.menuText}>Notificação</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -258,7 +282,7 @@ const styles = StyleSheet.create({
     zIndex: 4,
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#827b7b', // fundo para melhor contraste
+    backgroundColor: '#827b7b',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.4,
@@ -288,7 +312,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
+  searchInput: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    marginVertical: 10,
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
 });
-
 
 export default ControleTurmas;

@@ -98,7 +98,7 @@ const TabsLayout = () => {
               <TabIcon 
                 icon={icons.turmas}
                 color={color}
-                name="Atleta"
+                name="Atletas"
                 focused={focused}
               />
             )

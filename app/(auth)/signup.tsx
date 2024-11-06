@@ -442,12 +442,9 @@ const submitAtleta = async () => {
                 <Picker.Item label="Volante" value="volante" />
                 <Picker.Item label="Meia Central" value="meia-central" />
                 <Picker.Item label="Meia Ofensivo" value="meia-ofensivo" />
-                <Picker.Item label="Meia Defensivo" value="meia-defensivo" />
                 <Picker.Item label="Ponta Direita" value="ponta-direita" />
-                <Picker.Item label="Ponta Esquerda" value="ponta-esquerda" />
-                <Picker.Item label="Atacante" value="atacante" />
+                <Picker.Item label="Ponta Esquerda" value="ponta-esquerda" />                
                 <Picker.Item label="Centroavante" value="centroavante" />
-                <Picker.Item label="Segundo Atacante" value="segundo-atacante" />
               </Picker>
             </View>
 

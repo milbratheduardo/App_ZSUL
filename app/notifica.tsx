@@ -50,34 +50,52 @@ const Notifica = () => {
   }, [turmaId]);
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Notificação</Text>
-        <View style={styles.cardContainer}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#006400" />
-          ) : turma ? (
-            <TurmaCard2 turma={turma} />
-          ) : (
-            <Text>Carregando dados da turma...</Text>
-          )}
-        </View>
+<View style={styles.container}>
+  <ScrollView contentContainerStyle={styles.scrollContent}>
+    <Text style={styles.title}>Notificação</Text>
+    
+    {/* Card Turma com margem superior */}
+    <View style={[styles.cardContainer, { marginTop: 30}]}>
+      {loading ? (
+        <ActivityIndicator size="large" color="#006400" />
+      ) : turma ? (
+        <TurmaCard2 turma={turma} />
+      ) : (
+        <Text>Carregando dados da turma...</Text>
+      )}
+    </View>
 
-        {/* Botões para selecionar entre Responsáveis e Atletas */}
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            style={[styles.optionButton, selectedOption === 'Responsáveis' && styles.selectedOptionButton]}
-            onPress={() => setSelectedOption('Responsáveis')}
-          >
-            <Text style={[styles.optionText, selectedOption === 'Responsáveis' && styles.selectedOptionText]}>Responsáveis</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.optionButton, selectedOption === 'Alunos' && styles.selectedOptionButton]}
-            onPress={() => setSelectedOption('Atletas')}
-          >
-            <Text style={[styles.optionText, selectedOption === 'Atletas' && styles.selectedOptionText]}>Alunos</Text>
-          </TouchableOpacity>
-        </View>
+    {/* Botões para selecionar entre Responsáveis e Atletas */}
+    <View style={styles.buttonGroup}>
+      <TouchableOpacity
+        style={[
+          styles.optionButton,
+          selectedOption === 'Responsáveis' && styles.selectedOptionButton,
+        ]}
+        onPress={() => setSelectedOption('Responsáveis')}
+      >
+        <Text style={[
+          styles.optionText,
+          selectedOption === 'Responsáveis' && styles.selectedOptionText,
+        ]}>
+          Responsáveis
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.optionButton,
+          selectedOption === 'Atletas' && styles.selectedOptionButton,
+        ]}
+        onPress={() => setSelectedOption('Atletas')}
+      >
+        <Text style={[
+          styles.optionText,
+          selectedOption === 'Atletas' && styles.selectedOptionText,
+        ]}>
+          Alunos
+        </Text>
+      </TouchableOpacity>
+    </View>
 
         <Text style={styles.label}>Data</Text>
         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.inputContainer}>

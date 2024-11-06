@@ -44,9 +44,14 @@ const Turmas = () => {
     setIsLoading(true);
     try {
       const response = await getAllTurmas();
+  
+      // Filtro adicional para verificar se user.userId está contido em turma.profissionalId
       const filteredData = response.filter(
-        turma => turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day
+        turma => 
+          turma.profissionalId.includes(user.userId) && // Verifica se o user.userId está contido em turma.profissionalId
+          (turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day) // Filtro para os dias
       );
+  
       setData(filteredData);
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -55,6 +60,7 @@ const Turmas = () => {
     }
   };
 
+  
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchData();

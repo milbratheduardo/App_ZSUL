@@ -55,6 +55,8 @@ const RootLayout = () => {
         <Stack.Screen name="relatorios" options={{headerShown: false}} />
         <Stack.Screen name="enviar_fotoTreino" options={{headerShown: false}} />
         <Stack.Screen name="notifica" options={{headerShown: false}} />
+        <Stack.Screen name="escolherAtleta" options={{headerShown: false}} />
+        <Stack.Screen name="detalhesAluno" options={{headerShown: false}} />
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>
     </GlobalProvider>

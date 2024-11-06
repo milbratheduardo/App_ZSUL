@@ -1,88 +1,120 @@
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import React from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider'; 
+import { getAllTurmas, getAlunosByTurmaId } from '@/lib/appwrite'; 
 import { images } from '@/constants'; 
-import { AntDesign, FontAwesome } from '@expo/vector-icons'; 
-
-import * as Linking from 'expo-linking'; 
+import { router } from 'expo-router';
 
 const History = () => {
   const { user } = useGlobalContext();
-  const firstName = user?.username.split(' ')[0];
+  const firstName = user?.nome.split(' ')[0];
+  const [turmas, setTurmas] = useState([]);
+  const [alunos, setAlunos] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [filteredAlunos, setFilteredAlunos] = useState([]);
 
-  // Função para abrir a página do Instagram
-  const openInstagram = () => {
-    Linking.openURL('https://www.instagram.com/sua_pagina');
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const allTurmas = await getAllTurmas();
+        
+        // Filtrar turmas em que o user.userId está em turma.profissionalId
+        const userTurmas = allTurmas.filter(turma => turma.profissionalId.includes(user.userId));
+        setTurmas(userTurmas);
+        
+        // Buscar alunos de cada turma e adicionar à lista de alunos com o título da turma
+        const alunosData = [];
+        for (const turma of userTurmas) {
+          const turmaAlunos = await getAlunosByTurmaId(turma.$id);
+          turmaAlunos.forEach(aluno => {
+            alunosData.push({ ...aluno, turmaTitle: turma.title });
+          });
+        }
+        setAlunos(alunosData);
+        setFilteredAlunos(alunosData); // Inicializar lista de alunos filtrados
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error.message);
+      }
+    };
+
+    fetchData();
+  }, [user.userId]);
+
+  const handleSearch = (text) => {
+    setSearchText(text);
+    const filtered = alunos.filter(aluno =>
+      aluno.nome.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredAlunos(filtered);
   };
 
-  // Função para abrir a página do Facebook
-  const openFacebook = () => {
-    Linking.openURL('https://www.facebook.com/sua_pagina');
+  const handleAlunoPress = (alunoId) => {
+    router.push({
+      pathname: '/detalhesAluno',
+      params: { alunoId }
+    });
   };
 
-  const openWhatsApp = () => {
-    const phoneNumber = '555391329635'; 
-    Linking.openURL(`https://wa.me/${phoneNumber}`);
+  const renderAluno = ({ item }) => {
+    const positionDetails = {
+      goleiro: { abbreviation: 'GL', color: '#800080' },
+      'zagueiro central': { abbreviation: 'ZC', color: '#1E90FF' },
+      'lateral direito': { abbreviation: 'LD', color: '#1E90FF' },
+      'lateral esquerdo': { abbreviation: 'LE', color: '#1E90FF' },
+      volante: { abbreviation: 'VOL', color: '#32CD32' },
+      'meia central': { abbreviation: 'MC', color: '#32CD32' },
+      'meia ofensivo': { abbreviation: 'MO', color: '#32CD32' },
+      'meia defensivo': { abbreviation: 'MD', color: '#32CD32' },
+      'ponta direita': { abbreviation: 'PD', color: '#FF6347' },
+      'ponta esquerda': { abbreviation: 'PE', color: '#FF6347' },
+      centroavante: { abbreviation: 'CA', color: '#FF6347' },
+    };
+
+    const position = positionDetails[item.posicao.toLowerCase()] || {};
+    const alunoInfo = `${item.nome} - ${item.turmaTitle}`;
+
+    return (
+      <TouchableOpacity style={styles.alunoContainer} onPress={() => handleAlunoPress(item.userId)}>
+        <View style={styles.alunoInfo}>
+          <Image source={{ uri: item.avatar }} style={styles.alunoAvatar} />
+          <Text style={styles.alunoNome}>{alunoInfo}</Text>
+        </View>
+        <View style={[styles.posicaoContainer, { backgroundColor: position.color || '#808080' }]}>
+          <Text style={styles.posicaoText}>{position.abbreviation || 'N/A'}</Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      {/* Header com saudação e logo */}
       <View style={{ padding: 16 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <View>
-            <Text className="font-pmedium text-sm text-primary">Bem Vindo</Text>
-            <Text className="text-2xl font-psemibold text-verde">{firstName}</Text>
+            <Text style={styles.welcomeText}>Bem Vindo</Text>
+            <Text style={styles.userName}>{firstName}</Text>
           </View>
           <Image source={images.escola_sp_transparente} style={styles.logo} />
         </View>
-      </View>
 
-      {/* Conteúdo rolável */}
-      <ScrollView style={{ padding: 16 }}>
-        <Text style={styles.title}>Escolinha de Futebol – Núcleos Cassino e Saraiva</Text>
+        <TextInput
+          placeholder="Pesquisar por nome do atleta"
+          value={searchText}
+          onChangeText={handleSearch}
+          style={styles.searchInput}
+        />
 
-        <Text style={styles.text}>
-          Nossa escolinha de futebol é destinada a crianças e adolescentes de 7 a 16 anos, com dois núcleos de atendimento: Cassino e Saraiva. Aqui, buscamos muito mais do que ensinar apenas o esporte. Nosso objetivo é proporcionar um aprendizado completo, englobando todas as competências do futebol: técnica, tática, física e emocional.
-        </Text>
-
-        <Text style={styles.title}>Objetivos da Escolinha:</Text>
-
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Ensino Completo do Futebol:</Text> Focamos no desenvolvimento integral dos alunos, abrangendo desde os aspectos técnicos e táticos até a preparação física e emocional necessária para o esporte.
-        </Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Desenvolvimento Integral:</Text> Além das habilidades motoras e cognitivas, também trabalhamos as capacidades sociais dos alunos, incentivando a interação e o respeito mútuo.
-        </Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Formação de Cidadãos:</Text> Nosso objetivo não é apenas formar atletas, mas cidadãos. Aqui, desenvolvemos a criatividade, a habilidade e o espírito esportivo, sempre com foco no trabalho coletivo e nos valores de cooperação e respeito.
-        </Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Saúde e Bem-estar:</Text> Através da prática esportiva, promovemos a melhora da saúde física e mental dos alunos, criando uma base sólida para uma vida saudável.
-        </Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Preparação para Competições:</Text> Ao longo do tempo, desenvolvemos o nível técnico dos alunos, preparando-os para competições regionais e estaduais, proporcionando experiências competitivas que estimulam o crescimento pessoal e esportivo.
-        </Text>
-
-        <Text style={styles.title}>Metodologia:</Text>
-        <Text style={styles.textfinal}>
-          Nossa metodologia é dividida em três etapas principais: Iniciação, Transição e Competitivo. Cada uma dessas fases tem objetivos específicos e abordagens distintas, garantindo o desenvolvimento gradual dos alunos em todas as dimensões do futebol. Valorizamos não apenas o desempenho técnico e tático, mas também a promoção dos valores fundamentais do esporte, como amizade, igualdade, cooperação e fair play (jogo limpo).
-        </Text>
-        <Text style={styles.author}>Aplicativo Desenvolvido por: Eduardo Milbrath</Text>
-      </ScrollView>
-
-      {/* Botões flutuantes */}
-      <View style={styles.floatingButtons}>
-        <TouchableOpacity onPress={openInstagram} style={styles.floatingButton}>
-          <AntDesign name="instagram" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={openFacebook} style={styles.floatingButton}>
-          <AntDesign name="facebook-square" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={openWhatsApp} style={styles.floatingButton}>
-          <FontAwesome name="whatsapp" size={24} color="white" />
-        </TouchableOpacity>
+        {filteredAlunos.length === 0 ? (
+          <Text style={styles.noAlunosText}>Nenhum aluno encontrado</Text>
+        ) : (
+          <FlatList
+            data={filteredAlunos}
+            keyExtractor={(item) => item.$id}
+            renderItem={renderAluno}
+            style={styles.alunosList}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -95,45 +127,69 @@ const styles = StyleSheet.create({
     width: 115,
     height: 90,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  text: {
-    fontSize: 16,
-    marginBottom: 10,
-    lineHeight: 22,
-  },
-  textfinal: {
-    fontSize: 16,
-    marginBottom: 10,
-    lineHeight: 22,
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  author: {
+  welcomeText: {
     fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom:350,
-    color: '#666',
+    color: '#126046',
   },
-  floatingButtons: {
-    position: 'absolute',
-    bottom: 60,
-    right: 20,
-    flexDirection: 'column',
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#126046',
   },
-  floatingButton: {
-    backgroundColor: '#126046',
-    borderRadius: 50,
-    padding: 15,
-    marginBottom: 15,
+  alunosList: {
+    marginTop: 10,
+  },
+  alunoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  alunoInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  alunoAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
+  },
+  alunoNome: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  posicaoContainer: {
+    width: 50,
+    borderRadius: 5,
+    paddingVertical: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
+  },
+  posicaoText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    marginVertical: 10,
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  noAlunosText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
   },
 });
