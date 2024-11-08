@@ -59,6 +59,7 @@ const Galeria = () => {
     setIsLoading(true);
     try {
       const images = await getAllImages();
+      console.log(images)
 
       // Para cada imagem, buscar a URL e o username usando o `getImageUrl` e `getUsersById`
       const imagesWithDetails = await Promise.all(
@@ -69,7 +70,7 @@ const Galeria = () => {
           return {
             ...image,
             uri: imageUrl,
-            username: userDetail?.username|| 'Usuário Desconhecido',
+            username: userDetail?.nome|| 'Usuário Desconhecido',
           };
         })
       );

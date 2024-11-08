@@ -12,6 +12,7 @@ const EnviarImagem = () => {
   const [title, setTitle] = useState('');
   const { user } = useGlobalContext(); // Obtém o usuário do contexto global
 
+
   const pickImage = async () => {
     try {
       let result = await DocumentPicker.getDocumentAsync({
@@ -41,7 +42,7 @@ const EnviarImagem = () => {
 
     try {
       // Chama a função para salvar a imagem no banco de dados
-      const response = await salvarImagem(selectedFile, title, user.$id);
+      const response = await salvarImagem(selectedFile, title, user.userId);
       console.log('Imagem salva na galeria:', response);
       Alert.alert('Sucesso', 'Imagem salva com sucesso na galeria.');
 

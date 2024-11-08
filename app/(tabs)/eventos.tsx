@@ -62,7 +62,7 @@ const Eventos = () => {
     fetchData();
   }, []);
 
-  const firstName = user?.username.split(' ')[0];
+  const firstName = user?.nome.split(' ')[0];
 
   // Mapeia os eventos para o formato esperado pelo calendário
   const markedDates = events.reduce((acc, event) => {
@@ -107,7 +107,7 @@ const Eventos = () => {
           <Image source={images.escola_sp_transparente} className="w-[115px] h-[90px]" />
         </View>
       </View>
-      {user.role === 'admin' && (
+      {user.role === 'admin' || user.role === 'profissional' && (
       <View style={{ position: 'absolute', bottom: 80, right: 30 }}>
         <TouchableOpacity
           onPress={() => router.push({

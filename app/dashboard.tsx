@@ -5,19 +5,12 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { router } from 'expo-router';
 
-const Profile = () => {
+const dashboard = () => {
   const { user } = useGlobalContext();
   const firstName = user?.nome.split(' ')[0];
 
   // URL da foto de perfil
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
-
-  // Opções de navegação com ícones FontAwesome
-  const navigationOptions = [
-    { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
-    { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
-    { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
-  ];
 
   const renderOption = ({ item }) => (
     <TouchableOpacity style={styles.optionContainer} onPress={() => router.push(item.route)}>
@@ -39,24 +32,18 @@ const Profile = () => {
             <View style={styles.headerText}>
               <Text style={styles.greeting}>{firstName}</Text>
               <Text style={styles.userInfo}>{user?.nome} - E.F. SC São Paulo RS</Text>
+              <Text style={styles.userInfo}>Dashboard</Text>
             </View>
           </View>
           <Icon name="shield" size={50} color="#126046" style={styles.teamLogo} />
         </View>
       </View>
 
-      {/* Navigation Options */}
-      <FlatList
-        data={navigationOptions}
-        renderItem={renderOption}
-        keyExtractor={(item) => item.title}
-        contentContainerStyle={styles.optionsList}
-      />
     </SafeAreaView>
   );
 };
 
-export default Profile;
+export default dashboard;
 
 const styles = StyleSheet.create({
   container: {
