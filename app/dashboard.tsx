@@ -1,16 +1,23 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { router } from 'expo-router';
 
-const dashboard = () => {
+const Dashboard = () => {
   const { user } = useGlobalContext();
-  const firstName = user?.nome.split(' ')[0];
-
-  // URL da foto de perfil
+  const firstName = user?.nome?.split(' ')[0];
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
+
+  const options = [
+    { title: 'Alunos', icon: 'users', route: '/students' },
+    { title: 'Aulas e Treinos', icon: 'calendar', route: '/classes-trainings' },
+    { title: 'Metodologias', icon: 'book', route: '/methodologies' },
+    { title: 'Eventos e Turmas', icon: 'trophy', route: '/events-teams' },
+    { title: 'Galeria de Mídia', icon: 'image', route: '/media-gallery' },
+    { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalized-training' },
+  ];
 
   const renderOption = ({ item }) => (
     <TouchableOpacity style={styles.optionContainer} onPress={() => router.push(item.route)}>
@@ -30,8 +37,8 @@ const dashboard = () => {
           <View style={styles.profileDetails}>
             <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
             <View style={styles.headerText}>
-              <Text style={styles.greeting}>{firstName}</Text>
-              <Text style={styles.userInfo}>{user?.nome} - E.F. SC São Paulo RS</Text>
+              <Text style={styles.greeting}>Olá, {firstName}</Text>
+              <Text style={styles.userInfo}>{user?.nome} - Treinador de Futebol</Text>
               <Text style={styles.userInfo}>Dashboard</Text>
             </View>
           </View>
@@ -39,11 +46,48 @@ const dashboard = () => {
         </View>
       </View>
 
+      <ScrollView contentContainerStyle={styles.dashboardContent}>
+        {/* Resumo de Informações */}
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Resumo</Text>
+          <View style={styles.summaryContent}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>50</Text>
+              <Text style={styles.summaryLabel}>Total de Alunos</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>8</Text>
+              <Text style={styles.summaryLabel}>Aulas Hoje</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>3</Text>
+              <Text style={styles.summaryLabel}>Eventos Recentes</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Lista de Ações Rápidas */}
+        <Text style={styles.sectionTitle}>Ações Rápidas</Text>
+        <FlatList
+          data={options}
+          renderItem={renderOption}
+          keyExtractor={(item) => item.title}
+          contentContainerStyle={styles.optionsList}
+        />
+
+        {/* Gráfico Fictício de Posições de Atletas */}
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>Posições de Atletas</Text>
+          <View style={styles.chartPlaceholder}>
+            <Text style={styles.chartText}>[Gráfico de Posições Placeholder]</Text>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default dashboard;
+export default Dashboard;
 
 const styles = StyleSheet.create({
   container: {
@@ -86,8 +130,51 @@ const styles = StyleSheet.create({
   teamLogo: {
     marginLeft: 16,
   },
+  dashboardContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 16,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  summaryContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  summaryItem: {
+    alignItems: 'center',
+  },
+  summaryValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#126046',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginVertical: 12,
+  },
   optionsList: {
-    padding: 16,
+    paddingVertical: 8,
   },
   optionContainer: {
     flexDirection: 'row',
@@ -118,5 +205,33 @@ const styles = StyleSheet.create({
   },
   arrowIcon: {
     color: '#126046',
+  },
+  chartContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 16,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  chartPlaceholder: {
+    backgroundColor: '#E0E0E0',
+    height: 150,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chartText: {
+    color: '#666',
+    fontSize: 16,
   },
 });

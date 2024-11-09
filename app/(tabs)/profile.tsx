@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 
 const Profile = () => {
@@ -17,6 +18,7 @@ const Profile = () => {
     { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
     { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
     { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
+    { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
   ];
 
   const renderOption = ({ item }) => (

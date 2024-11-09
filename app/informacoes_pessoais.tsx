@@ -1,42 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Modal, TextInput, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getMetodologias, salvarMetodologia, excluirMetodologia } from '@/lib/appwrite';
 
-const Informacoes_pessoais = () => {
+const InformacoesPessoais = () => {
   const { user } = useGlobalContext();
-  const firstName = user?.nome.split(' ')[0];
-  const [metodologias, setMetodologias] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [newMetodologia, setNewMetodologia] = useState('');
-  const [selectedMetodologia, setSelectedMetodologia] = useState(null);
-
+  const firstName = user?.nome?.split(' ')[0] || 'Usuário';
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
 
-  useEffect(() => {
-    const fetchMetodologias = async () => {
-      const response = await getMetodologias(user.userId);
-      setMetodologias(response?.metodologias || []);
-    };
-    fetchMetodologias();
-  }, [user]);
+  const userInfoArray = [
+    { label: 'CPF', value: user.cpf, icon: 'id-card' },
+    { label: 'Email', value: user.email, icon: 'envelope' },
+    { label: 'Modalidade', value: user.modalidade, icon: 'futbol-o' },
+    { label: 'Faixa Etária de Atuação', value: user.faixa_etaria, icon: 'group' },
+    { label: 'Profissão', value: user.profissao, icon: 'briefcase' },
+    { label: 'WhatsApp', value: user.whats, icon: 'whatsapp' },
+  ];
 
-  console.log('DADOS USER: ', user)
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [reportText, setReportText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
+  const handleReportSubmit = () => {
+    console.log('Relato enviado:', { selectedCategory, reportText });
+    setSelectedCategory('');
+    setReportText('');
+    setReportModalVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.profileDetails}>
             <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
             <View style={styles.headerText}>
               <Text style={styles.greeting}>Olá, {firstName}</Text>
-              <Text style={styles.userInfo}>{user?.nome} - E.F. SC São Paulo RS</Text>
+              <Text style={styles.userInfo}>{user?.nome || 'Usuário'}</Text>
               <Text style={styles.userInfo}>Informações Pessoais</Text>
             </View>
           </View>
@@ -44,11 +45,83 @@ const Informacoes_pessoais = () => {
         </View>
       </View>
 
+      <ScrollView contentContainerStyle={styles.infoContainer}>
+  {userInfoArray.map((item, index) => (
+    <View key={index} style={styles.infoCard}>
+      <Icon name={item.icon} size={24} color="#126046" style={styles.icon} />
+      <View style={styles.textContainer}>
+        <Text style={styles.label}>{item.label}</Text>
+        <Text style={styles.value}>
+          {item.value === user.faixa_etaria ? `${item.value} anos` : item.value}
+        </Text>
+      </View>
+    </View>
+  ))}
+</ScrollView>
+
+      {/* Botão para Suporte */}
+      <TouchableOpacity style={styles.reportButton} onPress={() => setReportModalVisible(true)}>
+        <Text style={styles.reportButtonText}>Suporte</Text>
+      </TouchableOpacity>
+
+      {/* Modal de Relato de Problema */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={reportModalVisible}
+        onRequestClose={() => setReportModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Solicitação de Suporte</Text>
+
+            {/* Campo de Seleção de Categoria */}
+            <Text style={styles.label}>Escolha um assunto</Text>
+            <View style={styles.pickerContainer}>
+              <TouchableOpacity
+                style={styles.categoryButton}
+                onPress={() => setSelectedCategory('Erro de Sistema')}
+              >
+                <Text style={selectedCategory === 'Erro de Sistema' ? styles.selectedText : styles.categoryText}>Sugestão</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.categoryButton}
+                onPress={() => setSelectedCategory('Dúvida')}
+              >
+                <Text style={selectedCategory === 'Dúvida' ? styles.selectedText : styles.categoryText}>Aplicativo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.categoryButton}
+                onPress={() => setSelectedCategory('Sugestão')}
+              >
+                <Text style={selectedCategory === 'Sugestão' ? styles.selectedText : styles.categoryText}>Outros</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={[styles.textInput, { height: 100 }]}
+              placeholder="Descreva o problema..."
+              multiline
+              value={reportText}
+              onChangeText={setReportText}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setReportModalVisible(false)}>
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.submitButton} onPress={handleReportSubmit}>
+                <Text style={styles.buttonText}>Enviar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-export default Informacoes_pessoais;
+export default InformacoesPessoais;
 
 const styles = StyleSheet.create({
   container: {
@@ -94,11 +167,11 @@ const styles = StyleSheet.create({
   teamLogo: {
     marginLeft: 16,
   },
-  metodologiasContainer: {
-    paddingHorizontal: 16,
+  infoContainer: {
+    paddingHorizontal: 20,
     paddingBottom: 80,
   },
-  card: {
+  infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -106,102 +179,112 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: '#126046',
   },
-  cardTextContainer: {
+  icon: {
+    marginRight: 12,
+  },
+  textContainer: {
     flex: 1,
-    marginRight: 8,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#126046',
-  },
-  cardDescription: {
+  label: {
     fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: '500',
     color: '#333',
-    marginTop: 4,
   },
-  deleteIcon: {
-    padding: 4,
-    borderRadius: 8,
-    backgroundColor: '#FFEBEE',
-  },
-  addButton: {
+  reportButton: {
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
-    backgroundColor: '#126046',
-    borderRadius: 50,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#FF6347',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
     elevation: 5,
+  },
+  reportButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 20,
   },
   modalContent: {
-    width: '100%',
-    maxWidth: 400,
+    width: '90%',
     backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
+    padding: 20,
+    borderRadius: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#126046',
-    marginBottom: 16,
-  },
-  modalMessage: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginVertical: 10,
+    fontSize: 18,
+    fontWeight: '600',
     color: '#333',
+    marginBottom: 10,
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  categoryButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#E8E8E8',
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  categoryText: {
+    color: '#333',
+  },
+  selectedText: {
+    color: '#126046',
+    fontWeight: '700',
+  },
+  textInput: {
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: '#F9FAFB',
+    color: '#333',
+    marginBottom: 20,
   },
   modalButtons: {
     flexDirection: 'row',
-    marginTop: 16,
-  },
-  input: {
-    width: '100%',
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    marginBottom: 20,
-    backgroundColor: '#F5F5F5',
-    color: '#333',
-  },
-  saveButton: {
-    backgroundColor: '#126046',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-    marginHorizontal: 5,
+    justifyContent: 'space-between',
   },
   cancelButton: {
-    backgroundColor: '#FF6347',
+    backgroundColor: '#CCCCCC',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
-  saveButtonText: {
+  submitButton: {
+    backgroundColor: '#126046',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  buttonText: {
     color: '#FFFFFF',
     fontWeight: '600',
-    fontSize: 16,
   },
 });

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, ScrollView, Modal, TextInput, TouchableO
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { AntDesign, Feather } from '@expo/vector-icons';
 import { getMetodologias, salvarMetodologia, excluirMetodologia } from '@/lib/appwrite';
 
 const Metodologia = () => {
@@ -82,7 +83,7 @@ const Metodologia = () => {
 
       {/* Botão de adicionar nova metodologia centralizado na parte inferior */}
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <Icon name="plus" size={28} color="#FFFFFF" />
+        <AntDesign name="plus" size={24} color="#FFFFFF" />
       </TouchableOpacity>
 
       {/* Modal para adicionar nova metodologia */}
