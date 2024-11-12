@@ -1,22 +1,72 @@
-import React from 'react';
+import React,  { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { router } from 'expo-router';
+import { getAllTurmas, getAlunosByTurmaId, getEventsForCurrentMonth } from '@/lib/appwrite';
 
 const Dashboard = () => {
   const { user } = useGlobalContext();
   const firstName = user?.nome?.split(' ')[0];
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
+  const [totalAlunos, setTotalAlunos] = useState(0);
+  const [aulasHoje, setAulasHoje] = useState(0);
+  const [eventosRecentes, setEventosRecentes] = useState(0);
+
+
+  useEffect(() => {
+    const fetchEventosRecentes = async () => {
+      const count = await getEventsForCurrentMonth();
+      setEventosRecentes(count);
+    };
+
+    fetchEventosRecentes();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Obter todas as turmas
+        const turmas = await getAllTurmas();
+        
+        // Filtrar turmas para aquelas que têm o user.userId no campo profissionalId
+        const turmasFiltradas = turmas.filter((turma) => turma.profissionalId.includes(user.userId));
+
+        // Total de Alunos
+        let countAlunos = 0;
+        for (const turma of turmasFiltradas) {
+          const alunos = await getAlunosByTurmaId(turma.$id);
+          countAlunos += alunos.length;
+        }
+        setTotalAlunos(countAlunos);
+
+        // Contagem de Aulas Hoje
+        const today = new Date();
+        const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const todayName = daysOfWeek[today.getDay()];
+
+        const aulasHojeCount = turmasFiltradas.filter((turma) =>
+          [turma.Dia1, turma.Dia2, turma.Dia3].includes(todayName)
+        ).length;
+
+        setAulasHoje(aulasHojeCount);
+      } catch (error) {
+        console.error('Erro ao buscar dados do dashboard:', error);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user.userId]);
+
 
   const options = [
     { title: 'Alunos', icon: 'users', route: '/students' },
     { title: 'Aulas e Treinos', icon: 'calendar', route: '/classes-trainings' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
-    { title: 'Eventos e Turmas', icon: 'trophy', route: '/events-teams' },
-    { title: 'Galeria de Mídia', icon: 'image', route: '/media-gallery' },
-    { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalized-training' },
+    { title: 'Eventos e Jogos', icon: 'trophy', route: '/events-teams' },
+    
   ];
 
   const renderOption = ({ item }) => (
@@ -52,15 +102,15 @@ const Dashboard = () => {
           <Text style={styles.summaryTitle}>Resumo</Text>
           <View style={styles.summaryContent}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>50</Text>
+              <Text style={styles.summaryValue}>{totalAlunos}</Text>
               <Text style={styles.summaryLabel}>Total de Alunos</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>8</Text>
+              <Text style={styles.summaryValue}>{aulasHoje}</Text>
               <Text style={styles.summaryLabel}>Aulas Hoje</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>3</Text>
+              <Text style={styles.summaryValue}>{eventosRecentes}</Text>
               <Text style={styles.summaryLabel}>Eventos Recentes</Text>
             </View>
           </View>
@@ -75,13 +125,13 @@ const Dashboard = () => {
           contentContainerStyle={styles.optionsList}
         />
 
-        {/* Gráfico Fictício de Posições de Atletas */}
+        {/* Gráfico Fictício de Posições de Atletas 
         <View style={styles.chartContainer}>
           <Text style={styles.chartTitle}>Posições de Atletas</Text>
           <View style={styles.chartPlaceholder}>
             <Text style={styles.chartText}>[Gráfico de Posições Placeholder]</Text>
           </View>
-        </View>
+        </View>*/}
       </ScrollView>
     </SafeAreaView>
   );

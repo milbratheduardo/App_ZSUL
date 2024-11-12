@@ -2,18 +2,20 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 
 const Community = () => {
-  // Dados fictícios para representar tópicos ou eventos
+  const router = useRouter();
+
   const communityTopics = [
-    { id: '1', title: 'Discussão e Mensagens', icon: 'comments', description: 'Canal de avisos e mensagens com pais e' },
-    { id: '2', title: 'Evento: Campeonato Local', icon: 'trophy', description: 'Participe do próximo campeonato de futebol local.' },
-    { id: '3', title: 'Grupo de Pais', icon: 'users', description: 'Grupo dedicado aos pais e responsáveis.' },
-    { id: '4', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.' },
+    { id: '1', title: 'Discussão e Mensagens', icon: 'comments', description: 'Canal de avisos e mensagens com pais e', route: '/discussion-messages' },
+    { id: '2', title: 'Evento: Campeonato Local', icon: 'trophy', description: 'Participe do próximo campeonato de futebol local.', route: '/local-championship' },
+    { id: '3', title: 'Grupo de Pais', icon: 'users', description: 'Grupo dedicado aos pais e responsáveis.', route: '/parents-group' },
+    { id: '4', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/community-news' },
   ];
 
   const renderTopic = ({ item }) => (
-    <TouchableOpacity style={styles.topicContainer}>
+    <TouchableOpacity style={styles.topicContainer} onPress={() => router.push(item.route)}>
       <Icon name={item.icon} size={24} color="#126046" style={styles.topicIcon} />
       <View style={styles.topicTextContainer}>
         <Text style={styles.topicTitle}>{item.title}</Text>
@@ -51,8 +53,6 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 20,
     backgroundColor: '#126046',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
   },
   headerText: {
     fontSize: 24,
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     padding: 14,
-    borderRadius:50,
+    borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

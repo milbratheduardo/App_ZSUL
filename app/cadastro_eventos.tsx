@@ -1,191 +1,166 @@
-import { View, Text, Image, Alert, TouchableOpacity, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  Alert,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as DocumentPicker from 'expo-document-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { images } from '../constants';
 import FormField from '@/components/FormField';
-import CustomButton from '@/components/CustomButton';
-import { router, useLocalSearchParams } from 'expo-router';
-import { createEvent, createMatch, uploadImage } from '../lib/appwrite';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { router } from 'expo-router';
+import { createEvent, createMatch } from '../lib/appwrite';
 import { useGlobalContext } from "../context/GlobalProvider";
+import { TextInput } from 'react-native';
 
 const CadastroEventos = () => {
   const { user } = useGlobalContext();
-  const [type, setType] = useState('');
+  const [type, setType] = useState('evento'); // Definindo 'evento' como valor padrão
   const [form, setForm] = useState({
     Title: '',
-    Date_event: '',
     Description: '',
-    Hora_event: '',
+    Local: '',
   });
+  const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [charCount, setCharCount] = useState(0);
-  const [image, setImage] = useState(null);
-  const [imageName, setImageName] = useState('');
   const [selectedAlunos, setSelectedAlunos] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const { selectedAlunosIds, type: typeFromParams, Title, Date_event, Description, Hora_event } = useLocalSearchParams();
 
-  useEffect(() => {
-    if (selectedAlunosIds) {
-      setSelectedAlunos(selectedAlunosIds.split(','));
+  const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Janeiro é 0
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+  
+
+  const submitForm = async () => {
+    if (!form.Title || !date || !form.Description || !time || !form.Local) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      return;
     }
-    if (typeFromParams) {
-      setType(typeFromParams);
+    if (type === 'partida' && selectedAlunos.length === 0) {
+      Alert.alert('Erro', 'Por favor, adicione alunos para a partida.');
+      return;
     }
   
-    // Recuperar os valores do formulário dos parâmetros
-    setForm({
-      Title: Title || form.Title,
-      Date_event: Date_event || form.Date_event,
-      Description: Description || form.Description,
-      Hora_event: Hora_event || form.Hora_event,
-    });
-  }, [selectedAlunosIds, typeFromParams, Title, Date_event, Description, Hora_event]);
-  
-  const pickImage = async () => {
+    setIsSubmitting(true);
     try {
-      let result = await DocumentPicker.getDocumentAsync({
-        type: '*/*', // Permite selecionar qualquer tipo de arquivo
-      });
+      const formattedDate = formatDate(date);
+      const eventData = {
+        Title: form.Title,
+        Date_event: formattedDate,
+        Description: form.Description,
+        Hora_event: time.toLocaleTimeString(),
+        Confirmados: selectedAlunos,
+        type,
+      };
+      console.log('Dados enviados para createEvent/createMatch:', eventData);
   
-      console.log('Resultado da seleção:', result);
-      setSelectedFile(result.assets[0]);
-  
-      if (!result.canceled) {
-        const file = result.assets[0];
-        console.log('Informações do arquivo selecionado:', file);
+      if (type === 'evento') {
+        await createEvent(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), type);
+      } else if (type === 'partida') {
+        await createMatch(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), selectedAlunos, type);
       } else {
-        console.log('Seleção cancelada pelo usuário');
+        Alert.alert('Erro', 'Selecione uma opção: Evento ou Partida');
+        return;
       }
-    } catch (error) {
-      console.error('Erro ao selecionar arquivo:', error);
-    }
-  };
-  
-  
-  const submitEvent = async () => {
-    if (form.Title === '' || form.Date_event === '' || form.Description === '' || form.Hora_event === '') {
-      Alert.alert('Error', 'Por favor, preencha todos os campos e selecione uma imagem.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // Faz o upload da imagem e obtém o ID da imagem
-      const imageId = await uploadImage(selectedFile);
-
-      // Cria o evento com os dados fornecidos e o ID da imagem
-      await createEvent(form.Title, form.Date_event, form.Description, form.Hora_event, imageId, type);
-
-      // Redireciona para a página de eventos
       router.replace('/eventos');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Erro', error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const submitMatch = async () => {
-    if (form.Title === '' || form.Date_event === '' || form.Description === '' || form.Hora_event === '' || selectedAlunos.length === 0) {
-      Alert.alert('Error', 'Por favor, preencha todos os campos, selecione uma imagem e adicione alunos.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const imageId = await uploadImage(selectedFile);
-      await createMatch(form.Title, form.Date_event, form.Description, form.Hora_event, imageId, selectedAlunos, type);
-      router.replace('/eventos');
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (type === 'evento') {
-      submitEvent();
-    } else if (type === 'partida') {
-      submitMatch();
-    } else {
-      Alert.alert('Error', 'Por favor, selecione uma opção: Evento ou Partida');
-    }
-  };
-
   const renderFormFields = () => (
     <>
+      <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Título</Text>
       <FormField
-        title='Título'
         value={form.Title}
+        placeholder="Adicione um título"
         handleChangeText={(e) => setForm({ ...form, Title: e })}
         otherStyles='mt-10'
       />
+
+      <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Data</Text>
+      <TouchableOpacity onPress={() => setShowDatePicker(true)} style={{ marginTop: 10 }}>
+        <FormField
+          value={date.toLocaleDateString('pt-BR')}
+          editable={false}
+        />
+      </TouchableOpacity>
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) setDate(selectedDate);
+          }}
+        />
+      )}
+
+      <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Horário</Text>
+      <TouchableOpacity onPress={() => setShowTimePicker(true)} style={{ marginTop: 10 }}>
+        <FormField
+          value={time ? time.toLocaleTimeString() : "Selecione o horário"}
+          editable={false}
+        />
+      </TouchableOpacity>
+      {showTimePicker && (
+        <DateTimePicker
+          value={time || new Date()}
+          mode="time"
+          display="default"
+          onChange={(event, selectedTime) => {
+            setShowTimePicker(false);
+            if (selectedTime) setTime(selectedTime);
+          }}
+        />
+      )}
+
+      <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Local</Text>
       <FormField
-        title={`Descrição (Restam ${190 - charCount} caracteres)`}
+        value={form.Local}
+        placeholder="Endereço Completo"
+        handleChangeText={(e) => setForm({ ...form, Local: e })}
+        otherStyles='mt-10'
+      />
+
+      <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Descrição</Text>
+      <TextInput
         value={form.Description}
-        handleChangeText={(e) => {
+        onChangeText={(e) => {
           if (e.length <= 190) {
             setForm({ ...form, Description: e });
             setCharCount(e.length);
           }
         }}
         maxLength={190}
-        otherStyles='mt-10'
+        multiline={true}
+        placeholder="Digite a descrição do evento ou partida"
+        style={{
+          height: 150,
+          borderWidth: 1,
+          borderColor: '#ccc',
+          borderRadius: 8,
+          padding: 10,
+          marginTop: 10,
+          textAlignVertical: 'top',
+        }}
       />
-      <FormField
-        title="Data"
-        value={form.Date_event}
-        handleChangeText={(e) => setForm({ ...form, Date_event: e })}
-        maskType="datetime"
-        options={{ format: 'DD-MM-YYYY' }}
-        otherStyles='mt-10'
-      />
-      <FormField
-        title="Horário"
-        value={form.Hora_event}
-        handleChangeText={(e) => setForm({ ...form, Hora_event: e })}
-        maskType="custom"
-        options={{ mask: '99:99' }}
-        otherStyles='mt-10'
-      />
-
-      <TouchableOpacity className="mt-10">
-        <CustomButton
-          title="Selecionar Imagem"
-          handlePress={pickImage}
-          containerStyles='mt-7 px-4'
-        />
-        {selectedFile ? (
-          <Text style={{ color: 'black', marginTop: 10, textAlign: 'center' }}>{selectedFile.name}</Text>
-        ) : null}
-      </TouchableOpacity>
-
-      {type === 'partida' && (
-        <View className="mt-10">
-          <CustomButton 
-            title="Selecionar Alunos" 
-            handlePress={() => router.push({
-              pathname: '/selecionar_alunos',
-              params: {
-                selectedAlunos: selectedAlunos.join(','),
-                Title: form.Title,
-                Date_event: form.Date_event,
-                Description: form.Description,
-                Hora_event: form.Hora_event
-              }
-            })}
-          />
-          {selectedAlunos.length > 0 && (
-            <Text style={{ textAlign: 'center', marginTop: 8 }}>
-              {selectedAlunos.length} Aluno(s) Selecionado(s)
-            </Text>
-          )}
-        </View>
-      )}
+      <Text style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+        Restam {190 - charCount} caracteres
+      </Text>
     </>
   );
 
@@ -193,14 +168,17 @@ const CadastroEventos = () => {
     <SafeAreaView className="bg-white h-full">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View className='w-full justify-center px-4 my-6'>
-          <Image source={images.logo_zsul} className='w-[115px] h-[35px]' />
-          <Text className='text-2xl text-black text-semibold mt-10 font-psemibold'>
-            Cadastre um novo Evento ou Partida
-          </Text>
+          <View style={{ padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text className="font-pmedium text-sm text-primary">Bem Vindo</Text>
+              <Text className="text-2xl font-psemibold text-verde">{user?.nome.split(' ')[0]}</Text>
+            </View>
+            <Image source={images.escola_sp_transparente} className="w-[115px] h-[90px]" />
+          </View>
 
           <View className='flex-row justify-between mt-10'>
             <TouchableOpacity
-              className={`p-4 w-[45%] ${type === 'evento' ? 'bg-golden' : 'bg-gray-200'} rounded-lg`}
+              className={`p-4 w-[45%] rounded-lg shadow-sm ${type === 'evento' ? 'bg-green-900' : 'bg-gray-300'}`}
               onPress={() => setType('evento')}
             >
               <Text className={`text-lg text-center ${type === 'evento' ? 'text-white' : 'text-black'}`}>
@@ -209,7 +187,7 @@ const CadastroEventos = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className={`p-4 w-[45%] ${type === 'partida' ? 'bg-golden' : 'bg-gray-200'} rounded-lg`}
+              className={`p-4 w-[45%] rounded-lg shadow-sm ${type === 'partida' ? 'bg-green-900' : 'bg-gray-300'}`}
               onPress={() => setType('partida')}
             >
               <Text className={`text-lg text-center ${type === 'partida' ? 'text-white' : 'text-black'}`}>
@@ -221,12 +199,29 @@ const CadastroEventos = () => {
           {renderFormFields()}
         </View>
 
-        <CustomButton
-          title='Cadastrar'
-          handlePress={handleSubmit}
-          containerStyles='mt-7 mb-10 ml-4 mr-4'
-          isLoading={isSubmitting}
-        />
+        <View className="flex-row justify-center mb-10">
+          <TouchableOpacity onPress={submitForm} className="mx-4">
+            <Icon name="check-circle" size={50} color="#126046" />
+          </TouchableOpacity>
+
+          {type === 'partida' && (
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: '/selecionar_alunos',
+                  params: {
+                    selectedAlunos: selectedAlunos.join(','),
+                    Title: form.Title,
+                    Description: form.Description,
+                  },
+                })
+              }
+              className="mx-4"
+            >
+              <Icon name="group-add" size={50} color="#126046" />
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, ScrollView, Modal, TextInput, TouchableO
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import emailjs from 'emailjs-com';
 
 const InformacoesPessoais = () => {
   const { user } = useGlobalContext();
@@ -23,10 +24,23 @@ const InformacoesPessoais = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
 
   const handleReportSubmit = () => {
-    console.log('Relato enviado:', { selectedCategory, reportText });
-    setSelectedCategory('');
-    setReportText('');
-    setReportModalVisible(false);
+    const templateParams = {
+      assunto: selectedCategory,
+      descricao: reportText,
+      nome: user.nome,
+      role: user.role,
+    };
+
+    emailjs.send('service_gciw5lm', 'template_le4ktiu', templateParams, 'ypSN4onrJ_W04LRlr')
+      .then((response) => {
+        console.log('Email enviado com sucesso!', response.status, response.text);
+        setSelectedCategory('');
+        setReportText('');
+        setReportModalVisible(false);
+      })
+      .catch((error) => {
+        console.error('Erro ao enviar o email:', error);
+      });
   };
 
   return (
@@ -75,26 +89,34 @@ const InformacoesPessoais = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Solicitação de Suporte</Text>
 
-            {/* Campo de Seleção de Categoria */}
             <Text style={styles.label}>Escolha um assunto</Text>
             <View style={styles.pickerContainer}>
               <TouchableOpacity
-                style={styles.categoryButton}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === 'Erro de Sistema' && styles.selectedCategoryButton
+                ]}
                 onPress={() => setSelectedCategory('Erro de Sistema')}
               >
-                <Text style={selectedCategory === 'Erro de Sistema' ? styles.selectedText : styles.categoryText}>Sugestão</Text>
+                <Text style={selectedCategory === 'Erro de Sistema' ? styles.selectedText : styles.categoryText}>Erro de Sistema</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.categoryButton}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === 'Dúvida' && styles.selectedCategoryButton
+                ]}
                 onPress={() => setSelectedCategory('Dúvida')}
               >
-                <Text style={selectedCategory === 'Dúvida' ? styles.selectedText : styles.categoryText}>Aplicativo</Text>
+                <Text style={selectedCategory === 'Dúvida' ? styles.selectedText : styles.categoryText}>Dúvida</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.categoryButton}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === 'Sugestão' && styles.selectedCategoryButton
+                ]}
                 onPress={() => setSelectedCategory('Sugestão')}
               >
-                <Text style={selectedCategory === 'Sugestão' ? styles.selectedText : styles.categoryText}>Outros</Text>
+                <Text style={selectedCategory === 'Sugestão' ? styles.selectedText : styles.categoryText}>Sugestão</Text>
               </TouchableOpacity>
             </View>
 
@@ -243,6 +265,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 15,
   },
+  selectedCategoryButton: {
+    backgroundColor: '#126046', // Verde escuro igual ao botão Enviar
+  },  
   categoryButton: {
     flex: 1,
     paddingVertical: 10,
@@ -255,7 +280,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedText: {
-    color: '#126046',
+    color: '#fff',
     fontWeight: '700',
   },
   textInput: {

@@ -15,10 +15,12 @@ const Profile = () => {
 
   // Opções de navegação com ícones FontAwesome
   const navigationOptions = [
-    { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
     { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
-    { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
+    { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
     { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
+    { title: 'Turmas', icon: 'group', route: '' },
+    { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
+    { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
   ];
 
   const renderOption = ({ item }) => (
