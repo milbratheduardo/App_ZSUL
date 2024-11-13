@@ -64,6 +64,12 @@ const RootLayout = () => {
         <Stack.Screen name="students" options={{headerShown: false}} />
         <Stack.Screen name="personalize_training" options={{headerShown: false}} />
         <Stack.Screen name="methodologies" options={{headerShown: false}} />
+        <Stack.Screen name="athletes_group" options={{headerShown: false}} />
+        <Stack.Screen name="mensagens_alunos" options={{headerShown: false}} />
+        <Stack.Screen name="parents_group" options={{headerShown: false}} />
+        <Stack.Screen name="mensagens_responsaveis" options={{headerShown: false}} />
+        <Stack.Screen name="responsaveis" options={{headerShown: false}} />
+        <Stack.Screen name="all_turmas" options={{headerShown: false}} />
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>
     </GlobalProvider>

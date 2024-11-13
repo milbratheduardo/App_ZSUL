@@ -1,19 +1,33 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  TextInput
+} from 'react-native';
 import React, { useState, useEffect } from 'react';
 import TurmaCard2 from '@/components/TurmaCard2';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { router, useLocalSearchParams } from 'expo-router';
-import { getTurmaById, salvarRelatorio } from '@/lib/appwrite';
+import { getTurmaById, salvarNotifica } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 
 const Notifica = () => {
   const { turmaId } = useLocalSearchParams();
-  const [form, setForm] = useState({ data: new Date(), hora: new Date(), local: '', observacoes: '' });
+  const [form, setForm] = useState({
+    data: new Date(),
+    hora: new Date(),
+    local: '',
+    observacoes: ''
+  });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [turma, setTurma] = useState(null);
-  const [selectedOption, setSelectedOption] = useState('Responsáveis'); // Estado para controlar a seleção
+  const [selectedOption, setSelectedOption] = useState('Responsáveis');
   const { user, selectedImages, setSelectedImages } = useGlobalContext();
   const [loading, setLoading] = useState(true);
 
@@ -24,15 +38,12 @@ const Notifica = () => {
         turmaId,
         data: form.data.toLocaleDateString('pt-BR'),
         hora: form.hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        local: form.local,
         observacoes: form.observacoes,
-        tipo: selectedOption,
-        imagens: selectedImages,
+        publico: selectedOption,
       };
 
-      await salvarRelatorio(relatorioData);
-      Alert.alert('Sucesso', 'Relatório salvo com sucesso!');
-      setSelectedImages([]);
+      await salvarNotifica(relatorioData);
+      Alert.alert('Sucesso', 'Mensagem Enviada com sucesso!');
     } catch (error) {
       Alert.alert('Erro', 'Falha ao salvar o relatório.');
       console.error('Erro ao salvar relatório:', error);
@@ -50,52 +61,54 @@ const Notifica = () => {
   }, [turmaId]);
 
   return (
-<View style={styles.container}>
-  <ScrollView contentContainerStyle={styles.scrollContent}>
-    <Text style={styles.title}>Notificação</Text>
-    
-    {/* Card Turma com margem superior */}
-    <View style={[styles.cardContainer, { marginTop: 30}]}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#006400" />
-      ) : turma ? (
-        <TurmaCard2 turma={turma} />
-      ) : (
-        <Text>Carregando dados da turma...</Text>
-      )}
-    </View>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Notificação</Text>
 
-    {/* Botões para selecionar entre Responsáveis e Atletas */}
-    <View style={styles.buttonGroup}>
-      <TouchableOpacity
-        style={[
-          styles.optionButton,
-          selectedOption === 'Responsáveis' && styles.selectedOptionButton,
-        ]}
-        onPress={() => setSelectedOption('Responsáveis')}
-      >
-        <Text style={[
-          styles.optionText,
-          selectedOption === 'Responsáveis' && styles.selectedOptionText,
-        ]}>
-          Responsáveis
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[
-          styles.optionButton,
-          selectedOption === 'Atletas' && styles.selectedOptionButton,
-        ]}
-        onPress={() => setSelectedOption('Atletas')}
-      >
-        <Text style={[
-          styles.optionText,
-          selectedOption === 'Atletas' && styles.selectedOptionText,
-        ]}>
-          Alunos
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <View style={[styles.cardContainer, { marginTop: 30 }]}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#006400" />
+          ) : turma ? (
+            <TurmaCard2 turma={turma} />
+          ) : (
+            <Text>Carregando dados da turma...</Text>
+          )}
+        </View>
+
+        <View style={styles.buttonGroup}>
+          <TouchableOpacity
+            style={[
+              styles.optionButton,
+              selectedOption === 'Responsáveis' && styles.selectedOptionButton,
+            ]}
+            onPress={() => setSelectedOption('Responsáveis')}
+          >
+            <Text
+              style={[
+                styles.optionText,
+                selectedOption === 'Responsáveis' && styles.selectedOptionText,
+              ]}
+            >
+              Responsáveis
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.optionButton,
+              selectedOption === 'Atletas' && styles.selectedOptionButton,
+            ]}
+            onPress={() => setSelectedOption('Atletas')}
+          >
+            <Text
+              style={[
+                styles.optionText,
+                selectedOption === 'Atletas' && styles.selectedOptionText,
+              ]}
+            >
+              Alunos
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>Data</Text>
         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.inputContainer}>
@@ -116,7 +129,9 @@ const Notifica = () => {
         <Text style={styles.label}>Hora</Text>
         <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.inputContainer}>
           <Text style={styles.input}>
-            {form.hora ? form.hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Selecione a hora'}
+            {form.hora
+              ? form.hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'Selecione a hora'}
           </Text>
         </TouchableOpacity>
         {showTimePicker && (
@@ -153,7 +168,7 @@ const Notifica = () => {
         )}
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveRelatorio}> 
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveRelatorio}>
             <Icon name="send" size={24} color="#fff" />
           </TouchableOpacity>
         </View>

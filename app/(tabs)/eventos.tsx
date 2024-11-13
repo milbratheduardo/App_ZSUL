@@ -78,12 +78,23 @@ const Eventos = () => {
     return `${day}-${month}-${year}`;
   };
 
-  const today = new Date().toISOString().split('T')[0]; // Pega a data de hoje no formato YYYY-MM-DD
+  const getTodayLocalDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const today = getTodayLocalDate();
+  
   markedDates[today] = {
     selected: true,
     selectedColor: '#126046', // Definindo o dia atual em verde
     selectedTextColor: 'white',
   };
+
+
   
 
   // Função para lidar com o clique em um dia do calendário

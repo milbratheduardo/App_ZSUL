@@ -51,7 +51,7 @@ const detalhesAluno = () => {
 
           <View style={styles.imageContainer}>
             <Image 
-              source={{ uri: aluno.imageUrl || 'https://via.placeholder.com/150' }} 
+              source={{ uri: aluno.imageUrl || aluno.avatar }} 
               style={styles.playerImage} 
             />
           </View>
@@ -99,7 +99,9 @@ const detalhesAluno = () => {
         </ImageBackground>
       </View>
     </View>
-  );
+
+
+);
 };
 
 export default detalhesAluno;

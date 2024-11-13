@@ -6,13 +6,14 @@ import { useRouter } from 'expo-router';
 
 const Community = () => {
   const router = useRouter();
-
-  const communityTopics = [
-    { id: '1', title: 'Discussão e Mensagens', icon: 'comments', description: 'Canal de avisos e mensagens com pais e', route: '/discussion-messages' },
-    { id: '2', title: 'Evento: Campeonato Local', icon: 'trophy', description: 'Participe do próximo campeonato de futebol local.', route: '/local-championship' },
-    { id: '3', title: 'Grupo de Pais', icon: 'users', description: 'Grupo dedicado aos pais e responsáveis.', route: '/parents-group' },
-    { id: '4', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/community-news' },
-  ];
+    const communityTopics = [
+      { id: '1', title: 'Responsáveis', icon: 'comments', description: 'Canal de avisos e mensagens com pais e responsáveis', route: '/responsaveis' },
+      { id: '2', title: 'Grupo de Atletas', icon: 'soccer-ball-o', description: 'Conecte-se com outros atletas e saiba das novidades.', route: '/athletes_group' },
+      { id: '3', title: 'Grupo de Pais', icon: 'users', description: 'Grupo dedicado aos pais e responsáveis.', route: '/parents_group' },
+      { id: '4', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/community-news' },
+    ];
+    
+  
 
   const renderTopic = ({ item }) => (
     <TouchableOpacity style={styles.topicContainer} onPress={() => router.push(item.route)}>

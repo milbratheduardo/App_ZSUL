@@ -60,6 +60,8 @@ const Turmas = () => {
     }
   };
 
+  console.log(user.role)
+
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -145,7 +147,7 @@ const Turmas = () => {
               <Text className="text-primary text-lg font-pregular mb-1">
                 Turmas Disponíveis
               </Text>
-              {user.role === 'admin' && (
+              {user.role === 'admin' && user.role === 'profissional' (
                 <CustomButton
                   title="Nova Turma"
                   handlePress={() => router.push('/cadastro_turma')}

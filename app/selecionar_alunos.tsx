@@ -11,7 +11,7 @@ const SelecionarAlunos = () => {
   const [selectedAlunos, setSelectedAlunos] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { selectedAlunos: selectedAlunosFromParams, Title, Date_event, Description, Hora_event } = useLocalSearchParams();
+  const { selectedAlunos: selectedAlunosFromParams, Title, Date_event, Description, Hora_event, Local } = useLocalSearchParams();
 
   useEffect(() => {
     if (selectedAlunosFromParams) {
@@ -42,27 +42,30 @@ const SelecionarAlunos = () => {
     }
   };
 
-  const handleSelectAluno = (id) => {
+  const handleSelectAluno = (userId) => {
     setSelectedAlunos((prevSelected) =>
-      prevSelected.includes(id)
-        ? prevSelected.filter((selectedId) => selectedId !== id)
-        : [...prevSelected, id]
+      prevSelected.includes(userId)
+        ? prevSelected.filter((selectedId) => selectedId !== userId)
+        : [...prevSelected, userId]
     );
   };
 
+  console.log(Date_event)
   const handleSave = () => {
     router.replace({
       pathname: '/cadastro_eventos',
       params: {
-        selectedAlunosIds: selectedAlunos.join(','),
+        selectedAlunos: selectedAlunos.join(','), // Lista dos userId dos alunos selecionados
         type: 'partida',
         Title,
         Date_event,
         Description,
         Hora_event,
+        Local
       },
     });
   };
+  
 
   const positionDetails = {
     goleiro: { abbreviation: 'GL', color: '#800080' },
@@ -79,14 +82,14 @@ const SelecionarAlunos = () => {
   };
 
   const renderAluno = ({ item }) => {
-    const isSelected = selectedAlunos.includes(item.$id);
+    const isSelected = selectedAlunos.includes(item.userId);
     const position = positionDetails[item.posicao.toLowerCase()] || {};
     const alunoInfo = `${item.nome}`;
 
     return (
       <TouchableOpacity
         style={[styles.alunoContainer, isSelected && styles.alunoSelecionado]}
-        onPress={() => handleSelectAluno(item.$id)}
+        onPress={() => handleSelectAluno(item.userId)}
       >
         <View style={styles.alunoInfo}>
           <Image source={{ uri: item.avatar }} style={styles.alunoAvatar} />
@@ -118,7 +121,7 @@ const SelecionarAlunos = () => {
       ) : (
         <FlatList
           data={filteredAlunos}
-          keyExtractor={(item) => item.$id.toString()}
+          keyExtractor={(item) => item.userId.toString()}
           renderItem={renderAluno}
           contentContainerStyle={styles.listContainer}
         />
@@ -170,7 +173,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   alunoSelecionado: {
-    backgroundColor: 'lightgray',
+    backgroundColor: 'lightgreen',
   },
   alunoInfo: {
     flexDirection: 'row',

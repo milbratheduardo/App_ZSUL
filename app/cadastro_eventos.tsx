@@ -5,6 +5,7 @@ import {
   Alert,
   TouchableOpacity,
   ScrollView,
+  FlatList,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,35 +13,62 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { images } from '../constants';
 import FormField from '@/components/FormField';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { router } from 'expo-router';
-import { createEvent, createMatch } from '../lib/appwrite';
+import { router, useLocalSearchParams } from 'expo-router';
+import { createEvent, createMatch, getAlunosById } from '../lib/appwrite';
 import { useGlobalContext } from "../context/GlobalProvider";
 import { TextInput } from 'react-native';
 
 const CadastroEventos = () => {
   const { user } = useGlobalContext();
-  const [type, setType] = useState('evento'); // Definindo 'evento' como valor padrão
+  const params = useLocalSearchParams();
+
+  const [type, setType] = useState(params.selectedAlunos ? 'partida' : 'evento');
   const [form, setForm] = useState({
-    Title: '',
-    Description: '',
-    Local: '',
+    Title: params.Title || '',
+    Description: params.Description || '',
+    Local: params.Local || '',
   });
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
+  const [date, setDate] = useState(
+    params.Date_event
+      ? new Date(parseInt(params.Date_event.split('-')[0]), parseInt(params.Date_event.split('-')[1]) - 1, parseInt(params.Date_event.split('-')[2]))
+      : new Date()
+  );  
+  const [time, setTime] = useState(params.Hora_event ? new Date(`1970-01-01T${params.Hora_event}`) : new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [charCount, setCharCount] = useState(0);
+  const [charCount, setCharCount] = useState(form.Description.length || 0);
   const [selectedAlunos, setSelectedAlunos] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  useEffect(() => {
+    if (params.selectedAlunos) {
+      const alunosIds = params.selectedAlunos.split(',');
+      fetchAlunosData(alunosIds);
+    }
+  }, [params.selectedAlunos]);
+
+  const fetchAlunosData = async (alunosIds) => {
+    try {
+      const alunosData = await Promise.all(alunosIds.map((id) => getAlunosById(id)));
+      setSelectedAlunos(alunosData);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível carregar os dados dos alunos');
+    }
+  };
 
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Janeiro é 0
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    return `${year}-${month}-${day}`; 
   };
-  
+
+  const displayFormattedDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`; // Formato para exibição
+  };
 
   const submitForm = async () => {
     if (!form.Title || !date || !form.Description || !time || !form.Local) {
@@ -51,24 +79,24 @@ const CadastroEventos = () => {
       Alert.alert('Erro', 'Por favor, adicione alunos para a partida.');
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
-      const formattedDate = formatDate(date);
+      const formattedDate = displayFormattedDate(date);
       const eventData = {
         Title: form.Title,
         Date_event: formattedDate,
         Description: form.Description,
         Hora_event: time.toLocaleTimeString(),
-        Confirmados: selectedAlunos,
+        Confirmados: selectedAlunos.map(aluno => aluno.userId),
         type,
       };
       console.log('Dados enviados para createEvent/createMatch:', eventData);
-  
+
       if (type === 'evento') {
         await createEvent(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), type);
       } else if (type === 'partida') {
-        await createMatch(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), selectedAlunos, type);
+        await createMatch(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), selectedAlunos.map(aluno => aluno.userId), type);
       } else {
         Alert.alert('Erro', 'Selecione uma opção: Evento ou Partida');
         return;
@@ -80,6 +108,7 @@ const CadastroEventos = () => {
       setIsSubmitting(false);
     }
   };
+
   const renderFormFields = () => (
     <>
       <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Título</Text>
@@ -93,7 +122,7 @@ const CadastroEventos = () => {
       <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Data</Text>
       <TouchableOpacity onPress={() => setShowDatePicker(true)} style={{ marginTop: 10 }}>
         <FormField
-          value={date.toLocaleDateString('pt-BR')}
+          value={displayFormattedDate(date)}
           editable={false}
         />
       </TouchableOpacity>
@@ -164,6 +193,25 @@ const CadastroEventos = () => {
     </>
   );
 
+  const renderSelectedAlunos = () => (
+    <View style={{ marginTop: 20 }}>
+      <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>Alunos Selecionados:</Text>
+      {selectedAlunos.length === 0 ? (
+        <Text>Nenhum aluno selecionado</Text>
+      ) : (
+        <FlatList
+          data={selectedAlunos}
+          keyExtractor={(item) => item.userId}
+          renderItem={({ item }) => (
+            <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
+              <Text>{item.nome}</Text>
+            </View>
+          )}
+        />
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView className="bg-white h-full">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -197,6 +245,7 @@ const CadastroEventos = () => {
           </View>
 
           {renderFormFields()}
+          {renderSelectedAlunos()}
         </View>
 
         <View className="flex-row justify-center mb-10">
@@ -210,9 +259,12 @@ const CadastroEventos = () => {
                 router.push({
                   pathname: '/selecionar_alunos',
                   params: {
-                    selectedAlunos: selectedAlunos.join(','),
+                    selectedAlunos: selectedAlunos.map(aluno => aluno.userId).join(','),
                     Title: form.Title,
                     Description: form.Description,
+                    Local: form.Local,
+                    Date_event: formatDate(date), // Enviando data em formato ISO
+                    Hora_event: time.toLocaleTimeString(),
                   },
                 })
               }
