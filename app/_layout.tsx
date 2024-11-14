@@ -48,7 +48,6 @@ const RootLayout = () => {
         <Stack.Screen name="ver_chamadas" options={{headerShown: false}} />
         <Stack.Screen name="editar_chamadas" options={{headerShown: false}} />
         <Stack.Screen name="enviar_imagem" options={{headerShown: false}} />
-        <Stack.Screen name="pagamento" options={{headerShown: false}} />
         <Stack.Screen name="ver_confirmados" options={{headerShown: false}} />
         <Stack.Screen name="aprovar_pagamentos" options={{headerShown: false}} />
         <Stack.Screen name="controle_turmas" options={{headerShown: false}} />
@@ -70,6 +69,10 @@ const RootLayout = () => {
         <Stack.Screen name="mensagens_responsaveis" options={{headerShown: false}} />
         <Stack.Screen name="responsaveis" options={{headerShown: false}} />
         <Stack.Screen name="all_turmas" options={{headerShown: false}} />
+        <Stack.Screen name="pagamento" options={{headerShown: false}} />
+        <Stack.Screen name="seu_atleta" options={{headerShown: false}} />
+        <Stack.Screen name="all_relatorios" options={{headerShown: false}} />
+        
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>
     </GlobalProvider>

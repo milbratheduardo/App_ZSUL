@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import TurmasCard2 from '@/components/TurmaCard2';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useLocalSearchParams } from 'expo-router';
-import { getTurmaById, getAlunosByTurmaId } from '@/lib/appwrite';
+import { getTurmaById, getAlunosByTurmaId, getAllRelatorios } from '@/lib/appwrite';
 import { router } from 'expo-router';
+import { useGlobalContext } from '@/context/GlobalProvider';
 
 const ControleTurmas = () => {
   const [turma, setTurma] = useState(null);
@@ -13,6 +14,7 @@ const ControleTurmas = () => {
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filteredAlunos, setFilteredAlunos] = useState([]);
+  const { user } = useGlobalContext();
 
   const { turmaId } = useLocalSearchParams();
 
@@ -85,6 +87,14 @@ const ControleTurmas = () => {
       params: { turmaId, turmaTitle: turma.title },
     });
   };
+
+  const toggleAllRelatorios = async () => { 
+            router.push({
+                pathname: '/all_relatorios',
+                params: { turmaId: turma.$id }
+            });
+};
+
 
   // Definições para abreviações e cores das posições dos atletas
   const positionDetails = {
@@ -174,22 +184,37 @@ const ControleTurmas = () => {
 
       {menuOpen && (
         <View style={styles.menuOptions}>
-          <TouchableOpacity style={styles.menuOption} onPress={toggleRelatorio}>
-            <Icon name="file-text" size={18} color="#006400" style={styles.menuIcon} />
-            <Text style={styles.menuText}>Relatório de Treino</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuOption} onPress={toggleChamadas}>
-            <Icon name="check-square" size={18} color="#006400" style={styles.menuIcon} />
-            <Text style={styles.menuText}>Chamada</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuOption} onPress={toggleAtleta}>
-            <Icon name="user-plus" size={18} color="#006400" style={styles.menuIcon} />
-            <Text style={styles.menuText}>Inserir Atleta</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuOption} onPress={toggleNotifica}>
-            <Icon name="bell" size={18} color="#006400" style={styles.menuIcon} />
-            <Text style={styles.menuText}>Notificação</Text>
-          </TouchableOpacity>
+          {user.role === 'profissional' ? (
+            <>
+              <TouchableOpacity style={styles.menuOption} onPress={toggleRelatorio}>
+                <Icon name="file-text" size={18} color="#006400" style={styles.menuIcon} />
+                <Text style={styles.menuText}>Relatórios de Treino</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuOption} onPress={toggleChamadas}>
+                <Icon name="check-square" size={18} color="#006400" style={styles.menuIcon} />
+                <Text style={styles.menuText}>Chamadas</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuOption} onPress={toggleAtleta}>
+                <Icon name="user-plus" size={18} color="#006400" style={styles.menuIcon} />
+                <Text style={styles.menuText}>Inserir Atleta</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuOption} onPress={toggleNotifica}>
+                <Icon name="bell" size={18} color="#006400" style={styles.menuIcon} />
+                <Text style={styles.menuText}>Notificação</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.menuOption} onPress={toggleAllRelatorios}>
+                <Icon name="file-text" size={18} color="#006400" style={styles.menuIcon} />
+                <Text style={styles.menuText}>Relatórios de Treino</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuOption} onPress={toggleChamadas}>
+                <Icon name="check-square" size={18} color="#006400" style={styles.menuIcon} />
+                <Text style={styles.menuText}>Chamadas</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       )}
     </View>

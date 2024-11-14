@@ -19,18 +19,28 @@ const History = () => {
       try {
         const allTurmas = await getAllTurmas();
         
-        // Filtrar turmas em que o user.userId está em turma.profissionalId
-        const userTurmas = allTurmas.filter(turma => turma.profissionalId.includes(user.userId));
+        // Filtrar turmas em que o user.userId está em turma.profissionalId ou se o user é responsável com cpf associado
+        const userTurmas = allTurmas.filter(turma => 
+          turma.profissionalId.includes(user.userId) || user.role === 'responsavel'
+        );
+
         setTurmas(userTurmas);
         
         // Buscar alunos de cada turma e adicionar à lista de alunos com o título da turma
         const alunosData = [];
         for (const turma of userTurmas) {
           const turmaAlunos = await getAlunosByTurmaId(turma.$id);
-          turmaAlunos.forEach(aluno => {
+
+          // Filtrar os alunos para mostrar apenas aqueles com o nomeResponsavel igual ao user.cpf para responsáveis
+          const filteredAlunos = turmaAlunos.filter(aluno => 
+            user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
+          );
+
+          filteredAlunos.forEach(aluno => {
             alunosData.push({ ...aluno, turmaTitle: turma.title });
           });
         }
+        
         setAlunos(alunosData);
         setFilteredAlunos(alunosData); // Inicializar lista de alunos filtrados
       } catch (error) {
@@ -123,73 +133,16 @@ const History = () => {
 export default History;
 
 const styles = StyleSheet.create({
-  logo: {
-    width: 115,
-    height: 90,
-  },
-  welcomeText: {
-    fontSize: 14,
-    color: '#126046',
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#126046',
-  },
-  alunosList: {
-    marginTop: 10,
-  },
-  alunoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  alunoInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  alunoAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
-  },
-  alunoNome: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  posicaoContainer: {
-    width: 50,
-    borderRadius: 5,
-    paddingVertical: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  posicaoText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  searchInput: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    marginVertical: 10,
-    borderColor: '#ccc',
-    borderWidth: 1,
-  },
-  noAlunosText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#666',
-    marginTop: 20,
-  },
+  logo: { width: 115, height: 90 },
+  welcomeText: { fontSize: 14, color: '#126046' },
+  userName: { fontSize: 22, fontWeight: 'bold', color: '#126046' },
+  alunosList: { marginTop: 10 },
+  alunoContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc', backgroundColor: '#f8f8f8', borderRadius: 8, marginBottom: 10 },
+  alunoInfo: { flexDirection: 'row', alignItems: 'center' },
+  alunoAvatar: { width: 30, height: 30, borderRadius: 15, marginRight: 10 },
+  alunoNome: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  posicaoContainer: { width: 50, borderRadius: 5, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' },
+  posicaoText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  searchInput: { backgroundColor: '#fff', borderRadius: 8, padding: 10, fontSize: 16, marginVertical: 10, borderColor: '#ccc', borderWidth: 1 },
+  noAlunosText: { textAlign: 'center', fontSize: 16, color: '#666', marginTop: 20 },
 });

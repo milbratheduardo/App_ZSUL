@@ -41,7 +41,7 @@ const TabsLayout = () => {
           tabBarStyle: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 63 }        }}
       >
 
-      {user.role !== 'responsavel' && (
+      
               <Tabs.Screen 
               name='eventos'
               options={{
@@ -57,7 +57,7 @@ const TabsLayout = () => {
             )
           }}
         />
-      )}
+      
       
         <Tabs.Screen 
           name='galeria'

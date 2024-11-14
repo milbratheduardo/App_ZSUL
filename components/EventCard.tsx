@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, Alert } from 'react-native';
 import CustomButton from './CustomButton'; // Botão reutilizável
-import { getImageUrl, getCurrentUser, updateEventConfirmados } from '@/lib/appwrite';
+import { getImageUrl, getCurrentUser, updateEventConfirmados, getEventConfirmados } from '@/lib/appwrite';
 import { router } from 'expo-router'; // Importe o router do expo-router
 
 const EventCard = ({ event }) => {
@@ -9,6 +9,7 @@ const EventCard = ({ event }) => {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(''); // Adicionei para armazenar o papel do usuário
+  const [confirmados, setConfirmados] = useState([]); // Lista de confirmados
 
   useEffect(() => {
     // Buscar imagem do evento
@@ -38,11 +39,29 @@ const EventCard = ({ event }) => {
     };
 
     fetchUser();
-  }, [event.Confirmados]);
+
+    // Carregar lista de confirmados se não estiver presente no objeto event
+    if (event.Confirmados) {
+      setConfirmados(event.Confirmados);
+    } else {
+      fetchConfirmados();
+    }
+  }, [event]);
+
+  // Função para buscar a lista de confirmados do evento
+  const fetchConfirmados = async () => {
+    try {
+      const confirmadosList = await getEventConfirmados(event.$id); // Função para obter a lista de confirmados pelo ID do evento
+      setConfirmados(confirmadosList);
+      checkIfConfirmed(userId, confirmadosList); // Verifica se o usuário está na lista de confirmados
+    } catch (error) {
+      console.error("Erro ao buscar confirmados:", error);
+    }
+  };
 
   // Verifica se o usuário já confirmou a presença
-  const checkIfConfirmed = (userId) => {
-    if (event.Confirmados && event.Confirmados.includes(userId)) {
+  const checkIfConfirmed = (userId, confirmadosList = confirmados) => {
+    if (confirmadosList && confirmadosList.includes(userId)) {
       setIsConfirmed(true); // Usuário já confirmado
     }
   };
@@ -51,9 +70,10 @@ const EventCard = ({ event }) => {
   const handleConfirmPresence = async () => {
     if (userId && !isConfirmed) {
       try {
-        const updatedConfirmados = [...event.Confirmados, userId]; // Adiciona o ID do usuário à lista
+        const updatedConfirmados = [...confirmados, userId]; // Adiciona o ID do usuário à lista
         await updateEventConfirmados(event.$id, updatedConfirmados); // Função para atualizar o evento no banco de dados
 
+        setConfirmados(updatedConfirmados); // Atualiza a lista local de confirmados
         setIsConfirmed(true); // Atualiza o estado local
         Alert.alert('Sucesso', 'Você confirmou presença no evento');
       } catch (error) {
@@ -67,9 +87,10 @@ const EventCard = ({ event }) => {
   const handleCancelPresence = async () => {
     if (userId && isConfirmed) {
       try {
-        const updatedConfirmados = event.Confirmados.filter((id) => id !== userId); // Remove o ID do usuário da lista
+        const updatedConfirmados = confirmados.filter((id) => id !== userId); // Remove o ID do usuário da lista
         await updateEventConfirmados(event.$id, updatedConfirmados); // Atualiza o evento no banco de dados
 
+        setConfirmados(updatedConfirmados); // Atualiza a lista local de confirmados
         setIsConfirmed(false); // Atualiza o estado local
         Alert.alert('Sucesso', 'Você cancelou sua presença no evento');
       } catch (error) {
@@ -84,7 +105,7 @@ const EventCard = ({ event }) => {
     router.push({
       pathname: '/ver_relacionados', // Nome da rota para a tela 'Ver Relacionados'
       params: {
-        confirmados: event.Confirmados.join(','), // Passa os IDs como uma string separada por vírgula
+        confirmados: confirmados.join(','), // Passa os IDs como uma string separada por vírgula
         eventTitle: event.Title, // Passando também o título do evento se necessário
         eventId: event.$id
       }
@@ -93,11 +114,10 @@ const EventCard = ({ event }) => {
 
   // Função para ver confirmados (para o admin)
   const handleViewConfirmados = () => {
-    // Lógica para ver confirmados (pode ser similar ao handleViewRelated)
     router.push({
       pathname: '/ver_confirmados', // Nome da rota para a tela 'Ver Confirmados'
       params: {
-        confirmados: event.Confirmados.join(','), // Passa os IDs como uma string separada por vírgula
+        confirmados: confirmados.join(','), // Passa os IDs como uma string separada por vírgula
         eventTitle: event.Title, // Passando também o título do evento
         eventId: event.$id
       }
@@ -106,7 +126,6 @@ const EventCard = ({ event }) => {
 
   return (
     <View style={{ marginBottom: 16, borderRadius: 8, backgroundColor: '#fff', padding: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
-      {/* Imagem do evento */}
       {imageUrl ? (
         <Image 
           source={{ uri: imageUrl }} 
@@ -114,51 +133,26 @@ const EventCard = ({ event }) => {
           resizeMode="cover"
         />
       ) : (
-        <Text style={{ fontSize: 14, color: 'gray', marginBottom: 10 }}>Evento sem capa</Text>
+        <Text style={{ fontSize: 14, color: 'gray', marginBottom: 10 }}></Text>
       )}
-
-      {/* Título do evento */}
       <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>{event.Title}</Text>
+      <Text style={{ fontSize: 14, color: '#555', marginBottom: 8 }}>Local: {event.Local}</Text>
+      <Text style={{ fontSize: 14, color: '#555', marginBottom: 8 }}>Descrição: {event.Description}</Text>
+      <Text style={{ fontSize: 14, color: '#777' }}>Data: {event.Date_event} - Hora: {event.Hora_event}</Text>
 
-      {/* Descrição do evento */}
-      <Text style={{ fontSize: 14, color: '#555', marginBottom: 8 }}>{event.Description}</Text>
-
-      {/* Data e hora do evento */}
-      <Text style={{ fontSize: 14, color: '#777' }}>
-        Data: {event.Date_event} - Hora: {event.Hora_event}
-      </Text>
-
-      {/* Botões diferentes dependendo do tipo de evento */}
       {event.Type === 'partida' ? (
-        <CustomButton
-          title="Ver Relacionados"
-          handlePress={handleViewRelated}
-          containerStyles="mt-4 p-3 bg-verde"
-        />
+        <CustomButton title="Ver Relacionados" handlePress={handleViewRelated} containerStyles="mt-4 p-3 bg-verde" />
       ) : isConfirmed ? (
         <>
           <Text style={{ fontSize: 14, color: 'green', marginTop: 10 }}>Você já está inscrito neste evento</Text>
-          <CustomButton
-            title="Cancelar Presença"
-            handlePress={handleCancelPresence}
-            containerStyles="mt-4 p-3 bg-red-700"
-          />
+          <CustomButton title="Cancelar Presença" handlePress={handleCancelPresence} containerStyles="mt-4 p-3 bg-red-700" />
         </>
       ) : (
-        <CustomButton
-          title="Confirmar Presença"
-          handlePress={handleConfirmPresence}
-          containerStyles="mt-4 p-3 bg-verde"
-        />
+        <CustomButton title="Confirmar Presença" handlePress={handleConfirmPresence} containerStyles="mt-4 p-3 bg-verde" />
       )}
 
-      {/* Botão adicional para admin */}
       {userRole === 'admin' && event.Type === 'evento' && (
-        <CustomButton
-          title="Ver Confirmados"
-          handlePress={handleViewConfirmados}
-          containerStyles="mt-4 p-3 bg-verde"
-        />
+        <CustomButton title="Ver Confirmados" handlePress={handleViewConfirmados} containerStyles="mt-4 p-3 bg-verde" />
       )}
     </View>
   );

@@ -239,8 +239,7 @@ const submitAtleta = async () => {
       form.password === '' ||
       form.endereco === '' ||
       form.bairro === '' ||
-      form.whatsapp === '' ||
-      form.contatoalternativo === '' // Validando campo de contato alternativo
+      form.whatsapp === '' 
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
       setShowErrorModal(true);
@@ -584,11 +583,12 @@ const submitAtleta = async () => {
             {/* Informações Educacionais e Familiares */}
             <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações Educacionais e Familiares</Text>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Nome do Seu Responsável</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">CPF do Responsável</Text>
             <FormField 
               title='Nome do Responsável'
               value={form.nomeResponsavel}
               handleChangeText={(e) => setForm({ ...form, nomeResponsavel: e })}
+              maskType={'cpf'}
             />
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Primeira Escola de Futebol?</Text>

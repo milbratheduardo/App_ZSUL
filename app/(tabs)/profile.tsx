@@ -5,6 +5,7 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
+import { signOut } from '@/lib/appwrite';
 
 const Profile = () => {
   const { user } = useGlobalContext();
@@ -14,14 +15,30 @@ const Profile = () => {
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
 
   // Opções de navegação com ícones FontAwesome
-  const navigationOptions = [
-    { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
-    { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
-    { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
-    { title: 'Turmas', icon: 'group', route: '/all_turmas' },
-    { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
-    { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
-  ];
+  const navigationOptions = user.role === 'responsavel'
+    ? [
+        { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
+        { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
+        { title: 'Seu Atleta', icon: 'child', route: '/seu_atleta' },
+        { title: 'Pagamentos', icon: 'credit-card', route: '/pagamento' },
+      ]
+    : [
+        { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
+        { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
+        { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
+        { title: 'Turmas', icon: 'group', route: '/all_turmas' },
+        { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
+        { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
+      ];
+
+  const logout = async () => {
+    try {
+      await signOut();
+      router.push('/signin'); 
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
 
   const renderOption = ({ item }) => (
     <TouchableOpacity style={styles.optionContainer} onPress={() => router.push(item.route)}>
@@ -56,6 +73,12 @@ const Profile = () => {
         keyExtractor={(item) => item.title}
         contentContainerStyle={styles.optionsList}
       />
+
+      {/* Botão para Suporte */}
+      <TouchableOpacity style={styles.reportButton} onPress={logout}>
+        <Text style={styles.reportButtonText}>Sair</Text>
+      </TouchableOpacity>
+
       
     </SafeAreaView>
   );
@@ -74,6 +97,21 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#126046',
     borderBottomWidth: 0,
+  },
+  reportButton: {
+    position: 'absolute',
+    bottom: 80,
+    alignSelf: 'center',
+    backgroundColor: '#FF6347',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  reportButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
   },
   headerContent: {
     flexDirection: 'row',

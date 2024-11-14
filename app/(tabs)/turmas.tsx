@@ -8,6 +8,9 @@ import TurmasCard from '@/components/TurmaCard';
 import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { router } from 'expo-router';
+import { getAllAlunos } from '@/lib/appwrite';
+
+
 
 const Turmas = () => {
   const [data, setData] = useState([]);
@@ -15,6 +18,9 @@ const Turmas = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTurma, setSelectedTurma] = useState(null);
   const { user } = useGlobalContext();
+
+  
+
 
   const today = new Date();
   const currentDate = today.getDate();
@@ -43,25 +49,45 @@ const Turmas = () => {
   const fetchData = async (day = selectedDay) => {
     setIsLoading(true);
     try {
-      const response = await getAllTurmas();
+      if (user.role === 'profissional') {
+        // Lógica para profissionais
+        const response = await getAllTurmas();
   
-      // Filtro adicional para verificar se user.userId está contido em turma.profissionalId
-      const filteredData = response.filter(
-        turma => 
-          turma.profissionalId.includes(user.userId) && // Verifica se o user.userId está contido em turma.profissionalId
-          (turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day) // Filtro para os dias
-      );
+        const filteredData = response.filter(
+          turma =>
+            turma.profissionalId.includes(user.userId) && // Verifica se o user.userId está contido em turma.profissionalId
+            (turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day) // Filtro para os dias
+        );
   
-      setData(filteredData);
+        setData(filteredData);
+      } else if (user.role === 'responsavel') {
+        // Lógica para responsáveis
+        const alunos = await getAllAlunos();
+  
+        // Filtra os alunos cujo nomeResponsavel é igual ao CPF do usuário
+        const responsavelAlunos = alunos.filter(aluno => aluno.nomeResponsavel === user.cpf);
+  
+        // Extrai os IDs das turmas desses alunos, removendo duplicatas
+        const turmaIds = [...new Set(responsavelAlunos.map(aluno => aluno.turmaId).filter(Boolean))];
+  
+        // Busca todas as turmas
+        const todasTurmas = await getAllTurmas();
+  
+        // Filtra turmas com base nos turmaIds extraídos e no dia selecionado
+        const filteredData = todasTurmas.filter(
+          turma =>
+            turmaIds.includes(turma.$id) && // Verifica se a turma está na lista de IDs das turmas dos alunos
+            (turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day) // Filtro para os dias
+        );
+  
+        setData(filteredData);
+      }
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
       setIsLoading(false);
     }
   };
-
-  console.log(user.role)
-
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -147,7 +173,7 @@ const Turmas = () => {
               <Text className="text-primary text-lg font-pregular mb-1">
                 Turmas Disponíveis
               </Text>
-              {user.role === 'admin' && user.role === 'profissional' (
+              {user.role === 'admin' || user.role === 'profissional' && (
                 <CustomButton
                   title="Nova Turma"
                   handlePress={() => router.push('/cadastro_turma')}

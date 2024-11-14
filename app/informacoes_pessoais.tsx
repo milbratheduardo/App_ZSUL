@@ -10,13 +10,20 @@ const InformacoesPessoais = () => {
   const firstName = user?.nome?.split(' ')[0] || 'Usuário';
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
 
-  const userInfoArray = [
+  const userInfoArray = user.role === 'responsavel' 
+  ? [
+    { label: 'CPF', value: user.cpf, icon: 'id-card' },
+    { label: 'Email', value: user.email, icon: 'envelope' },
+    { label: 'WhatsApp', value: user.whatsapp, icon: 'whatsapp' },
+  ]
+  :[
     { label: 'CPF', value: user.cpf, icon: 'id-card' },
     { label: 'Email', value: user.email, icon: 'envelope' },
     { label: 'Modalidade', value: user.modalidade, icon: 'futbol-o' },
     { label: 'Faixa Etária de Atuação', value: user.faixa_etaria, icon: 'group' },
     { label: 'Profissão', value: user.profissao, icon: 'briefcase' },
     { label: 'WhatsApp', value: user.whats, icon: 'whatsapp' },
+
   ];
 
   const [reportModalVisible, setReportModalVisible] = useState(false);

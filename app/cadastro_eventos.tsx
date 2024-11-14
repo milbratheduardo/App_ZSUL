@@ -90,13 +90,14 @@ const CadastroEventos = () => {
         Hora_event: time.toLocaleTimeString(),
         Confirmados: selectedAlunos.map(aluno => aluno.userId),
         type,
+        Local: form.Local
       };
       console.log('Dados enviados para createEvent/createMatch:', eventData);
 
       if (type === 'evento') {
-        await createEvent(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), type);
+        await createEvent(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), type, form.Local);
       } else if (type === 'partida') {
-        await createMatch(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), selectedAlunos.map(aluno => aluno.userId), type);
+        await createMatch(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), selectedAlunos.map(aluno => aluno.userId), type, form.Local);
       } else {
         Alert.alert('Erro', 'Selecione uma opção: Evento ou Partida');
         return;
@@ -193,6 +194,8 @@ const CadastroEventos = () => {
     </>
   );
 
+
+  
   const renderSelectedAlunos = () => (
     <View style={{ marginTop: 20 }}>
       <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>Alunos Selecionados:</Text>
@@ -245,7 +248,7 @@ const CadastroEventos = () => {
           </View>
 
           {renderFormFields()}
-          {renderSelectedAlunos()}
+          {type === 'partida' && renderSelectedAlunos()}
         </View>
 
         <View className="flex-row justify-center mb-10">
