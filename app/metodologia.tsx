@@ -26,6 +26,7 @@ const Metodologia = () => {
   }, [user]);
 
   const handleSaveMetodologia = async () => {
+    console.log('Salvando metodologia:', newMetodologia);
     if (newMetodologia.trim()) {
       await salvarMetodologia(user.userId, newMetodologia);
       setMetodologias([...metodologias, newMetodologia]);

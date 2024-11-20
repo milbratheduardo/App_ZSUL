@@ -63,9 +63,9 @@ const Dashboard = () => {
 
   const options = [
     { title: 'Alunos', icon: 'users', route: '/students' },
-    { title: 'Aulas e Treinos', icon: 'calendar', route: '/classes-trainings' },
+    { title: 'Treinos Personalizados', icon: 'calendar', route: '/dash_treinos' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
-    { title: 'Eventos e Jogos', icon: 'trophy', route: '/events-teams' },
+    { title: 'Eventos e Jogos', icon: 'trophy', route: '/lista_eventos' },
     
   ];
 
@@ -111,7 +111,7 @@ const Dashboard = () => {
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{eventosRecentes}</Text>
-              <Text style={styles.summaryLabel}>Eventos Recentes</Text>
+              <Text style={styles.summaryLabel}>Eventos do Mês</Text>
             </View>
           </View>
         </View>

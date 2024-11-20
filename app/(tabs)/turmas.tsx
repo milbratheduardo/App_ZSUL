@@ -175,7 +175,7 @@ const Turmas = () => {
               </Text>
               {user.role === 'admin' || user.role === 'profissional' && (
                 <CustomButton
-                  title="Nova Turma"
+                  title="Criar Turma"
                   handlePress={() => router.push('/cadastro_turma')}
                   containerStyles="ml-4 p-3"
                 />

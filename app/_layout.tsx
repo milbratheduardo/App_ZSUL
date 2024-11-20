@@ -72,6 +72,14 @@ const RootLayout = () => {
         <Stack.Screen name="pagamento" options={{headerShown: false}} />
         <Stack.Screen name="seu_atleta" options={{headerShown: false}} />
         <Stack.Screen name="all_relatorios" options={{headerShown: false}} />
+        <Stack.Screen name="responsaveis_contact" options={{headerShown: false}} />
+        <Stack.Screen name="lista_eventos" options={{headerShown: false}} />
+        <Stack.Screen name="profissionais_contact" options={{headerShown: false}} />
+        <Stack.Screen name="dash_treinos" options={{headerShown: false}} />
+
+
+
+        
         
         {/*<Stack.Screen name="/search/[query]" options={{headerShown: false}} />*/}
       </Stack>

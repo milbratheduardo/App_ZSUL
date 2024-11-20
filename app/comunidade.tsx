@@ -1,33 +1,41 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
 
-
-
 const Community = () => {
   const { user } = useGlobalContext();
   const router = useRouter();
-    const communityTopics = user.role === 'responsavel' 
+  const communityTopics = user.role === 'responsavel' 
     ? [
-      { id: '1', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/community-news' },
-      { id: '2', title: 'Contato dos Profissionais', icon: 'address-book', description: 'Entre em contato com os profissionais do time.', route: '/' },
-      { id: '3', title: 'Administração', icon: 'building', description: 'Entre em contato com o departamento administrativo.', route: '/' },
-      
-    ]:
-    [
-      { id: '1', title: 'Responsáveis', icon: 'comments', description: 'Canal de avisos e mensagens com pais e responsáveis', route: '/responsaveis' },
-      { id: '2', title: 'Grupo de Atletas', icon: 'soccer-ball-o', description: 'Conecte-se com outros atletas e saiba das novidades.', route: '/athletes_group' },
-      { id: '3', title: 'Grupo de Pais', icon: 'users', description: 'Grupo dedicado aos pais e responsáveis.', route: '/parents_group' },
-      { id: '4', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/community-news' },
-    ];
-    
-  
+        { id: '1', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/community-news' },
+        { id: '2', title: 'Contato dos Profissionais', icon: 'address-book', description: 'Entre em contato com os profissionais do time.', route: '/profissionais_contact' },
+        { id: '3', title: 'Administração', icon: 'building', description: 'Entre em contato com o departamento administrativo.', route: null }, // Removido o route para ser tratado no clique
+      ]
+    : [
+        { id: '1', title: 'Responsáveis', icon: 'comments', description: 'Canal de avisos e mensagens com pais e responsáveis', route: '/responsaveis' },
+        { id: '2', title: 'Grupo de Atletas', icon: 'soccer-ball-o', description: 'Conecte-se com outros atletas e saiba das novidades.', route: '/athletes_group' },
+        { id: '3', title: 'Grupo de Pais', icon: 'users', description: 'Grupo dedicado aos pais e responsáveis.', route: '/parents_group' },
+        { id: '4', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/community-news' },
+      ];
+
+  const handlePress = (item) => {
+    if (item.id === '3' && user.role === 'responsavel') {
+      const whatsappUrl = `https://wa.me/555391329635`;
+      Linking.openURL(whatsappUrl).catch(() =>
+        Alert.alert('Erro', 'Não foi possível abrir o WhatsApp.')
+      );
+    } else if (item.route) {
+      router.push(item.route);
+    } else {
+      Alert.alert('Aviso', 'Ação não implementada para este item.');
+    }
+  };
 
   const renderTopic = ({ item }) => (
-    <TouchableOpacity style={styles.topicContainer} onPress={() => router.push(item.route)}>
+    <TouchableOpacity style={styles.topicContainer} onPress={() => handlePress(item)}>
       <Icon name={item.icon} size={24} color="#126046" style={styles.topicIcon} />
       <View style={styles.topicTextContainer}>
         <Text style={styles.topicTitle}>{item.title}</Text>

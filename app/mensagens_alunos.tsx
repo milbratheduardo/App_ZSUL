@@ -17,7 +17,7 @@ const MensagensAlunos = () => {
       const filteredData = response.filter(
         (notifica) => notifica.turmaId === turmaId && notifica.publico === 'Atletas'
       );
-      setNotificacoes(filteredData);
+      setNotificacoes(filteredData.reverse());
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar as notificações.');
     } finally {
