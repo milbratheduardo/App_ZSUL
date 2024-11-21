@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getAllTurmas } from '@/lib/appwrite';
+import { getAllTurmas, getTurmaById } from '@/lib/appwrite';
 
 const AthletesGroup = () => {
   const router = useRouter();
@@ -12,26 +12,35 @@ const AthletesGroup = () => {
   const [turmas, setTurmas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getAllTurmas();
-      const filteredData = response.filter(
-        turma =>
-          turma.profissionalId.includes(user.userId) // Verifica se o user.userId está contido em turma.profissionalId
-      );
-      setTurmas(filteredData);
-    } catch (error) {
-      Alert.alert('Erro', error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        if (user.role === 'profissional') {
+          const response = await getAllTurmas();
+          const filteredData = response.filter(
+            turma => turma.profissionalId.includes(user.userId)
+          );
+          setTurmas(filteredData);
+        } else if (user.role === 'atleta') {
+          if (user.turmaId) {
+            const turma = await getTurmaById(user.turmaId); // Chamando a função importada
+            setTurmas([turma]); // Envolvendo em um array para o FlatList
+          } else {
+            Alert.alert('Erro', 'Você não está vinculado a nenhuma turma.');
+          }
+        }
+      } catch (error) {
+        Alert.alert('Erro', error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchData();
   }, []);
-
+  
   const renderTurma = ({ item }) => (
     <TouchableOpacity
       style={styles.topicContainer}

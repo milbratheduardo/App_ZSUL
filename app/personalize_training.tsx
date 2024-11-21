@@ -142,9 +142,11 @@ const TreinoPersonalizado = () => {
               onChangeText={(text) => setNewTreino({ ...newTreino, titulo: text })}
             />
             <TextInput
-              style={styles.modalInput}
+              style={styles.modalInputDescription}
               placeholder="Descrição"
               value={newTreino.descricao}
+              multiline={true} // Permite múltiplas linhas
+              numberOfLines={4} // Inicializa com 4 linhas visíveis
               onChangeText={(text) => setNewTreino({ ...newTreino, descricao: text })}
             />
             <TextInput
@@ -215,27 +217,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    width: '80%',
+    width: '90%',
     backgroundColor: 'white',
+    borderRadius: 10,
     padding: 20,
-    borderRadius: 8,
-    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
   modalInput: {
     width: '100%',
     height: 40,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 5,
+    marginBottom: 15,
     paddingHorizontal: 10,
-    marginBottom: 20,
+  },
+  modalInputDescription: {
+    width: '100%',
+    height: 120, // Maior altura para o campo de descrição
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    textAlignVertical: 'top', // Alinha o texto no topo
   },
   modalButton: {
-    backgroundColor: '#126046',
+    backgroundColor: '#4CAF50',
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 5,
+    alignItems: 'center',
   },
-  modalButtonText: { color: 'white', fontWeight: 'bold' },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

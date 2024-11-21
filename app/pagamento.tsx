@@ -1,123 +1,150 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { fetchPaymentDetails, fetchContractDetails } from '@/lib/appwrite'; // Funções para buscar dados de pagamento e contrato
 import { useGlobalContext } from '@/context/GlobalProvider';
+import { getAllAlunos } from '@/lib/appwrite';
 
-const Payment = () => {
+const Pagamentos = () => {
   const { user } = useGlobalContext();
-  const [paymentDetails, setPaymentDetails] = useState([]);
-  const [contractDetails, setContractDetails] = useState(null);
-  const [selectedOption, setSelectedOption] = useState('faturas'); // 'faturas' ou 'modalidade'
+  const [alunos, setAlunos] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedAluno, setSelectedAluno] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const planos = [
+    { id: 'mensal', title: 'Mensal', price: 45 }, // Valor em reais
+    { id: 'semestral', title: 'Semestral', price: 50 },
+    { id: 'anual', title: 'Anual', price: 60 },
+  ];
 
   useEffect(() => {
-    const loadDetails = async () => {
+    const fetchAlunos = async () => {
       try {
-        const details = await fetchPaymentDetails(user.userId);
-        setPaymentDetails(details);
+        setLoading(true);
+        const allAlunos = await getAllAlunos();
+        const alunosFiltrados = allAlunos.filter((aluno) => aluno.nomeResponsavel === user.cpf);
+        setAlunos(alunosFiltrados);
       } catch (error) {
-        console.error('Erro ao buscar detalhes de pagamento:', error);
+        Alert.alert('Erro', 'Falha ao buscar os dados dos alunos.');
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    const loadContractDetails = async () => {
-      try {
-        const contract = await fetchContractDetails(user.userId);
-        setContractDetails(contract);
-      } catch (error) {
-        console.error('Erro ao buscar detalhes do contrato:', error);
+    fetchAlunos();
+  }, [user.cpf]);
+
+  const handlePayment = async () => {
+    if (!selectedPlan || !selectedAluno) {
+      Alert.alert('Erro', 'Você deve selecionar um plano e um aluno.');
+      return;
+    }
+  
+    try {
+      const response = await fetch('https://e3d1-2804-d51-a416-500-40ea-c06f-3741-d38f.ngrok-free.app/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.userId, // Passa o ID do usuário responsável como nome
+          alunoId: selectedAluno.userId, // Metadata personalizada
+          plano: selectedPlan, // O plano selecionado (mensal, semestral, anual)
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Erro ao iniciar o pagamento');
       }
-    };
-
-    loadDetails();
-    loadContractDetails();
-  }, [user.userId]);
-
-  const renderPaymentItem = ({ item }) => (
-    <View style={styles.paymentItem}>
-      <Text style={styles.paymentTitle}>Fatura {item.month}/{item.year}</Text>
-      <Text style={styles.paymentStatus}>
-        Status: <Text style={{ fontWeight: 'bold', color: item.status === 'Pago' ? '#28a745' : '#dc3545' }}>{item.status}</Text>
-      </Text>
-      <Text style={styles.paymentAmount}>Valor: R$ {item.amount}</Text>
-      <TouchableOpacity style={styles.detailsButton}>
-        <Text style={styles.detailsButtonText}>Ver Detalhes</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  
+      const data = await response.json();
+      if (data.url) {
+        // Redireciona para a URL do Stripe Checkout usando Linking
+        console.log('Redirecting to Stripe Checkout URL:', data.url);
+        Alert.alert('Redirecionando...', 'Você será levado ao Stripe Checkout.');
+        Linking.openURL(data.url); // Abre a URL no navegador padrão do dispositivo
+      } else {
+        Alert.alert('Erro', 'Não foi possível iniciar o pagamento.');
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar o pagamento:', error);
+      Alert.alert('Erro', 'Não foi possível iniciar o pagamento.');
+    }
+  };
+ 
+  
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Pagamentos e Contrato</Text>
-        <Text style={styles.headerSubtitle}>Gerencie suas faturas e modalidade de contrato</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Selecione um Plano e um Aluno</Text>
+          <Text style={styles.headerSubtitle}>Informações sobre as mensalidades</Text>
+        </View>
 
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity
-          style={[styles.optionButton, selectedOption === 'faturas' && styles.optionButtonSelected]}
-          onPress={() => setSelectedOption('faturas')}
-        >
-          <Text style={[styles.optionButtonText, selectedOption === 'faturas' && styles.optionButtonTextSelected]}>
-            Faturas
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.optionButton, selectedOption === 'modalidade' && styles.optionButtonSelected]}
-          onPress={() => setSelectedOption('modalidade')}
-        >
-          <Text style={[styles.optionButtonText, selectedOption === 'modalidade' && styles.optionButtonTextSelected]}>
-            Modalidade do Contrato
-          </Text>
-        </TouchableOpacity>
-      </View>
+        {/* Carrossel de Planos */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
+          {planos.map((plano) => (
+            <TouchableOpacity
+              key={plano.id}
+              style={[styles.planCard, selectedPlan === plano.id && styles.selected]}
+              onPress={() => setSelectedPlan(plano.id)}
+            >
+              <Text style={styles.planTitle}>{plano.title}</Text>
+              <Text style={styles.planPrice}>R$ {plano.price},00</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-      {selectedOption === 'faturas' ? (
-        <FlatList
-          data={paymentDetails}
-          renderItem={renderPaymentItem}
-          keyExtractor={(item) => `${item.id}`}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
+        {/* Lista de Alunos */}
+        <View style={styles.alunoList}>
+          <Text style={styles.sectionTitle}>Alunos</Text>
+          {loading ? (
             <View style={styles.emptyState}>
-              <Icon name="credit-card" size={64} color="#ccc" />
-              <Text style={styles.emptyStateText}>Nenhuma fatura encontrada</Text>
+              <ActivityIndicator size="large" color="#126046" />
+              <Text style={styles.emptyStateText}>Carregando...</Text>
             </View>
-          }
-        />
-      ) : (
-        <View style={styles.contractContainer}>
-          {contractDetails ? (
-            <>
-              <Text style={styles.contractTitle}>Modalidade do Contrato</Text>
-              <Text style={styles.contractText}>Tipo: {contractDetails.type}</Text>
-              <Text style={styles.contractText}>Valor Mensal: R$ {contractDetails.monthlyAmount}</Text>
-              <Text style={styles.contractText}>Duração: {contractDetails.duration} meses</Text>
-              <Text style={styles.contractText}>Início: {contractDetails.startDate}</Text>
-              <Text style={styles.contractText}>Fim: {contractDetails.endDate}</Text>
-            </>
           ) : (
-            <Text style={styles.emptyStateText}>Nenhuma modalidade de contrato disponível</Text>
+            alunos.map((aluno) => (
+              <TouchableOpacity
+                key={aluno.$id}
+                style={[styles.alunoCard, selectedAluno?.userId === aluno.userId && styles.selected]}
+                onPress={() => setSelectedAluno(aluno)}
+              >
+                <Text style={styles.alunoName}>{aluno.nome}</Text>
+              </TouchableOpacity>
+            ))
           )}
         </View>
-      )}
+
+        {/* Botão para Stripe */}
+        <TouchableOpacity style={styles.paymentButton} onPress={handlePayment}>
+          <Text style={styles.paymentButtonText}>Continuar</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default Payment;
+export default Pagamentos;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
+  scrollContent: {
+    paddingBottom: 30, // Espaçamento extra no final
+  },
   header: {
-    padding: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
     backgroundColor: '#126046',
-    borderBottomWidth: 0,
-    alignItems: 'center',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 22,
@@ -129,37 +156,54 @@ const styles = StyleSheet.create({
     color: '#D1FAE5',
     marginTop: 4,
   },
-  optionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 20,
-  },
-  optionButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginHorizontal: 5,
-    backgroundColor: '#f0f0f0',
-  },
-  optionButtonSelected: {
-    backgroundColor: '#126046',
-  },
-  optionButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  optionButtonTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  listContent: {
+  carousel: {
     paddingHorizontal: 16,
-    paddingBottom: 80,
+    marginBottom: 10,
   },
-  paymentItem: {
+  planCard: {
+    width: 100,
+    height: 130,
+    padding: 12,
     backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    alignItems: 'center',
+    marginHorizontal: 8,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selected: {
+    borderColor: '#126046',
+    borderWidth: 2,
+  },
+  planTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  planPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#126046',
+  },
+  alunoList: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  alunoCard: {
     padding: 16,
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -167,65 +211,31 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  paymentTitle: {
+  alunoName: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#333',
+    textAlign: 'center',
   },
-  paymentStatus: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  paymentAmount: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 4,
-  },
-  detailsButton: {
-    marginTop: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+  paymentButton: {
+    marginHorizontal: 16,
+    marginVertical: 20,
+    paddingVertical: 12,
     backgroundColor: '#126046',
     borderRadius: 8,
     alignItems: 'center',
   },
-  detailsButtonText: {
+  paymentButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 20,
   },
   emptyStateText: {
     marginTop: 10,
     fontSize: 16,
     color: '#666',
-  },
-  contractContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    margin: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  contractTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  contractText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 4,
   },
 });

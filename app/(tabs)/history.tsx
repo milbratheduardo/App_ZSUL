@@ -21,7 +21,7 @@ const History = () => {
         
         // Filtrar turmas em que o user.userId está em turma.profissionalId ou se o user é responsável com cpf associado
         const userTurmas = allTurmas.filter(turma => 
-          turma.profissionalId.includes(user.userId) || user.role === 'responsavel'
+          turma.profissionalId.includes(user.userId) || user.role === 'responsavel' || user.role === `atleta`
         );
 
         setTurmas(userTurmas);
@@ -116,7 +116,7 @@ const History = () => {
         />
 
         {filteredAlunos.length === 0 ? (
-          <Text style={styles.noAlunosText}>Nenhum aluno encontrado</Text>
+          <Text style={styles.noAlunosText}>Alunos</Text>
         ) : (
           <FlatList
             data={filteredAlunos}

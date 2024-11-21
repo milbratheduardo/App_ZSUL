@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getMetodologias } from '@/lib/appwrite';
+import { getAllRelatorios } from '@/lib/appwrite';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { AntDesign } from '@expo/vector-icons';
 
@@ -15,14 +15,39 @@ const DashboardMetodologias = () => {
 
   useEffect(() => {
     const fetchMetodologias = async () => {
-      const response = await getMetodologias(user.userId);
-      const allMetodologias = response?.metodologias || [];
-      setMetodologias(allMetodologias);
-      
-      // Simulação de análise das metodologias mais e menos aplicadas
-      setMostUsed(allMetodologias.slice(0, 3)); // As 3 primeiras como exemplo de mais aplicadas
-      setLeastUsed(allMetodologias.slice(-3));  // As 3 últimas como exemplo de menos aplicadas
+      try {
+        const relatorios = await getAllRelatorios();
+        const userRelatorios = relatorios.filter((relatorio) => relatorio.userId === user.userId);
+
+        // Contar ocorrências de cada metodologia
+        const metodologiaCounts = {};
+        userRelatorios.forEach((relatorio) => {
+          (relatorio.metodologias || []).forEach((metodologia) => {
+            metodologiaCounts[metodologia] = (metodologiaCounts[metodologia] || 0) + 1;
+          });
+        });
+
+        const sortedMetodologias = Object.entries(metodologiaCounts).sort((a, b) => b[1] - a[1]);
+        const totalMetodologias = sortedMetodologias.length;
+
+        if (totalMetodologias === 0) {
+          setLeastUsed([]);
+          setMostUsed([]);
+        } else if (totalMetodologias === 1) {
+          setMostUsed([sortedMetodologias[0][0]]);
+          setLeastUsed([]);
+        } else {
+          const splitIndex = Math.ceil(totalMetodologias / 2);
+          setMostUsed(sortedMetodologias.slice(0, splitIndex).map(([key]) => key));
+          setLeastUsed(sortedMetodologias.slice(splitIndex).map(([key]) => key));
+        }
+
+        setMetodologias(sortedMetodologias.map(([key]) => key));
+      } catch (error) {
+        console.error('Erro ao buscar metodologias:', error);
+      }
     };
+
     fetchMetodologias();
   }, [user]);
 
@@ -31,7 +56,7 @@ const DashboardMetodologias = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.greeting}>Olá, {firstName}</Text>
-        <Text style={styles.subtitle}>Resumo das Metodologias</Text>
+        <Text style={styles.subtitle}>Resumo das Metodologias Aplicadas</Text>
       </View>
 
       {/* Dashboard */}
@@ -63,9 +88,6 @@ const DashboardMetodologias = () => {
           </View>
         ))}
       </ScrollView>
-
-      {/* Botão de adicionar metodologia */}
-
     </SafeAreaView>
   );
 };
@@ -81,8 +103,8 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 20,
     backgroundColor: '#126046',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
   },
   greeting: {
     fontSize: 22,
@@ -165,21 +187,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 15,
     right: 10,
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: '#126046',
-    borderRadius: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginLeft: 8,
   },
 });

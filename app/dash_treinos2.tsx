@@ -1,46 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { getTreinosPersonalizados, getAlunosById } from '@/lib/appwrite'; // Substitua pelo caminho real
+import { useLocalSearchParams } from 'expo-router'; // Importar o hook
+import { getTreinosPersonalizadosByAlunoId } from '@/lib/appwrite'; // Substitua pelo caminho real
 import { useGlobalContext } from '@/context/GlobalProvider';
 
-const DashTreinos = () => {
-  const { user } = useGlobalContext();
+const DashTreinos2 = () => {
+  const { alunoId } = useLocalSearchParams(); 
   const [treinos, setTreinos] = useState([]);
   const [selectedTreino, setSelectedTreino] = useState(null);
+  const { user } = useGlobalContext();
 
   useEffect(() => {
     fetchTreinos();
-  }, []);
+  }, [alunoId]);
 
   const fetchTreinos = async () => {
     try {
-      const response = await getTreinosPersonalizados(user.userId);
-
-      // Atualizar cada treino com o nome do aluno
-      const treinosComNomes = await Promise.all(
-        response.map(async (treino) => {
-          try {
-            const aluno = await getAlunosById(treino.aluno); // Buscar o aluno pelo ID
-            return { ...treino, nomeAluno: aluno.nome }; // Adicionar o nome do aluno ao treino
-          } catch (error) {
-            console.error(`Erro ao buscar nome do aluno para treino ${treino.$id}:`, error.message);
-            return { ...treino, nomeAluno: 'Aluno não encontrado' }; // Valor padrão se houver erro
-          }
-        })
-      );
-
-      setTreinos(treinosComNomes);
+      const idAluno = alunoId && alunoId !== '' ? alunoId : user.userId; // Usa alunoId se não for vazio, senão usa user.userId
+  
+      if (!idAluno) {
+        Alert.alert('Erro', 'Aluno não identificado.');
+        return;
+      }
+  
+      // Obter treinos personalizados do aluno pelo idAluno
+      const response = await getTreinosPersonalizadosByAlunoId(idAluno);
+      setTreinos(response);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os treinos.');
       console.error(error);
     }
   };
-
-  const openEditModal = (treino) => {
-    Alert.alert('Editar', `Editar treino: ${treino.titulo}`);
-    // Implemente a lógica de edição aqui
-  };
+  
 
   const deleteTreino = (id) => {
     Alert.alert('Confirmação', 'Deseja excluir este treino?', [
@@ -63,16 +55,13 @@ const DashTreinos = () => {
         data={treinos}
         keyExtractor={(item) => item.$id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <View
             style={[
               styles.treinoContainer,
               selectedTreino?.$id === item.$id && styles.treinoSelecionado,
             ]}
-            onPress={() => setSelectedTreino(item)}
           >
-            <Text style={styles.treinoText}>
-              {item.titulo} - {item.nomeAluno}
-            </Text>
+            <Text style={styles.treinoText}>{item.titulo}</Text>
             <Text style={styles.descricao}>{item.descricao}</Text>
             {item.link && (
               <Text
@@ -83,21 +72,25 @@ const DashTreinos = () => {
               </Text>
             )}
             <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => deleteTreino(item.$id)}>
-                <Feather name="trash" size={20} color="red" />
-              </TouchableOpacity>
+              {user.role !== 'atleta' && (
+                <TouchableOpacity onPress={() => deleteTreino(item.$id)}>
+                  <Feather name="trash" size={20} color="red" style={styles.icon} />
+                </TouchableOpacity>
+              )}
             </View>
-            {selectedTreino?.$id === item.$id && (
-              <Text style={styles.checkmarkTreino}>✓</Text>
-            )}
-          </TouchableOpacity>
+          </View>
         )}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>Nenhum treino encontrado para este aluno.</Text>
+          </View>
+        }
       />
     </View>
   );
 };
 
-export default DashTreinos;
+export default DashTreinos2;
 
 const styles = StyleSheet.create({
   container: {
@@ -152,7 +145,7 @@ const styles = StyleSheet.create({
   },
   cardActions: {
     position: 'absolute',
-    top: 2, // Posiciona no topo
+    top: 10, // Posiciona no topo
     right: -40, // Posiciona à direita
     borderRadius: 0, // Faz o botão ser crcula
     padding: 50,
@@ -160,5 +153,12 @@ const styles = StyleSheet.create({
   icon: {
     padding: 5,
   },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+  },
 });
-

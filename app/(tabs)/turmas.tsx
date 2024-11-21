@@ -81,7 +81,24 @@ const Turmas = () => {
         );
   
         setData(filteredData);
+      } else if (user.role === 'atleta') {
+        // Lógica para atletas
+        const alunos = await getAllAlunos();
+        const atletaData = alunos.find(aluno => aluno.userId === user.userId); // Busca o próprio atleta
+  
+        if (atletaData) {
+          const todasTurmas = await getAllTurmas();
+          const filteredData = todasTurmas.filter(
+            turma =>
+              turma.$id === atletaData.turmaId && // Filtro para mostrar apenas a turma do atleta
+              (turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day)
+          );
+          setData(filteredData);
+        } else {
+          setData([]); // Caso o atleta não tenha uma turma associada
+        }
       }
+
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {

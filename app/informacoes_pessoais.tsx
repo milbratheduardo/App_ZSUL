@@ -1,30 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import emailjs from 'emailjs-com';
+import { getTurmaById } from '@/lib/appwrite'; // Importe a função corretamente
 
 const InformacoesPessoais = () => {
   const { user } = useGlobalContext();
+  const [turmaTitle, setTurmaTitle] = useState('Carregando...');
   const firstName = user?.nome?.split(' ')[0] || 'Usuário';
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
 
-  const userInfoArray = user.role === 'responsavel' 
-  ? [
-    { label: 'CPF', value: user.cpf, icon: 'id-card' },
-    { label: 'Email', value: user.email, icon: 'envelope' },
-    { label: 'WhatsApp', value: user.whatsapp, icon: 'whatsapp' },
-  ]
-  :[
-    { label: 'CPF', value: user.cpf, icon: 'id-card' },
-    { label: 'Email', value: user.email, icon: 'envelope' },
-    { label: 'Modalidade', value: user.modalidade, icon: 'futbol-o' },
-    { label: 'Faixa Etária de Atuação', value: user.faixa_etaria, icon: 'group' },
-    { label: 'Profissão', value: user.profissao, icon: 'briefcase' },
-    { label: 'WhatsApp', value: user.whats, icon: 'whatsapp' },
+  useEffect(() => {
+    const fetchTurmaTitle = async () => {
+      if (user.turmaId) {
+        try {
+          const turma = await getTurmaById(user.turmaId);
+          setTurmaTitle(turma.title);
+        } catch (error) {
+          console.error(error.message);
+          setTurmaTitle('Não encontrada');
+        }
+      } else {
+        setTurmaTitle('Não vinculada');
+      }
+    };
 
-  ];
+    fetchTurmaTitle();
+  }, [user.turmaId]);
+
+  const userInfoArray = (() => {
+    if (user.role === 'responsavel') {
+      return [
+        { label: 'CPF', value: user.cpf, icon: 'id-card' },
+        { label: 'Email', value: user.email, icon: 'envelope' },
+        { label: 'WhatsApp', value: user.whatsapp, icon: 'whatsapp' },
+      ];
+    } else if (user.role === 'profissional') {
+      return [
+        { label: 'CPF', value: user.cpf, icon: 'id-card' },
+        { label: 'Email', value: user.email, icon: 'envelope' },
+        { label: 'Modalidade', value: user.modalidade, icon: 'futbol-o' },
+        { label: 'Faixa Etária de Atuação', value: user.faixa_etaria, icon: 'group' },
+        { label: 'Profissão', value: user.profissao, icon: 'briefcase' },
+        { label: 'WhatsApp', value: user.whats, icon: 'whatsapp' },
+      ];
+    } else if (user.role === 'atleta') {
+      return [
+        { label: 'CPF', value: user.cpf, icon: 'id-card' },
+        { label: 'Email', value: user.email, icon: 'envelope' },
+        { label: 'Data de Nascimento', value: user.birthDate, icon: 'calendar' },
+        { label: 'Turma', value: turmaTitle, icon: 'group' },
+        { label: 'WhatsApp', value: user.whatsapp, icon: 'whatsapp' },
+        { label: 'Posição', value: user.posicao || 'Não definida', icon: 'map-marker' }, // Novo ícone para Posição
+      ];
+    }
+    return []; // Retorno padrão caso o `role` não se encaixe em nenhuma condição
+  })();
 
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [reportText, setReportText] = useState('');
@@ -67,23 +100,25 @@ const InformacoesPessoais = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.infoContainer}>
-  {userInfoArray.map((item, index) => (
-    <View key={index} style={styles.infoCard}>
-      <Icon name={item.icon} size={24} color="#126046" style={styles.icon} />
-      <View style={styles.textContainer}>
-        <Text style={styles.label}>{item.label}</Text>
-        <Text style={styles.value}>
-          {item.value === user.faixa_etaria ? `${item.value} anos` : item.value}
-        </Text>
-      </View>
-    </View>
-  ))}
-</ScrollView>
+        {userInfoArray.map((item, index) => (
+          <View key={index} style={styles.infoCard}>
+            <Icon name={item.icon} size={24} color="#126046" style={styles.icon} />
+            <View style={styles.textContainer}>
+              <Text style={styles.label}>{item.label}</Text>
+              <Text style={styles.value}>
+                {item.value === user.faixa_etaria ? `${item.value} anos` : item.value}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
 
       {/* Botão para Suporte */}
-      <TouchableOpacity style={styles.reportButton} onPress={() => setReportModalVisible(true)}>
-        <Text style={styles.reportButtonText}>Suporte</Text>
-      </TouchableOpacity>
+      {user.role !== 'atleta' && (
+        <TouchableOpacity style={styles.reportButton} onPress={() => setReportModalVisible(true)}>
+          <Text style={styles.reportButtonText}>Suporte</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Modal de Relato de Problema */}
       <Modal
@@ -101,29 +136,35 @@ const InformacoesPessoais = () => {
               <TouchableOpacity
                 style={[
                   styles.categoryButton,
-                  selectedCategory === 'Erro de Sistema' && styles.selectedCategoryButton
+                  selectedCategory === 'Erro de Sistema' && styles.selectedCategoryButton,
                 ]}
                 onPress={() => setSelectedCategory('Erro de Sistema')}
               >
-                <Text style={selectedCategory === 'Erro de Sistema' ? styles.selectedText : styles.categoryText}>Erro de Sistema</Text>
+                <Text style={selectedCategory === 'Erro de Sistema' ? styles.selectedText : styles.categoryText}>
+                  Erro de Sistema
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.categoryButton,
-                  selectedCategory === 'Dúvida' && styles.selectedCategoryButton
+                  selectedCategory === 'Dúvida' && styles.selectedCategoryButton,
                 ]}
                 onPress={() => setSelectedCategory('Dúvida')}
               >
-                <Text style={selectedCategory === 'Dúvida' ? styles.selectedText : styles.categoryText}>Dúvida</Text>
+                <Text style={selectedCategory === 'Dúvida' ? styles.selectedText : styles.categoryText}>
+                  Dúvida
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.categoryButton,
-                  selectedCategory === 'Sugestão' && styles.selectedCategoryButton
+                  selectedCategory === 'Sugestão' && styles.selectedCategoryButton,
                 ]}
                 onPress={() => setSelectedCategory('Sugestão')}
               >
-                <Text style={selectedCategory === 'Sugestão' ? styles.selectedText : styles.categoryText}>Sugestão</Text>
+                <Text style={selectedCategory === 'Sugestão' ? styles.selectedText : styles.categoryText}>
+                  Sugestão
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -161,8 +202,8 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 20,
     backgroundColor: '#126046',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     marginBottom: 16,
   },
   headerContent: {

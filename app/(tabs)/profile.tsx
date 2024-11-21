@@ -15,21 +15,32 @@ const Profile = () => {
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
 
   // Opções de navegação com ícones FontAwesome
-  const navigationOptions = user.role === 'responsavel'
-    ? [
-        { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
-        { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
-        { title: 'Seu Atleta', icon: 'child', route: '/seu_atleta' },
-        { title: 'Pagamentos', icon: 'credit-card', route: '/pagamento' },
-      ]
-    : [
-        { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
-        { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
-        { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
-        { title: 'Turmas', icon: 'group', route: '/all_turmas' },
-        { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
-        { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
-      ];
+  let navigationOptions = [];
+
+  if (user.role === 'responsavel') {
+    navigationOptions = [
+      { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
+      { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
+      { title: 'Seu Atleta', icon: 'child', route: '/seu_atleta' },
+      { title: 'Pagamentos', icon: 'credit-card', route: '/pagamento' },
+      { title: 'Faturas', icon: 'file-text', route: '/faturas' },
+    ];
+  } else if (user.role === 'profissional') {
+    navigationOptions = [
+      { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
+      { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
+      { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
+      { title: 'Turmas', icon: 'group', route: '/all_turmas' },
+      { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
+      { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
+    ];
+  } else if (user.role === 'atleta') {
+    navigationOptions = [
+      { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
+      { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/dash_treinos2' },
+      { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
+    ];
+  }
 
   const logout = async () => {
     try {
@@ -78,13 +89,9 @@ const Profile = () => {
       <TouchableOpacity style={styles.reportButton} onPress={logout}>
         <Text style={styles.reportButtonText}>Sair</Text>
       </TouchableOpacity>
-
-      
     </SafeAreaView>
   );
 };
-
-
 
 export default Profile;
 

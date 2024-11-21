@@ -62,7 +62,8 @@ const Dashboard = () => {
 
 
   const options = [
-    { title: 'Alunos', icon: 'users', route: '/students' },
+    { title: 'Turmas', icon: 'users', route: '/students' },
+    { title: 'Alunos', icon: 'user-circle', route: '/alunos_stats' },
     { title: 'Treinos Personalizados', icon: 'calendar', route: '/dash_treinos' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
     { title: 'Eventos e Jogos', icon: 'trophy', route: '/lista_eventos' },

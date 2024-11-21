@@ -89,7 +89,7 @@ const Students = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.pageTitle}>Dashboard de Alunos</Text>
+      <Text style={styles.pageTitle}>Informações Gerais das Turmas</Text>
       <Picker
         selectedValue={selectedTurma}
         onValueChange={(value) => handleTurmaChange(value)}

@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f4f7f6',
   },
   topCardContainer: {
-    marginTop: 20, // Adicionado para dar espaço entre o topo da tela e o card
+    marginTop: 30, // Adicionado para dar espaço entre o topo da tela e o card
     marginBottom: 10, // Espaço entre o card e o próximo título
   },
   loadingText: {
