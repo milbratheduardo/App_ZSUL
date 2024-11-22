@@ -42,7 +42,7 @@ const Pagamentos = () => {
     }
   
     try {
-      const response = await fetch('https://e3d1-2804-d51-a416-500-40ea-c06f-3741-d38f.ngrok-free.app/checkout', {
+      const response = await fetch('https://de48-2804-d51-a416-500-e807-6da6-797b-90de.ngrok-free.app/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

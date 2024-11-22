@@ -1,50 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import { router } from 'expo-router';
-
 
 const Financeiro = () => {
-  const [payments, setPayments] = useState([]); // Armazena os pagamentos
-  const [contracts, setContracts] = useState([]); // Armazena os contratos
+  const [billingData, setBillingData] = useState([]); // Lista de dados de faturamento
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Função para buscar pagamentos e contratos da API
-    const fetchFinancialData = async () => {
+    // Função para buscar dados de faturamento
+    const fetchBillingData = async () => {
       try {
-        const paymentData = await getPayments(); // Chama a API para obter pagamentos
-        const contractData = await getContracts(); // Chama a API para obter contratos
+        const response = await fetch(
+          'https://de48-2804-d51-a416-500-e807-6da6-797b-90de.ngrok-free.app/billing'
+        );
+        const data = await response.json();
 
-        setPayments(paymentData);
-        setContracts(contractData);
+        if (response.ok) {
+          setBillingData(data.billing || []); // Define os dados de faturamento se existirem
+        } else {
+          console.error('Erro ao buscar dados de faturamento:', data.message);
+        }
       } catch (error) {
-        console.error('Erro ao buscar dados financeiros:', error);
+        console.error('Erro ao buscar dados financeiros:', error.message);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchFinancialData();
+    fetchBillingData();
   }, []);
 
-  // Renderiza cada pagamento
-  const renderPayment = ({ item }: { item: { id: string; name: string; amount: number; date: string } }) => (
-    <View style={styles.itemCard}>
-      <Text style={styles.itemTitle}>{item.name}</Text>
-      <Text style={styles.itemSubtitle}>Valor: R$ {item.amount.toFixed(2)}</Text>
-      <Text style={styles.itemSubtitle}>Data: {item.date}</Text>
-    </View>
-  );
+  // Renderiza cada item de faturamento
+  const renderBillingItem = ({ item }) => {
+    const statusStyle =
+      item.status === 'paid'
+        ? styles.statusPaid
+        : item.status === 'open'
+        ? styles.statusPending
+        : styles.statusDefault;
 
-  // Renderiza cada contrato
-  const renderContract = ({ item }: { item: { id: string; name: string; type: string } }) => (
-    <View style={styles.itemCard}>
-      <Text style={styles.itemTitle}>{item.name}</Text>
-      <Text style={styles.itemSubtitle}>Modelo de Contrato: {item.type}</Text>
-    </View>
-  );
+    const statusText =
+      item.status === 'paid' ? 'PAGO' : item.status === 'open' ? 'PENDENTE' : item.status;
+
+    return (
+      <View style={styles.itemCard}>
+        <Text style={styles.itemTitle}>{item.client}</Text>
+        <Text style={[styles.itemSubtitle, statusStyle]}>Status: {statusText}</Text>
+        <Text style={styles.itemSubtitle}>Valor: R$ {item.amount?.toFixed(2)}</Text>
+        <Text style={styles.itemSubtitle}>Data de Vencimento: {item.due_date}</Text>
+        {item.metadata && (
+          <View style={styles.metadataContainer}>
+            <Text style={styles.metadataHeader}>Metadados:</Text>
+            {Object.entries(item.metadata).map(([key, value]) => (
+              <Text key={key} style={styles.metadataItem}>
+                {key}: {value}
+              </Text>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -53,31 +69,15 @@ const Financeiro = () => {
       {isLoading ? (
         <Text style={styles.loadingText}>Carregando dados financeiros...</Text>
       ) : (
-        <>
-          {/* Lista de Pagamentos */}
-          <Text style={styles.sectionHeader}>Pagamentos</Text>
-          <FlatList
-            data={payments}
-            renderItem={renderPayment}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            ListEmptyComponent={() => (
-              <Text style={styles.emptyText}>Nenhum pagamento encontrado.</Text>
-            )}
-          />
-
-          {/* Lista de Contratos */}
-          <Text style={styles.sectionHeader}>Contratos</Text>
-          <FlatList
-            data={contracts}
-            renderItem={renderContract}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            ListEmptyComponent={() => (
-              <Text style={styles.emptyText}>Nenhum contrato encontrado.</Text>
-            )}
-          />
-        </>
+        <FlatList
+          data={billingData}
+          renderItem={renderBillingItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={() => (
+            <Text style={styles.emptyText}>Nenhum dado de faturamento encontrado.</Text>
+          )}
+        />
       )}
     </SafeAreaView>
   );
@@ -96,13 +96,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#126046',
     marginVertical: 16,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
   },
   loadingText: {
     fontSize: 16,
@@ -130,6 +123,46 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   itemSubtitle: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+  },
+  statusPaid: {
+    backgroundColor: '#DFF6DD',
+    color: '#126046',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  statusPending: {
+    backgroundColor: '#FFF6DD',
+    color: '#FFB800',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  statusDefault: {
+    backgroundColor: '#F4F4F4',
+    color: '#888',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  metadataContainer: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+  },
+  metadataHeader: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  metadataItem: {
     fontSize: 14,
     color: '#555',
     marginTop: 4,
