@@ -22,16 +22,22 @@ const TurmasList = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await getAllTurmas();
-
-      // Filtro para exibir apenas turmas onde o user.userId está contido em turma.profissionalId
-      const filteredData = response.filter(
-        turma =>
-          turma.profissionalId.includes(user.userId) && // Verifica se o user.userId está contido em turma.profissionalId
-          (turma.Dia1 || turma.Dia2 || turma.Dia3) // Filtro para dias disponíveis
-      );
-
-      setData(filteredData);
+      let response = [];
+  
+      if (user.admin === 'admin') {
+        // Busca todas as turmas se o usuário for admin
+        response = await getAllTurmas();
+      } else {
+        // Busca e filtra as turmas relacionadas ao profissional
+        const allTurmas = await getAllTurmas();
+        response = allTurmas.filter(
+          turma =>
+            turma.profissionalId.includes(user.userId) && // Verifica se o user.userId está contido em turma.profissionalId
+            (turma.Dia1 || turma.Dia2 || turma.Dia3) // Filtro para dias disponíveis
+        );
+      }
+  
+      setData(response);
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {

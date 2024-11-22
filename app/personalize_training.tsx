@@ -21,22 +21,22 @@ const TreinoPersonalizado = () => {
     try {
       // Passo 1: Buscar todas as turmas
       const turmas = await getAllTurmas();
-
-      // Passo 2: Filtrar turmas do professor atual
-      const minhasTurmas = turmas.filter((turma) =>
-        turma.profissionalId.includes(user.userId)
-      );
-
+  
+      // Passo 2: Verificar se o usuário é admin ou profissional
+      const minhasTurmas = user.admin === 'admin'
+        ? turmas // Admin: todas as turmas
+        : turmas.filter((turma) => turma.profissionalId.includes(user.userId)); // Profissional: turmas do usuário
+  
       // Passo 3: Buscar alunos para cada turma
       const alunosPromises = minhasTurmas.map((turma) =>
         getAlunosByTurmaId(turma.$id)
       );
-
+  
       const alunosData = await Promise.all(alunosPromises);
-
+  
       // Passo 4: Consolidar todos os alunos em uma lista única
       const todosAlunos = alunosData.flat();
-
+  
       setAlunos(todosAlunos);
       setFilteredAlunos(todosAlunos);
     } catch (error) {
@@ -44,6 +44,7 @@ const TreinoPersonalizado = () => {
       console.error(error);
     }
   };
+  
 
   const handleSearch = (query) => {
     setSearchQuery(query);

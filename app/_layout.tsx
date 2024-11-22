@@ -79,6 +79,10 @@ const RootLayout = () => {
         <Stack.Screen name="news_comunidade" options={{headerShown: false}} />
         <Stack.Screen name="dash_treinos2" options={{headerShown: false}} />
         <Stack.Screen name="alunos_stats" options={{headerShown: false}} />
+        <Stack.Screen name="admin_profile" options={{headerShown: false}} />
+        <Stack.Screen name="vincular_prof" options={{headerShown: false}} />
+        <Stack.Screen name="gerenciar_usuarios" options={{headerShown: false}} />
+        <Stack.Screen name="financeiro" options={{headerShown: false}} />
 
 
 

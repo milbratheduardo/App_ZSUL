@@ -17,9 +17,7 @@ const Turmas = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTurma, setSelectedTurma] = useState(null);
-  const { user } = useGlobalContext();
-
-  
+  const { user } = useGlobalContext();  
 
 
   const today = new Date();
@@ -49,43 +47,38 @@ const Turmas = () => {
   const fetchData = async (day = selectedDay) => {
     setIsLoading(true);
     try {
-      if (user.role === 'profissional') {
+      if (user.admin === 'admin') {
+        const todasTurmas = await getAllTurmas();
+        const filteredData = todasTurmas.filter(
+          turma =>
+            turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day // Filtro para os dias
+        );
+        setData(filteredData);
+      } else if (user.role === 'profissional') {
         // Lógica para profissionais
         const response = await getAllTurmas();
-  
         const filteredData = response.filter(
           turma =>
             turma.profissionalId.includes(user.userId) && // Verifica se o user.userId está contido em turma.profissionalId
             (turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day) // Filtro para os dias
         );
-  
         setData(filteredData);
       } else if (user.role === 'responsavel') {
         // Lógica para responsáveis
         const alunos = await getAllAlunos();
-  
-        // Filtra os alunos cujo nomeResponsavel é igual ao CPF do usuário
         const responsavelAlunos = alunos.filter(aluno => aluno.nomeResponsavel === user.cpf);
-  
-        // Extrai os IDs das turmas desses alunos, removendo duplicatas
         const turmaIds = [...new Set(responsavelAlunos.map(aluno => aluno.turmaId).filter(Boolean))];
-  
-        // Busca todas as turmas
         const todasTurmas = await getAllTurmas();
-  
-        // Filtra turmas com base nos turmaIds extraídos e no dia selecionado
         const filteredData = todasTurmas.filter(
           turma =>
             turmaIds.includes(turma.$id) && // Verifica se a turma está na lista de IDs das turmas dos alunos
             (turma.Dia1 === day || turma.Dia2 === day || turma.Dia3 === day) // Filtro para os dias
         );
-  
         setData(filteredData);
       } else if (user.role === 'atleta') {
         // Lógica para atletas
         const alunos = await getAllAlunos();
         const atletaData = alunos.find(aluno => aluno.userId === user.userId); // Busca o próprio atleta
-  
         if (atletaData) {
           const todasTurmas = await getAllTurmas();
           const filteredData = todasTurmas.filter(
@@ -98,7 +91,6 @@ const Turmas = () => {
           setData([]); // Caso o atleta não tenha uma turma associada
         }
       }
-
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {

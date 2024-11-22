@@ -25,7 +25,7 @@ const Profile = () => {
       { title: 'Pagamentos', icon: 'credit-card', route: '/pagamento' },
       { title: 'Faturas', icon: 'file-text', route: '/faturas' },
     ];
-  } else if (user.role === 'profissional') {
+  }else if (user.role === 'profissional') {
     navigationOptions = [
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
       { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
@@ -34,7 +34,13 @@ const Profile = () => {
       { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
       { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
     ];
-  } else if (user.role === 'atleta') {
+    if (user.admin === 'admin') {
+      navigationOptions = navigationOptions.concat([
+        { title: 'Administração', icon: 'building', route: '/admin_profile' },
+      ]);
+    }
+  }
+   else if (user.role === 'atleta') {
     navigationOptions = [
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
       { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/dash_treinos2' },
@@ -85,7 +91,7 @@ const Profile = () => {
         contentContainerStyle={styles.optionsList}
       />
 
-      {/* Botão para Suporte */}
+      {/* Botão para Logout */}
       <TouchableOpacity style={styles.reportButton} onPress={logout}>
         <Text style={styles.reportButtonText}>Sair</Text>
       </TouchableOpacity>

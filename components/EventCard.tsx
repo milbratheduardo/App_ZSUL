@@ -3,6 +3,7 @@ import { View, Text, Image, Alert } from 'react-native';
 import CustomButton from './CustomButton'; // Botão reutilizável
 import { getImageUrl, getCurrentUser, updateEventConfirmados, getEventConfirmados } from '@/lib/appwrite';
 import { router } from 'expo-router'; // Importe o router do expo-router
+import { useGlobalContext } from '@/context/GlobalProvider';
 
 const EventCard = ({ event }) => {
   const [imageUrl, setImageUrl] = useState('');
@@ -10,6 +11,8 @@ const EventCard = ({ event }) => {
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(''); // Adicionei para armazenar o papel do usuário
   const [confirmados, setConfirmados] = useState([]); // Lista de confirmados
+  const { user } = useGlobalContext();
+
 
   useEffect(() => {
     // Buscar imagem do evento
@@ -26,6 +29,7 @@ const EventCard = ({ event }) => {
 
     fetchImageUrl();
 
+    
     // Buscar usuário atual
     const fetchUser = async () => {
       try {
@@ -151,7 +155,7 @@ const EventCard = ({ event }) => {
         <CustomButton title="Confirmar Presença" handlePress={handleConfirmPresence} containerStyles="mt-4 p-3 bg-verde" />
       )}
 
-      {userRole === 'admin' && event.Type === 'evento' && (
+      {user.admin === 'admin' && event.Type === 'evento' && (
         <CustomButton title="Ver Confirmados" handlePress={handleViewConfirmados} containerStyles="mt-4 p-3 bg-verde" />
       )}
     </View>

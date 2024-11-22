@@ -17,9 +17,14 @@ const StudentsStats = () => {
     const fetchData = async () => {
       try {
         const allTurmas = await getAllTurmas();
-        const userTurmas = allTurmas.filter((turma) => turma.profissionalId.includes(user.userId));
+        
+        // Verifica se o usuário é admin
+        const userTurmas = user.admin === 'admin'
+          ? allTurmas // Carrega todas as turmas para admin
+          : allTurmas.filter((turma) => turma.profissionalId.includes(user.userId)); // Filtra turmas relacionadas ao profissional
+        
         setTurmas(userTurmas);
-
+  
         const alunosData = [];
         for (const turma of userTurmas) {
           const turmaAlunos = await getAlunosByTurmaId(turma.$id);
@@ -32,9 +37,10 @@ const StudentsStats = () => {
         console.error('Erro ao buscar dados:', error);
       }
     };
-
+  
     fetchData();
-  }, [user.userId]);
+  }, [user.userId, user.admin]); // Adicionado user.admin como dependência
+  
 
   const handleTurmaChange = (turmaId) => {
     setSelectedTurma(turmaId);

@@ -17,16 +17,22 @@ const Students = () => {
     const fetchTurmas = async () => {
       try {
         const turmas = await getAllTurmas();
-        const turmasFiltradas = turmas.filter(turma => turma.profissionalId.includes(user.userId));
+  
+        // Verifica se o usuário é admin
+        const turmasFiltradas = user.admin === 'admin'
+          ? turmas // Carrega todas as turmas para admin
+          : turmas.filter(turma => turma.profissionalId.includes(user.userId)); // Filtra turmas relacionadas ao profissional
+  
         setTurmas(turmasFiltradas);
         console.log('Turmas filtradas:', turmasFiltradas);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
       }
     };
-
+  
     fetchTurmas();
-  }, [user.userId]);
+  }, [user.userId, user.admin]);
+  
 
   const handleTurmaChange = async (turmaId) => {
     setSelectedTurma(turmaId);

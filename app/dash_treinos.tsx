@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { getTreinosPersonalizados, getAlunosById } from '@/lib/appwrite'; // Substitua pelo caminho real
+import { getTreinosPersonalizados, getAllTreinosPersonalizados, getAlunosById } from '@/lib/appwrite'; // Substitua pelo caminho real
 import { useGlobalContext } from '@/context/GlobalProvider';
 
 const DashTreinos = () => {
@@ -15,8 +15,16 @@ const DashTreinos = () => {
 
   const fetchTreinos = async () => {
     try {
-      const response = await getTreinosPersonalizados(user.userId);
-
+      let response;
+  
+      if (user.admin === 'admin') {
+        // Caso o usuário seja admin, buscar todos os treinos personalizados
+        response = await getAllTreinosPersonalizados(); // Certifique-se de que essa função retorna todos os treinos
+      } else {
+        // Caso contrário, buscar apenas os treinos do usuário atual
+        response = await getTreinosPersonalizados(user.userId);
+      }
+  
       // Atualizar cada treino com o nome do aluno
       const treinosComNomes = await Promise.all(
         response.map(async (treino) => {
@@ -29,13 +37,14 @@ const DashTreinos = () => {
           }
         })
       );
-
+  
       setTreinos(treinosComNomes);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os treinos.');
       console.error(error);
     }
   };
+  
 
   const openEditModal = (treino) => {
     Alert.alert('Editar', `Editar treino: ${treino.titulo}`);

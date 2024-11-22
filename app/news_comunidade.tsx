@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getNovidades, saveNovidade, deleteNovidade } from '@/lib/appwrite'; // Substitua pelas funções do Appwrite
+import { getNovidades, salvarNovidade, deleteNovidade } from '@/lib/appwrite'; // Substitua pelas funções do Appwrite
 import { useGlobalContext } from '@/context/GlobalProvider';
 
 const Novidades = () => {
@@ -18,7 +18,7 @@ const Novidades = () => {
   const [novaNovidade, setNovaNovidade] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = user.role === 'admin'; // Verifica se o usuário é administrador
+  const isAdmin = user.admin === 'admin'; 
 
   useEffect(() => {
     const fetchNovidades = async () => {
@@ -40,20 +40,27 @@ const Novidades = () => {
       Alert.alert('Atenção', 'O campo de novidade não pode estar vazio.');
       return;
     }
-
+  
+    // Dados a serem enviados
+    const novidadeData = {
+      novidade: novaNovidade, // Texto da novidade
+      userId: user?.userId || 'Desconhecido', // Adiciona o ID do usuário ou um valor padrão
+    };
+  
     try {
-      const newNovidade = await saveNovidade(novaNovidade);
-      setNovidades([...novidades, newNovidade]);
-      setNovaNovidade('');
+      const newNovidade = await salvarNovidade(novidadeData);
+      setNovidades((prev) => [...prev, newNovidade]); // Atualiza a lista de novidades
+      setNovaNovidade(''); // Limpa o campo de entrada
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao adicionar a novidade.');
+      Alert.alert('Erro', 'Falha ao adicionar a novidade: ' + error.message);
     }
   };
+  
 
   const handleDeleteNovidade = async (id) => {
     try {
       await deleteNovidade(id);
-      setNovidades(novidades.filter((item) => item.id !== id));
+      setNovidades(novidades.filter((item) => item.$id !== id));
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível excluir a novidade.');
     }
@@ -61,11 +68,11 @@ const Novidades = () => {
 
   const renderNovidadeCard = ({ item }) => (
     <View style={styles.card}>
-      <Text style={styles.novidadeText}>{item.text}</Text>
+      <Text style={styles.novidadeText}>{item.novidade}</Text>
       {isAdmin && (
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => handleDeleteNovidade(item.id)}
+          onPress={() => handleDeleteNovidade(item.$id)}
         >
           <Icon name="trash" size={20} color="#FF6347" />
         </TouchableOpacity>
@@ -82,7 +89,7 @@ const Novidades = () => {
       ) : (
         <FlatList
           data={novidades}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.$id}
           renderItem={renderNovidadeCard}
           contentContainerStyle={styles.list}
         />

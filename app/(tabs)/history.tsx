@@ -2,7 +2,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput } 
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider'; 
-import { getAllTurmas, getAlunosByTurmaId } from '@/lib/appwrite'; 
+import { getAllTurmas, getAlunosByTurmaId, getAllAlunos, getTurmaById } from '@/lib/appwrite'; 
 import { images } from '@/constants'; 
 import { router } from 'expo-router';
 
@@ -17,39 +17,66 @@ const History = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const allTurmas = await getAllTurmas();
-        
-        // Filtrar turmas em que o user.userId está em turma.profissionalId ou se o user é responsável com cpf associado
-        const userTurmas = allTurmas.filter(turma => 
-          turma.profissionalId.includes(user.userId) || user.role === 'responsavel' || user.role === `atleta`
-        );
-
-        setTurmas(userTurmas);
-        
-        // Buscar alunos de cada turma e adicionar à lista de alunos com o título da turma
-        const alunosData = [];
-        for (const turma of userTurmas) {
-          const turmaAlunos = await getAlunosByTurmaId(turma.$id);
-
-          // Filtrar os alunos para mostrar apenas aqueles com o nomeResponsavel igual ao user.cpf para responsáveis
-          const filteredAlunos = turmaAlunos.filter(aluno => 
-            user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
+        if (user.admin === 'admin') {
+          // Lógica para admin: listar todos os alunos
+          const allAlunos = await getAllAlunos();
+          
+          // Adiciona o título da turma aos alunos
+          const alunosData = await Promise.all(
+            allAlunos.map(async aluno => {
+              let turmaTitle = 'Sem Turma Associada';
+              if (aluno.turmaId) {
+                try {
+                  const turma = await getTurmaById(aluno.turmaId);
+                  turmaTitle = turma.title;
+                } catch (error) {
+                  console.error('Erro ao buscar título da turma:', error.message);
+                }
+              }
+              return { ...aluno, turmaTitle };
+            })
           );
-
-          filteredAlunos.forEach(aluno => {
-            alunosData.push({ ...aluno, turmaTitle: turma.title });
-          });
+  
+          setAlunos(alunosData);
+          setFilteredAlunos(alunosData); // Inicializa lista de alunos filtrados
+        } else {
+          // Lógica para outros usuários
+          const allTurmas = await getAllTurmas();
+  
+          // Filtrar turmas em que o user.userId está em turma.profissionalId ou se o user é responsável com cpf associado
+          const userTurmas = allTurmas.filter(turma =>
+            turma.profissionalId.includes(user.userId) || user.role === 'responsavel' || user.role === `atleta`
+          );
+  
+          setTurmas(userTurmas);
+  
+          // Buscar alunos de cada turma e adicionar à lista de alunos com o título da turma
+          const alunosData = [];
+          for (const turma of userTurmas) {
+            const turmaAlunos = await getAlunosByTurmaId(turma.$id);
+  
+            // Filtrar os alunos para mostrar apenas aqueles com o nomeResponsavel igual ao user.cpf para responsáveis
+            const filteredAlunos = turmaAlunos.filter(aluno =>
+              user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
+            );
+  
+            filteredAlunos.forEach(aluno => {
+              alunosData.push({ ...aluno, turmaTitle: turma.title });
+            });
+          }
+  
+          setAlunos(alunosData);
+          setFilteredAlunos(alunosData); // Inicializa lista de alunos filtrados
         }
-        
-        setAlunos(alunosData);
-        setFilteredAlunos(alunosData); // Inicializar lista de alunos filtrados
       } catch (error) {
         console.error("Erro ao buscar dados:", error.message);
       }
     };
-
+  
     fetchData();
   }, [user.userId]);
+  
+  
 
   const handleSearch = (text) => {
     setSearchText(text);
