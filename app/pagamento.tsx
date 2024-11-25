@@ -42,7 +42,7 @@ const Pagamentos = () => {
     }
   
     try {
-      const response = await fetch('https://de48-2804-d51-a416-500-e807-6da6-797b-90de.ngrok-free.app/checkout', {
+      const response = await fetch('https://stripe-v1.onrender.com/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
