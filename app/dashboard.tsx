@@ -1,8 +1,9 @@
-import React,  { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useGlobalContext } from '@/context/GlobalProvider';
 import { router } from 'expo-router';
 import { getAllTurmas, getAlunosByTurmaId, getEventsForCurrentMonth } from '@/lib/appwrite';
 
@@ -13,7 +14,19 @@ const Dashboard = () => {
   const [totalAlunos, setTotalAlunos] = useState(0);
   const [aulasHoje, setAulasHoje] = useState(0);
   const [eventosRecentes, setEventosRecentes] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
 
+  const handleDateChange = (event, date) => {
+    if (date) {
+      setSelectedDate(date);
+    }
+    setShowPicker(false);
+  };
+
+  const formatMonthYear = (date) => {
+    return `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`;
+  };
 
   useEffect(() => {
     const fetchEventosRecentes = async () => {
@@ -24,17 +37,14 @@ const Dashboard = () => {
     fetchEventosRecentes();
   }, []);
 
-
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Obter todas as turmas
         const turmas = await getAllTurmas();
-        
-        // Filtrar turmas para aquelas que têm o user.userId no campo profissionalId
-        const turmasFiltradas = turmas.filter((turma) => turma.profissionalId.includes(user.userId));
+        const turmasFiltradas = turmas.filter((turma) =>
+          turma.profissionalId.includes(user.userId)
+        );
 
-        // Total de Alunos
         let countAlunos = 0;
         for (const turma of turmasFiltradas) {
           const alunos = await getAlunosByTurmaId(turma.$id);
@@ -42,7 +52,6 @@ const Dashboard = () => {
         }
         setTotalAlunos(countAlunos);
 
-        // Contagem de Aulas Hoje
         const today = new Date();
         const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
         const todayName = daysOfWeek[today.getDay()];
@@ -60,14 +69,12 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [user.userId]);
 
-
   const options = [
     { title: 'Turmas', icon: 'users', route: '/students' },
     { title: 'Alunos', icon: 'user-circle', route: '/alunos_stats' },
     { title: 'Treinos Personalizados', icon: 'calendar', route: '/dash_treinos' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
     { title: 'Eventos e Jogos', icon: 'trophy', route: '/lista_eventos' },
-    
   ];
 
   const renderOption = ({ item }) => (
@@ -82,7 +89,6 @@ const Dashboard = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.profileDetails}>
@@ -98,9 +104,12 @@ const Dashboard = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.dashboardContent}>
-        {/* Resumo de Informações */}
+        
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Resumo</Text>
+          <TouchableOpacity style={styles.calendarButton} onPress={() => setShowPicker(true)}>
+            <Icon name="calendar" size={20} color="#126046" />
+            <Text style={styles.calendarText}>{formatMonthYear(selectedDate)}</Text>
+          </TouchableOpacity>
           <View style={styles.summaryContent}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{totalAlunos}</Text>
@@ -108,16 +117,27 @@ const Dashboard = () => {
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{aulasHoje}</Text>
-              <Text style={styles.summaryLabel}>Aulas Hoje</Text>
+              <Text style={styles.summaryLabel}>Alunos do Mês</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{eventosRecentes}</Text>
               <Text style={styles.summaryLabel}>Eventos do Mês</Text>
             </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{eventosRecentes}</Text>
+              <Text style={styles.summaryLabel}>Total de Eventos</Text>
+            </View>
           </View>
         </View>
+        {showPicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display="calendar"
+            onChange={handleDateChange}
+          />
+        )}
 
-        {/* Lista de Ações Rápidas */}
         <Text style={styles.sectionTitle}>Ações Rápidas</Text>
         <FlatList
           data={options}
@@ -125,14 +145,6 @@ const Dashboard = () => {
           keyExtractor={(item) => item.title}
           contentContainerStyle={styles.optionsList}
         />
-
-        {/* Gráfico Fictício de Posições de Atletas 
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Posições de Atletas</Text>
-          <View style={styles.chartPlaceholder}>
-            <Text style={styles.chartText}>[Gráfico de Posições Placeholder]</Text>
-          </View>
-        </View>*/}
       </ScrollView>
     </SafeAreaView>
   );
@@ -196,11 +208,16 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 16,
   },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+  calendarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  calendarText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#126046',
+    marginLeft: 8,
   },
   summaryContent: {
     flexDirection: 'row',
@@ -215,7 +232,7 @@ const styles = StyleSheet.create({
     color: '#126046',
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: 10,
     color: '#666',
   },
   sectionTitle: {
@@ -256,33 +273,5 @@ const styles = StyleSheet.create({
   },
   arrowIcon: {
     color: '#126046',
-  },
-  chartContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 16,
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  chartPlaceholder: {
-    backgroundColor: '#E0E0E0',
-    height: 150,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chartText: {
-    color: '#666',
-    fontSize: 16,
   },
 });

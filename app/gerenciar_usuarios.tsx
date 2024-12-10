@@ -6,16 +6,14 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import { getAllUsers, getAllProfissionais, getAllAlunos, getAllResponsaveis } from '@/lib/appwrite';
 
 const GerenciarUsuarios = () => {
-  const [selectedUserType, setSelectedUserType] = useState(''); // Tipo de usuário selecionado
-  const [users, setUsers] = useState([]); // Lista de usuários para exibição
-  const [userCounts, setUserCounts] = useState({ profissionais: 0, atletas: 0, responsaveis: 0 }); // Contagem de usuários
+  const [selectedUserType, setSelectedUserType] = useState('');
+  const [users, setUsers] = useState([]);
+  const [userCounts, setUserCounts] = useState({ profissionais: 0, atletas: 0, responsaveis: 0 });
 
   useEffect(() => {
     const fetchUserCounts = async () => {
       try {
         const allUsers = await getAllUsers();
-
-        // Contagem por tipo de usuário
         const profissionaisCount = allUsers.filter(user => user.role === 'profissional').length;
         const atletasCount = allUsers.filter(user => user.role === 'atleta').length;
         const responsaveisCount = allUsers.filter(user => user.role === 'responsavel').length;
@@ -36,10 +34,8 @@ const GerenciarUsuarios = () => {
 
   const handleSelectUserType = async (type) => {
     setSelectedUserType(type);
-
     try {
       let fetchedUsers = [];
-
       if (type === 'profissionais') {
         fetchedUsers = await getAllProfissionais();
         setUsers(
@@ -62,19 +58,33 @@ const GerenciarUsuarios = () => {
         );
       } else if (type === 'responsaveis') {
         fetchedUsers = await getAllResponsaveis();
-          setUsers(
-            fetchedUsers.map((responsavel) => ({
-              userId: responsavel.userId || 'ID Desconhecido',
-              nome: responsavel.nome || 'Nome não informado',
-              cpf: responsavel.cpf || 'CPF não informado',
-              whatsapp: responsavel.whatsapp || 'WhatsApp não informado',
-            }))
-          );
-        }
+        setUsers(
+          fetchedUsers.map((responsavel) => ({
+            userId: responsavel.userId || 'ID Desconhecido',
+            nome: responsavel.nome || 'Nome não informado',
+            cpf: responsavel.cpf || 'CPF não informado',
+            whatsapp: responsavel.whatsapp || 'WhatsApp não informado',
+          }))
+        );
+      }
     } catch (error) {
       Alert.alert('Erro', `Não foi possível carregar os ${type}.`);
       console.error(`Erro ao buscar ${type}:`, error.message);
     }
+  };
+
+  const handleArchive = (userId) => {
+    Alert.alert('Arquivar', `Deseja arquivar o usuário com ID ${userId}?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Confirmar', onPress: () => console.log(`Usuário ${userId} arquivado`) },
+    ]);
+  };
+
+  const handleDelete = (userId) => {
+    Alert.alert('Deletar', `Deseja deletar o usuário com ID ${userId}?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Confirmar', onPress: () => console.log(`Usuário ${userId} deletado`) },
+    ]);
   };
 
   const renderUser = ({ item }) => (
@@ -84,20 +94,24 @@ const GerenciarUsuarios = () => {
       {selectedUserType === 'atletas' && <Text style={styles.userInfo}>Posição: {item.posicao}</Text>}
       {selectedUserType === 'responsaveis' && <Text style={styles.userInfo}>WhatsApp: {item.whatsapp}</Text>}
       <Text style={styles.userCpf}>CPF: {item.cpf}</Text>
+
+      <View style={styles.iconContainer}>
+        <TouchableOpacity onPress={() => handleArchive(item.userId)}>
+          <Icon name="archive" size={20} color="#126046" style={styles.icon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(item.userId)}>
+          <Icon name="trash" size={20} color="#E53935" style={styles.icon} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.headerText}>Gerenciar Usuários</Text>
-
-      {/* Contadores de usuários */}
       <View style={styles.userTypeContainer}>
         <TouchableOpacity
-          style={[
-            styles.userTypeCard,
-            selectedUserType === 'profissionais' && styles.selectedCard,
-          ]}
+          style={[styles.userTypeCard, selectedUserType === 'profissionais' && styles.selectedCard]}
           onPress={() => handleSelectUserType('profissionais')}
         >
           <Icon name="briefcase" size={24} color="#126046" />
@@ -105,10 +119,7 @@ const GerenciarUsuarios = () => {
           <Text style={styles.userCount}>{userCounts.profissionais}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.userTypeCard,
-            selectedUserType === 'atletas' && styles.selectedCard,
-          ]}
+          style={[styles.userTypeCard, selectedUserType === 'atletas' && styles.selectedCard]}
           onPress={() => handleSelectUserType('atletas')}
         >
           <Icon name="running" size={24} color="#126046" />
@@ -116,10 +127,7 @@ const GerenciarUsuarios = () => {
           <Text style={styles.userCount}>{userCounts.atletas}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.userTypeCard,
-            selectedUserType === 'responsaveis' && styles.selectedCard,
-          ]}
+          style={[styles.userTypeCard, selectedUserType === 'responsaveis' && styles.selectedCard]}
           onPress={() => handleSelectUserType('responsaveis')}
         >
           <Icon name="user-friends" size={24} color="#126046" />
@@ -128,7 +136,6 @@ const GerenciarUsuarios = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Lista de usuários */}
       <FlatList
         data={users}
         renderItem={renderUser}
@@ -218,6 +225,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginTop: 4,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+  },
+  icon: {
+    marginLeft: 12,
   },
   emptyText: {
     fontSize: 16,

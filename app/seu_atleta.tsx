@@ -2,37 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useRouter } from 'expo-router';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useRouter } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getAllTurmas, getAlunosByTurmaId, getChamadasByTurmaId, getTreinosPersonalizados, getTreinosPersonalizadosByAlunoId } from '@/lib/appwrite';
+import { getAllTurmas, getAlunosByTurmaId, getChamadasByTurmaId, getTreinosPersonalizadosByAlunoId } from '@/lib/appwrite';
 
 const AlunoProfile = () => {
   const { user } = useGlobalContext();
-  const [alunos, setAlunos] = useState<any[]>([]);
-  const router = useRouter(); 
-
+  const [alunos, setAlunos] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchAlunos = async () => {
       try {
         const allTurmas = await getAllTurmas();
-        const alunosData: any[] = [];
+        const alunosData = [];
   
         for (const turma of allTurmas) {
           const turmaAlunos = await getAlunosByTurmaId(turma.$id);
-          const chamadas = await getChamadasByTurmaId(turma.$id); // Obter chamadas da turma
+          const chamadas = await getChamadasByTurmaId(turma.$id);
           const totalChamadas = chamadas.length;
   
-          const filteredAlunos = turmaAlunos.filter(aluno =>
-            user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
+          const filteredAlunos = turmaAlunos.filter(
+            (aluno) => user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
           );
   
           for (const aluno of filteredAlunos) {
-            const presencas = chamadas.filter(chamada => chamada.presentes.includes(aluno.userId)).length;
+            const presencas = chamadas.filter((chamada) =>
+              chamada.presentes.includes(aluno.userId)
+            ).length;
             const presencaPercentual = totalChamadas > 0 ? ((presencas / totalChamadas) * 100).toFixed(1) : '0.0';
   
-            // Obtém treinos personalizados para cada aluno
             const treinos = await getTreinosPersonalizadosByAlunoId(aluno.userId);
             const totalTreinos = treinos.length;
   
@@ -41,7 +41,6 @@ const AlunoProfile = () => {
               turmaTitle: turma.title,
               presenca: presencaPercentual,
               treinosConcluidos: totalTreinos,
-              treinosTotais: totalTreinos, // Assumimos todos como concluídos; ajuste se necessário
             });
           }
         }
@@ -53,9 +52,8 @@ const AlunoProfile = () => {
   
     fetchAlunos();
   }, [user.cpf]);
-  
 
-  const renderAlunoItem = ({ item }: { item: any }) => (
+  const renderAlunoItem = ({ item }) => (
     <View style={styles.listItem}>
       <View style={styles.headerInfo}>
         <Image source={{ uri: item.avatarUrl || 'https://example.com/default-avatar.png' }} style={styles.avatar} />
@@ -78,12 +76,15 @@ const AlunoProfile = () => {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.treinosButton} onPress={() => router.push({
-        pathname: '/dash_treinos2',
-        params: {
-          alunoId: item.userId,
-        }  
-      })}>
+      <TouchableOpacity
+        style={styles.treinosButton}
+        onPress={() =>
+          router.push({
+            pathname: '/dash_treinos2',
+            params: { alunoId: item.userId },
+          })
+        }
+      >
         <Text style={styles.treinosButtonText}>Ver Treinos Personalizados</Text>
       </TouchableOpacity>
     </View>
@@ -95,6 +96,18 @@ const AlunoProfile = () => {
         <Text style={styles.headerTitle}>Seu Atleta</Text>
         <Text style={styles.headerSubtitle}>Informações e progresso do aluno</Text>
       </View>
+
+      <TouchableOpacity
+        style={styles.signupButton}
+        onPress={() =>
+          router.push({
+            pathname: '/signup',
+            params: { role: 'atleta', cpf: user.cpf },
+          })
+        }
+      >
+        <Text style={styles.signupButtonText}>Cadastrar Novo Atleta</Text>
+      </TouchableOpacity>
 
       <FlatList
         data={alunos}
@@ -115,7 +128,6 @@ const AlunoProfile = () => {
 export default AlunoProfile;
 
 const styles = StyleSheet.create({
-  // Estilos mantidos sem mudanças
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
@@ -124,8 +136,6 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 20,
     backgroundColor: '#126046',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
     marginBottom: 16,
   },
   headerTitle: {
@@ -137,6 +147,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#D1FAE5',
     marginTop: 4,
+  },
+  signupButton: {
+    margin: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#126046',
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  signupButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   listContent: {
     paddingHorizontal: 16,

@@ -21,7 +21,9 @@ import { useLocalSearchParams } from 'expo-router'; // Para pegar a data passada
 const SignUp = () => {
   const { setUser, setIsLoggedIn } = useGlobalContext();
 
-  const { role } = useLocalSearchParams();
+  const { role, cpf } = useLocalSearchParams();
+  console.log('dados:', role, cpf);
+  
   const [form, setForm] = useState({
     username: '',
     cpf: '',

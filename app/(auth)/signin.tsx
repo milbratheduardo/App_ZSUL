@@ -288,7 +288,7 @@ const SignIn = () => {
         </Text>
       </TouchableOpacity>
 
-      {/* Botão Clicável - Atleta */}
+      {/* Botão Clicável - Atleta 
       <TouchableOpacity 
         onPress={() => {
           setShowChoiceModal(false); // Fechar o modal
@@ -313,7 +313,7 @@ const SignIn = () => {
         <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
           Atleta
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity>*/}
 
       {/* Botão Clicável - Responsável */}
       <TouchableOpacity 
