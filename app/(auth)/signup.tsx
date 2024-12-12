@@ -23,6 +23,16 @@ const SignUp = () => {
 
   const { role, cpf } = useLocalSearchParams();
   console.log('dados:', role, cpf);
+
+  useEffect(() => {
+    if (cpf) {
+      setForm((prevForm) => ({
+        ...prevForm,
+        nomeResponsavel: cpf,
+      }));
+    }
+  }, [cpf]);
+  
   
   const [form, setForm] = useState({
     username: '',
@@ -584,6 +594,7 @@ const submitAtleta = async () => {
 
             {/* Informações Educacionais e Familiares */}
             <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações Educacionais e Familiares</Text>
+            
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">CPF do Responsável</Text>
             <FormField 
@@ -591,6 +602,8 @@ const submitAtleta = async () => {
               value={form.nomeResponsavel}
               handleChangeText={(e) => setForm({ ...form, nomeResponsavel: e })}
               maskType={'cpf'}
+              editable={!cpf} // Bloqueia edição se 'cpf' estiver definido
+              style={cpf ? { backgroundColor: '#e0e0e0' } : {}} // Altera o estilo para indicar bloqueio
             />
 
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Primeira Escola de Futebol?</Text>

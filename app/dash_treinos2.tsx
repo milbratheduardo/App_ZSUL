@@ -72,7 +72,7 @@ const DashTreinos2 = () => {
               </Text>
             )}
             <View style={styles.cardActions}>
-              {user.role !== 'atleta' && (
+              {user.role !== 'atleta' || user.role !== 'responsavel' && (
                 <TouchableOpacity onPress={() => deleteTreino(item.$id)}>
                   <Feather name="trash" size={20} color="red" style={styles.icon} />
                 </TouchableOpacity>

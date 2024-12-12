@@ -83,6 +83,7 @@ const RootLayout = () => {
         <Stack.Screen name="vincular_prof" options={{headerShown: false}} />
         <Stack.Screen name="gerenciar_usuarios" options={{headerShown: false}} />
         <Stack.Screen name="financeiro" options={{headerShown: false}} />
+        <Stack.Screen name="edit_card_aluno" options={{headerShown: false}} />
 
 
 

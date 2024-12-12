@@ -3,12 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { getAlunosById } from '@/lib/appwrite';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
 const detalhesAluno = () => {
   const [aluno, setAluno] = useState(null);
   const { alunoId } = useLocalSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     fetchAluno();
@@ -21,6 +24,11 @@ const detalhesAluno = () => {
     } catch (error) {
       console.error('Erro ao buscar aluno:', error.message);
     }
+  };
+
+  const handleEdit = () => {
+    router.push(`/edit_card_aluno?alunoId=${alunoId}`);
+    console.log('Editar Card clicado!');
   };
 
   const calculateAge = (birthDate) => {
@@ -40,13 +48,17 @@ const detalhesAluno = () => {
 
   return (
     <View style={styles.screenContainer}>
+    <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+        <Icon name="edit" size={18} color="#FFFFFF" />
+        <Text style={styles.editButtonText}>Editar Card</Text>
+      </TouchableOpacity>
       <View style={styles.cardContainer}>
         <ImageBackground 
           source={{ uri: 'https://path-to-your-card-background-image.png' }}
           style={styles.backgroundImage}
           imageStyle={styles.backgroundImageStyle}
         >
-          <Text style={styles.rating}>{aluno.rating || '80'}</Text>
+          <Text style={styles.rating}>{aluno.geral || '80'}</Text>
           <Text style={styles.position}>{aluno.posicao}</Text>
 
           <View style={styles.imageContainer}>
@@ -69,11 +81,11 @@ const detalhesAluno = () => {
               </View>
               <View style={styles.infoItem}>
                 <Icon name="bolt" size={18} color="#FFFFFF" />
-                <Text style={styles.attributeText}>Pique: 85</Text>
+                <Text style={styles.attributeText}>Pique: {aluno.pique}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Icon name="soccer-ball-o" size={18} color="#FFFFFF" />
-                <Text style={styles.attributeText}>Força: 100</Text>
+                <Text style={styles.attributeText}>Força: {aluno.forca}</Text>
               </View>
             </View>
 
@@ -88,11 +100,11 @@ const detalhesAluno = () => {
               </View>
               <View style={styles.infoItem}>
                 <Icon name="handshake-o" size={18} color="#FFFFFF" />
-                <Text style={styles.attributeText}>Passe: 58</Text>
+                <Text style={styles.attributeText}>Passe: {aluno.passe}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Icon name="crosshairs" size={18} color="#FFFFFF" />
-                <Text style={styles.attributeText}>Finalização: 98</Text>
+                <Text style={styles.attributeText}>Finalização: {aluno.finalizacao}</Text>
               </View>
             </View>
           </View>
@@ -107,6 +119,26 @@ const detalhesAluno = () => {
 export default detalhesAluno;
 
 const styles = StyleSheet.create({
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#004225', // Verde escuro
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  editButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },  
   screenContainer: {
     flex: 1,
     justifyContent: 'center',

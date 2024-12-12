@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getAllUsers, getAllProfissionais, getAllAlunos, getAllResponsaveis } from '@/lib/appwrite';
+import { getAllUsers, getAllProfissionais, getAllAlunos, getAllResponsaveis, updateUserStatus, deleteUser } from '@/lib/appwrite';
 
 const GerenciarUsuarios = () => {
   const [selectedUserType, setSelectedUserType] = useState('');
@@ -14,10 +14,14 @@ const GerenciarUsuarios = () => {
     const fetchUserCounts = async () => {
       try {
         const allUsers = await getAllUsers();
-        const profissionaisCount = allUsers.filter(user => user.role === 'profissional').length;
-        const atletasCount = allUsers.filter(user => user.role === 'atleta').length;
-        const responsaveisCount = allUsers.filter(user => user.role === 'responsavel').length;
-
+  
+        // Filtra os usuários com status !== 'Arquivado'
+        const activeUsers = allUsers.filter((user) => user.status !== 'Arquivado');
+  
+        const profissionaisCount = activeUsers.filter(user => user.role === 'profissional').length;
+        const atletasCount = activeUsers.filter(user => user.role === 'atleta').length;
+        const responsaveisCount = activeUsers.filter(user => user.role === 'responsavel').length;
+  
         setUserCounts({
           profissionais: profissionaisCount,
           atletas: atletasCount,
@@ -28,63 +32,83 @@ const GerenciarUsuarios = () => {
         console.error('Erro ao buscar usuários:', error.message);
       }
     };
-
+  
     fetchUserCounts();
   }, []);
 
+  const fetchActiveUserIds = async () => {
+    try {
+      const allUsers = await getAllUsers();
+      const activeUsers = allUsers.filter(user => user.status !== 'Arquivado');
+      return activeUsers.map(user => user.userId);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível carregar os dados dos usuários.');
+      console.error('Erro ao buscar usuários:', error.message);
+      return [];
+    }
+  };
+  
+  
   const handleSelectUserType = async (type) => {
     setSelectedUserType(type);
     try {
+      const activeUserIds = await fetchActiveUserIds(); // Obter os IDs ativos
       let fetchedUsers = [];
+      
       if (type === 'profissionais') {
         fetchedUsers = await getAllProfissionais();
-        setUsers(
-          fetchedUsers.map((profissional) => ({
-            userId: profissional.userId || 'ID Desconhecido',
-            nome: profissional.nome || 'Nome não informado',
-            cpf: profissional.cpf || 'CPF não informado',
-            profissao: profissional.profissao || 'Profissão não informada',
-          }))
-        );
       } else if (type === 'atletas') {
         fetchedUsers = await getAllAlunos();
-        setUsers(
-          fetchedUsers.map((aluno) => ({
-            userId: aluno.userId || 'ID Desconhecido',
-            nome: aluno.nome || 'Nome não informado',
-            posicao: aluno.posicao || 'Posição não informada',
-            cpf: aluno.cpf || 'CPF não informado',
-          }))
-        );
       } else if (type === 'responsaveis') {
         fetchedUsers = await getAllResponsaveis();
-        setUsers(
-          fetchedUsers.map((responsavel) => ({
-            userId: responsavel.userId || 'ID Desconhecido',
-            nome: responsavel.nome || 'Nome não informado',
-            cpf: responsavel.cpf || 'CPF não informado',
-            whatsapp: responsavel.whatsapp || 'WhatsApp não informado',
-          }))
-        );
       }
+  
+      // Filtrar usuários com IDs ativos
+      const filteredUsers = fetchedUsers.filter(user => activeUserIds.includes(user.userId));
+  
+      // Mapear para os campos necessários
+      const mappedUsers = filteredUsers.map((user) => ({
+        userId: user.userId || 'ID Desconhecido',
+        nome: user.nome || 'Nome não informado',
+        cpf: user.cpf || 'CPF não informado',
+        ...(type === 'profissionais' && { profissao: user.profissao || 'Profissão não informada' }),
+        ...(type === 'atletas' && { posicao: user.posicao || 'Posição não informada' }),
+        ...(type === 'responsaveis' && { whatsapp: user.whatsapp || 'WhatsApp não informado' }),
+      }));
+  
+      setUsers(mappedUsers);
     } catch (error) {
       Alert.alert('Erro', `Não foi possível carregar os ${type}.`);
       console.error(`Erro ao buscar ${type}:`, error.message);
     }
   };
-
-  const handleArchive = (userId) => {
-    Alert.alert('Arquivar', `Deseja arquivar o usuário com ID ${userId}?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Confirmar', onPress: () => console.log(`Usuário ${userId} arquivado`) },
-    ]);
+  
+  
+  const handleArchive = async (userId) => {
+    try {
+      console.log('USERID: ', userId);
+      await updateUserStatus(userId, { status: 'Arquivado' });
+      Alert.alert('Sucesso', 'Usuário arquivado com sucesso.');
+  
+      // Atualize a lista de usuários removendo o arquivado, se necessário
+      setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== userId));
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível arquivar o usuário.');
+      console.error('Erro ao arquivar o usuário:', error.message);
+    }
   };
-
-  const handleDelete = (userId) => {
-    Alert.alert('Deletar', `Deseja deletar o usuário com ID ${userId}?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Confirmar', onPress: () => console.log(`Usuário ${userId} deletado`) },
-    ]);
+  
+  const handleDelete = async (userId) => {
+    try {
+      await deleteUser(userId);
+      Alert.alert('Sucesso', 'Usuário deletado com sucesso.');
+  
+      // Atualize a lista de usuários removendo o deletado
+      setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== userId));
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível deletar o usuário.');
+      console.error('Erro ao deletar o usuário:', error.message);
+    }
   };
 
   const renderUser = ({ item }) => (
