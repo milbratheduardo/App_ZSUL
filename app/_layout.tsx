@@ -30,9 +30,21 @@ const RootLayout = () => {
   if (!fontsLoaded && !error) {
     return null;
   }
+
+
+  const linking = {
+    prefixes: ['ZSul://'], 
+    config: {
+      screens: {
+        index: '',
+        pagamento: 'callback',
+      }
+    }
+  }
+
   return (
     <GlobalProvider>
-      <Stack>
+      <Stack linking={linking}>
         <Stack.Screen name="index" options={{headerShown: false}} />
         <Stack.Screen name="(auth)" options={{headerShown: false}} />
         <Stack.Screen name="(tabs)" options={{headerShown: false}} />
@@ -84,6 +96,9 @@ const RootLayout = () => {
         <Stack.Screen name="gerenciar_usuarios" options={{headerShown: false}} />
         <Stack.Screen name="financeiro" options={{headerShown: false}} />
         <Stack.Screen name="edit_card_aluno" options={{headerShown: false}} />
+        <Stack.Screen name="historico_relatorios" options={{headerShown: false}} />
+        <Stack.Screen name="gerenciamento_dados" options={{headerShown: false}} />
+        <Stack.Screen name="cartao" options={{headerShown: false}} />
 
 
 

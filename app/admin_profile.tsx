@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 
 const AdminOptions = () => {
@@ -26,6 +27,7 @@ const AdminOptions = () => {
     { title: 'Gerenciar Usuários', icon: 'users-cog', route: '/gerenciar_usuarios' },
     { title: 'Vincular Profissional', icon: 'user-plus', route: '/vincular_prof' },
     { title: 'Financeiro', icon: 'money-check-alt', route: '/financeiro' },
+    { title: 'Gerenciamento de Dados', icon: 'chart-line', route: '/gerenciamento_dados' },
   ];
 
   const renderOption = ({ item }: { item: { title: string; icon: string; route: string } }) => (

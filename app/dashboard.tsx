@@ -138,6 +138,7 @@ const Dashboard = () => {
     { title: 'Treinos Personalizados', icon: 'calendar', route: '/dash_treinos' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
     { title: 'Eventos e Jogos', icon: 'trophy', route: '/lista_eventos' },
+    { title: 'Histórico de Relatórios', icon: 'file-text', route: '/historico_relatorios' }
   ];
 
   const renderOption = ({ item }) => (

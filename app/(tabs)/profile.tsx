@@ -1,22 +1,19 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import { signOut } from '@/lib/appwrite';
 
 const Profile = () => {
   const { user } = useGlobalContext();
-  const firstName = user?.nome.split(' ')[0];
+  const [refreshing, setRefreshing] = useState(false);
 
-  // URL da foto de perfil
+  const firstName = user?.nome.split(' ')[0];
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
 
-  // Opções de navegação com ícones FontAwesome
   let navigationOptions = [];
-
   if (user.role === 'responsavel') {
     navigationOptions = [
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
@@ -25,7 +22,7 @@ const Profile = () => {
       { title: 'Pagamentos', icon: 'credit-card', route: '/pagamento' },
       { title: 'Faturas', icon: 'file-text', route: '/faturas' },
     ];
-  }else if (user.role === 'profissional') {
+  } else if (user.role === 'profissional') {
     navigationOptions = [
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
       { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
@@ -35,12 +32,9 @@ const Profile = () => {
       { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
     ];
     if (user.admin === 'admin') {
-      navigationOptions = navigationOptions.concat([
-        { title: 'Administração', icon: 'building', route: '/admin_profile' },
-      ]);
+      navigationOptions.push({ title: 'Administração', icon: 'building', route: '/admin_profile' });
     }
-  }
-   else if (user.role === 'atleta') {
+  } else if (user.role === 'atleta') {
     navigationOptions = [
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
       { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/dash_treinos2' },
@@ -51,10 +45,18 @@ const Profile = () => {
   const logout = async () => {
     try {
       await signOut();
-      router.push('/signin'); 
+      router.push('/signin');
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simula uma operação de atualização (exemplo: buscar novamente os dados do usuário)
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
   };
 
   const renderOption = ({ item }) => (
@@ -69,7 +71,6 @@ const Profile = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.profileDetails}>
@@ -83,15 +84,14 @@ const Profile = () => {
         </View>
       </View>
 
-      {/* Navigation Options */}
       <FlatList
         data={navigationOptions}
         renderItem={renderOption}
         keyExtractor={(item) => item.title}
         contentContainerStyle={styles.optionsList}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       />
 
-      {/* Botão para Logout */}
       <TouchableOpacity style={styles.reportButton} onPress={logout}>
         <Text style={styles.reportButtonText}>Sair</Text>
       </TouchableOpacity>
@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: '#126046',
-    borderBottomWidth: 0,
   },
   reportButton: {
     position: 'absolute',

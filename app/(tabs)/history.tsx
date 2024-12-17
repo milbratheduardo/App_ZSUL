@@ -1,5 +1,5 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider'; 
 import { getAllTurmas, getAlunosByTurmaId, getAllAlunos, getTurmaById } from '@/lib/appwrite'; 
@@ -13,70 +13,61 @@ const History = () => {
   const [alunos, setAlunos] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [filteredAlunos, setFilteredAlunos] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    try {
+      if (user.admin === 'admin') {
+        const allAlunos = await getAllAlunos();
+        const alunosData = await Promise.all(
+          allAlunos.map(async aluno => {
+            let turmaTitle = 'Sem Turma Associada';
+            if (aluno.turmaId) {
+              try {
+                const turma = await getTurmaById(aluno.turmaId);
+                turmaTitle = turma.title;
+              } catch (error) {
+                console.error('Erro ao buscar título da turma:', error.message);
+              }
+            }
+            return { ...aluno, turmaTitle };
+          })
+        );
+        setAlunos(alunosData);
+        setFilteredAlunos(alunosData);
+      } else {
+        const allTurmas = await getAllTurmas();
+        const userTurmas = allTurmas.filter(turma =>
+          turma.profissionalId.includes(user.userId) || user.role === 'responsavel' || user.role === `atleta`
+        );
+        setTurmas(userTurmas);
+        const alunosData = [];
+        for (const turma of userTurmas) {
+          const turmaAlunos = await getAlunosByTurmaId(turma.$id);
+          const filteredAlunos = turmaAlunos.filter(aluno =>
+            user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
+          );
+          filteredAlunos.forEach(aluno => {
+            alunosData.push({ ...aluno, turmaTitle: turma.title });
+          });
+        }
+        setAlunos(alunosData);
+        setFilteredAlunos(alunosData);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error.message);
+    }
+  }, [user]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (user.admin === 'admin') {
-          // Lógica para admin: listar todos os alunos
-          const allAlunos = await getAllAlunos();
-          
-          // Adiciona o título da turma aos alunos
-          const alunosData = await Promise.all(
-            allAlunos.map(async aluno => {
-              let turmaTitle = 'Sem Turma Associada';
-              if (aluno.turmaId) {
-                try {
-                  const turma = await getTurmaById(aluno.turmaId);
-                  turmaTitle = turma.title;
-                } catch (error) {
-                  console.error('Erro ao buscar título da turma:', error.message);
-                }
-              }
-              return { ...aluno, turmaTitle };
-            })
-          );
-  
-          setAlunos(alunosData);
-          setFilteredAlunos(alunosData); // Inicializa lista de alunos filtrados
-        } else {
-          // Lógica para outros usuários
-          const allTurmas = await getAllTurmas();
-  
-          // Filtrar turmas em que o user.userId está em turma.profissionalId ou se o user é responsável com cpf associado
-          const userTurmas = allTurmas.filter(turma =>
-            turma.profissionalId.includes(user.userId) || user.role === 'responsavel' || user.role === `atleta`
-          );
-  
-          setTurmas(userTurmas);
-  
-          // Buscar alunos de cada turma e adicionar à lista de alunos com o título da turma
-          const alunosData = [];
-          for (const turma of userTurmas) {
-            const turmaAlunos = await getAlunosByTurmaId(turma.$id);
-  
-            // Filtrar os alunos para mostrar apenas aqueles com o nomeResponsavel igual ao user.cpf para responsáveis
-            const filteredAlunos = turmaAlunos.filter(aluno =>
-              user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
-            );
-  
-            filteredAlunos.forEach(aluno => {
-              alunosData.push({ ...aluno, turmaTitle: turma.title });
-            });
-          }
-  
-          setAlunos(alunosData);
-          setFilteredAlunos(alunosData); // Inicializa lista de alunos filtrados
-        }
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error.message);
-      }
-    };
-  
     fetchData();
-  }, [user.userId]);
-  
-  
+  }, [fetchData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
 
   const handleSearch = (text) => {
     setSearchText(text);
@@ -150,6 +141,9 @@ const History = () => {
             keyExtractor={(item) => item.$id}
             renderItem={renderAluno}
             style={styles.alunosList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+            }
           />
         )}
       </View>
@@ -158,18 +152,74 @@ const History = () => {
 };
 
 export default History;
-
 const styles = StyleSheet.create({
-  logo: { width: 115, height: 90 },
-  welcomeText: { fontSize: 14, color: '#126046' },
-  userName: { fontSize: 22, fontWeight: 'bold', color: '#126046' },
-  alunosList: { marginTop: 10 },
-  alunoContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc', backgroundColor: '#f8f8f8', borderRadius: 8, marginBottom: 10 },
-  alunoInfo: { flexDirection: 'row', alignItems: 'center' },
-  alunoAvatar: { width: 30, height: 30, borderRadius: 15, marginRight: 10 },
-  alunoNome: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  posicaoContainer: { width: 50, borderRadius: 5, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' },
-  posicaoText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
-  searchInput: { backgroundColor: '#fff', borderRadius: 8, padding: 10, fontSize: 16, marginVertical: 10, borderColor: '#ccc', borderWidth: 1 },
-  noAlunosText: { textAlign: 'center', fontSize: 16, color: '#666', marginTop: 20 },
+  logo: {
+    width: 115,
+    height: 90,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: '#126046',
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#126046',
+  },
+  alunosList: {
+    marginTop: 10,
+  },
+  alunoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  alunoInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  alunoAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
+  },
+  alunoNome: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  posicaoContainer: {
+    width: 50,
+    borderRadius: 5,
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  posicaoText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    marginVertical: 10,
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  noAlunosText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
+  },
 });

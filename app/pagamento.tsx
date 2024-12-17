@@ -1,20 +1,30 @@
- import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { getAllAlunos } from '@/lib/appwrite';
+import { useRouter } from 'expo-router';
 
-const Pagamentos = () => {
+const Pagamentos2 = () => {
   const { user } = useGlobalContext();
   const [alunos, setAlunos] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [selectedAluno, setSelectedAluno] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const planos = [
-    { id: 'mensal', title: 'Mensal', price: 45 }, // Valor em reais
-    { id: 'semestral', title: 'Semestral', price: 50 },
-    { id: 'anual', title: 'Anual', price: 60 },
+    { id: '2c93808493b072d70193be7c14b30582', title: 'Mensal', price: 45 },
+    { id: '2c93808493b072d80193be79bea105ac', title: 'Semestral', price: 50 },
+    { id: '2c93808493b073170193be7a300c053f', title: 'Anual', price: 60 },
   ];
 
   useEffect(() => {
@@ -22,7 +32,9 @@ const Pagamentos = () => {
       try {
         setLoading(true);
         const allAlunos = await getAllAlunos();
-        const alunosFiltrados = allAlunos.filter((aluno) => aluno.nomeResponsavel === user.cpf);
+        const alunosFiltrados = allAlunos.filter(
+          (aluno) => aluno.nomeResponsavel === user.cpf && aluno.status_pagamento == null
+        );
         setAlunos(alunosFiltrados);
       } catch (error) {
         Alert.alert('Erro', 'Falha ao buscar os dados dos alunos.');
@@ -35,53 +47,28 @@ const Pagamentos = () => {
     fetchAlunos();
   }, [user.cpf]);
 
-  const handlePayment = async () => {
+  const handleContinue = () => {
     if (!selectedPlan || !selectedAluno) {
-      Alert.alert('Erro', 'Você deve selecionar um plano e um aluno.');
+      Alert.alert('Erro', 'Selecione um plano e um aluno.');
       return;
     }
-  
-    try {
-      const response = await fetch('https://stripe-v1.onrender.com/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: user.email,
-          name: user.userId, // Passa o ID do usuário responsável como nome
-          alunoId: selectedAluno.userId, // Metadata personalizada
-          plano: selectedPlan, // O plano selecionado (mensal, semestral, anual)
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Erro ao iniciar o pagamento');
-      }
-  
-      const data = await response.json();
-      if (data.url) {
-        // Redireciona para a URL do Stripe Checkout usando Linking
-        console.log('Redirecting to Stripe Checkout URL:', data.url);
-        Alert.alert('Redirecionando...', 'Você será levado ao Stripe Checkout.');
-        Linking.openURL(data.url); // Abre a URL no navegador padrão do dispositivo
-      } else {
-        Alert.alert('Erro', 'Não foi possível iniciar o pagamento.');
-      }
-    } catch (error) {
-      console.error('Erro ao iniciar o pagamento:', error);
-      Alert.alert('Erro', 'Não foi possível iniciar o pagamento.');
-    }
+
+    // Redirecionar para a tela /cartao com os parâmetros
+    router.push({
+      pathname: '/cartao',
+      params: {
+        plan_id: selectedPlan,
+        userId: user.userId,
+        atletaId: selectedAluno.userId,
+      },
+    });
   };
- 
-  
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Selecione um Plano e um Aluno</Text>
-          <Text style={styles.headerSubtitle}>Informações sobre as mensalidades</Text>
         </View>
 
         {/* Carrossel de Planos */}
@@ -119,31 +106,30 @@ const Pagamentos = () => {
           )}
         </View>
 
-        {/* Botão para Stripe */}
-        <TouchableOpacity style={styles.paymentButton} onPress={handlePayment}>
-          <Text style={styles.paymentButtonText}>Continuar</Text>
+        {/* Botão para Continuar */}
+        <TouchableOpacity style={styles.paymentButton} onPress={handleContinue}>
+          {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.paymentButtonText}>Continuar</Text>}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default Pagamentos;
+export default Pagamentos2;
 
+// Estilos permanecem os mesmos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
   scrollContent: {
-    paddingBottom: 30, // Espaçamento extra no final
+    paddingBottom: 30,
   },
   header: {
     paddingVertical: 24,
     paddingHorizontal: 20,
     backgroundColor: '#126046',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
     marginBottom: 16,
   },
   headerTitle: {
@@ -151,53 +137,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#D1FAE5',
-    marginTop: 4,
-  },
   carousel: {
     paddingHorizontal: 16,
     marginBottom: 10,
   },
   planCard: {
-    width: 100,
-    height: 130,
+    width: 120,
     padding: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     alignItems: 'center',
     marginHorizontal: 8,
-    marginVertical: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
   },
   selected: {
     borderColor: '#126046',
     borderWidth: 2,
   },
-  planTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  planPrice: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#126046',
-  },
   alunoList: {
-    marginTop: 10,
+    marginTop: 20,
     paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 10,
   },
   alunoCard: {
@@ -206,15 +170,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
-  },
-  alunoName: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
   },
   paymentButton: {
     marginHorizontal: 16,
@@ -228,14 +184,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
-  },
-  emptyState: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  emptyStateText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
   },
 });
