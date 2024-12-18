@@ -99,6 +99,7 @@ const RootLayout = () => {
         <Stack.Screen name="historico_relatorios" options={{headerShown: false}} />
         <Stack.Screen name="gerenciamento_dados" options={{headerShown: false}} />
         <Stack.Screen name="cartao" options={{headerShown: false}} />
+        <Stack.Screen name="faturas" options={{headerShown: false}} />
 
 
 

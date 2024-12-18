@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from '@/components/CustomButton';
 import TurmasCard2 from '@/components/TurmaCard2';
-import { getAllAlunos, salvarChamada, getTurmaById, addAlunoToTurma } from '@/lib/appwrite';
+import { getAllAlunos, salvarChamada, getTurmaById, addAlunoToTurma, getUsersById } from '@/lib/appwrite';
 import { useLocalSearchParams, router } from 'expo-router';
 
 const EscolherAtleta = () => {
@@ -36,20 +36,31 @@ const EscolherAtleta = () => {
   const fetchAlunos = async () => {
     try {
       const alunosData = await getAllAlunos();
-      
-      // Aplicando o filtro diretamente no resultado de getAllAlunos
-      const alunosFiltrados = alunosData.filter((aluno) =>
-        (!aluno.turmaId || aluno.turmaId === '') && 
-        (position === "qualquer" || aluno.posicao === position)
-      );
-      
-
+      const alunosFiltrados = [];
+  
+      // Iterar sobre cada aluno
+      for (const aluno of alunosData) {
+        try {
+          // Buscar informações do usuário pelo userId
+          const userAtleta = await getUsersById(aluno.userId);
+          if (userAtleta.status !== 'Arquivado' && 
+              (!aluno.turmaId || aluno.turmaId === '') && 
+              (position === "qualquer" || aluno.posicao === position)) {
+            alunosFiltrados.push(aluno);
+          }
+        } catch (error) {
+          console.error(`Erro ao verificar status do aluno ${aluno.nome}:`, error.message);
+        }
+      }
+  
       setAlunos(alunosFiltrados);
-      setFilteredAlunos(alunosFiltrados.slice(0, 10));
+      setFilteredAlunos(alunosFiltrados.slice(0, 10)); // Exibir os primeiros 10 alunos
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar os alunos');
+      console.error('Erro ao buscar alunos:', error.message);
     }
   };
+  
 
   const handleSelectAluno = (userId) => {
     if (selectedAlunos.includes(userId)) {

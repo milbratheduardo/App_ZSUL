@@ -75,7 +75,7 @@ const Cartao = () => {
         },
       });
 
-      const result = await handleIntegrationMP(user.email, cardTokenId);
+      const result = await handleIntegrationMP(user.email, cardTokenId,plan_id);
 
       if (result.status === "authorized") {
         const updatedAluno = await updateStatusPagamento(atletaId, plan_id, result.id, result.auto_recurring.end_date);

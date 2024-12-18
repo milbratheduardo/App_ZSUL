@@ -168,24 +168,7 @@ const CadastrarAlunos = () => {
         {/* Campo de Futebol SVG */}
         <CampoFutebolSVG turmaId={turmaId} handlePressPosition={handlePressPosition} />
 
-        <FlatList
-          data={filteredAlunos}
-          keyExtractor={(item) => item.userId.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.alunoItem,
-                selectedAlunos.includes(item.userId) && styles.selectedAlunoItem,
-              ]}
-              onPress={() => handleSelectAluno(item.userId)}
-            >
-              <Text style={styles.alunoText}>{item.nome}</Text>
-              <Text style={styles.alunoCheck}>
-                {selectedAlunos.includes(item.userId) ? '✓' : '○'}
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
+        
       </ScrollView>
     </SafeAreaView>
   );

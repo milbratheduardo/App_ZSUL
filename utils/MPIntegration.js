@@ -23,23 +23,15 @@ export const createCardToken = async (cardData) => {
   }
 };
 
-export const handleIntegrationMP = async (userEmail, cardTokenId) => {
+export const handleIntegrationMP = async (userEmail, cardTokenId, planId) => {
   const preapprovalData = {
-    "preapproval_plan_id": "2c93808493b072d70193be7c14b30582",
-    "reason": "Pagamento de Plano",
-    "external_reference": `REF-${new Date().getTime()}`, // Exemplo de referência única
-    "payer_email": userEmail,
-    "card_token_id": cardTokenId,
-    "auto_recurring": {
-      "frequency": 1,
-      "frequency_type": "months",
-      "start_date": new Date().toISOString(),
-      "end_date": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
-      "transaction_amount": 85,
-      "currency_id": "BRL",
-    },
-    "back_url": "myapp://callback",
-    "status": "authorized",
+    preapproval_plan_id: planId,
+    reason: "Plano Escolinha de Futebol São Paulo RS",
+    external_reference: `REF-${new Date().getTime()}`,
+    payer_email: userEmail,
+    card_token_id: cardTokenId,
+    back_url: "myapp://callback",
+    status: "authorized",
   };
 
   try {
@@ -63,3 +55,45 @@ export const handleIntegrationMP = async (userEmail, cardTokenId) => {
     throw error;
   }
 };
+
+export const handlePixPaymentMP = async (userEmail, userCPF, userNome) => {
+  try {
+    const idempotencyKey = `key-${new Date().getTime()}`; // Geração do X-Idempotency-Key
+
+    const pixPaymentData = {
+      transaction_amount: 58, // Valor do plano
+      description: 'Pagamento do Plano Mensal',
+      payment_method_id: 'pix',
+      payer: {
+        email: userEmail,
+        first_name: userNome,
+        identification: { type: 'CPF', number: userCPF },
+      },
+    };
+
+    const response = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        'X-Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify(pixPaymentData),
+    });
+
+    const data = await response.json();
+    console.log('Resposta completa da API Mercado Pago:', data);
+
+    if (data.id && data.point_of_interaction?.transaction_data?.ticket_url) {
+      return data; 
+    } else {
+      throw new Error('Erro: Resposta não contém ID da transação ou ticket_url.');
+    }
+  } catch (error) {
+    console.error('Erro ao processar pagamento com Pix:', error.message);
+    throw error;
+  }
+};
+
+
+

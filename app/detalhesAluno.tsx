@@ -5,6 +5,7 @@ import { getAlunosById } from '@/lib/appwrite';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useGlobalContext } from '@/context/GlobalProvider';
 
 const { width } = Dimensions.get('window');
 
@@ -12,6 +13,7 @@ const detalhesAluno = () => {
   const [aluno, setAluno] = useState(null);
   const { alunoId } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useGlobalContext();
 
   useEffect(() => {
     fetchAluno();
@@ -48,10 +50,12 @@ const detalhesAluno = () => {
 
   return (
     <View style={styles.screenContainer}>
+      {user.role == 'profissional' && (
     <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
         <Icon name="edit" size={18} color="#FFFFFF" />
         <Text style={styles.editButtonText}>Editar Card</Text>
       </TouchableOpacity>
+      )}
       <View style={styles.cardContainer}>
         <ImageBackground 
           source={{ uri: 'https://path-to-your-card-background-image.png' }}

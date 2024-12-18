@@ -8,21 +8,26 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useGlobalContext } from '@/context/GlobalProvider';
 import { getAllAlunos } from '@/lib/appwrite';
-import { format } from 'date-fns'; // Biblioteca para formatação de datas
+import { format } from 'date-fns'; // Biblioteca para formatar datas
 
-const Financeiro = () => {
+const Faturas = () => {
+  const { user } = useGlobalContext();
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchFinanceiro = async () => {
+    const fetchFaturas = async () => {
       try {
         setLoading(true);
 
         const allAlunos = await getAllAlunos();
+        const responsavelAlunos = allAlunos.filter(
+          (aluno) => aluno.nomeResponsavel === user.cpf
+        );
 
-        const alunosComFaturas = allAlunos.map((aluno) => {
+        const alunosComFaturas = responsavelAlunos.map((aluno) => {
           let plano;
           switch (aluno.status_pagamento) {
             case '2c93808493b072d80193be79bea105ac':
@@ -52,15 +57,15 @@ const Financeiro = () => {
 
         setAlunos(alunosComFaturas);
       } catch (error) {
-        Alert.alert('Erro', 'Não foi possível carregar os dados financeiros.');
+        Alert.alert('Erro', 'Não foi possível carregar as faturas.');
         console.error(error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFinanceiro();
-  }, []);
+    fetchFaturas();
+  }, [user.cpf]);
 
   const renderAlunoItem = ({ item }) => (
     <View style={styles.card}>
@@ -74,7 +79,7 @@ const Financeiro = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Financeiro</Text>
+        <Text style={styles.title}>Meus Pagamentos</Text>
       </View>
       {loading ? (
         <ActivityIndicator size="large" color="#126046" />
@@ -86,7 +91,7 @@ const Financeiro = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Nenhum dado financeiro encontrado.</Text>
+              <Text style={styles.emptyText}>Nenhuma fatura encontrada.</Text>
             </View>
           }
         />
@@ -95,7 +100,7 @@ const Financeiro = () => {
   );
 };
 
-export default Financeiro;
+export default Faturas;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
