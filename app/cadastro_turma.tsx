@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, Alert, TouchableOpacity, Platform  } from 'react-native';
+import { View, Text, ScrollView, TextInput, Alert, StyleSheet, TouchableOpacity, Modal, Platform  } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
@@ -6,6 +6,7 @@ import { TextInputMask } from 'react-native-masked-text';
 import { useGlobalContext } from "../context/GlobalProvider";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { createTurma } from '@/lib/appwrite';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 
 const CadastroTurma = () => {
@@ -24,6 +25,10 @@ const CadastroTurma = () => {
 
   const [showInicioPicker, setShowInicioPicker] = useState(false);
   const [showTerminoPicker, setShowTerminoPicker] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleTimeChange = (event, selectedTime, type) => {
     const currentTime = selectedTime || new Date();
@@ -53,7 +58,8 @@ const CadastroTurma = () => {
       form.Horario_de_inicio === '' ||
       form.Horario_de_termino === ''
     ) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      setErrorMessage(`Preencha todos os campos`);
+      setShowErrorModal(true);
       return;
     }
   
@@ -72,7 +78,8 @@ const CadastroTurma = () => {
         form.Horario_de_termino
       );
   
-      Alert.alert('Sucesso', 'Turma cadastrada com sucesso!');
+      setSuccessMessage('Turma cadastrada com sucesso!');
+      setShowSuccessModal(true);
       setForm({
         title: '',
         Qtd_Semana: '1',
@@ -85,7 +92,8 @@ const CadastroTurma = () => {
         Horario_de_termino: ''
       });
     } catch (error) {
-      Alert.alert('Erro', error.message);
+      setErrorMessage(`Erro. ${error.message}`);
+      setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -317,8 +325,180 @@ const CadastroTurma = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+         <Modal
+            visible={showErrorModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowErrorModal(false)}
+          >
+            <View style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            }}>
+              <View style={{
+                backgroundColor: 'red',
+                padding: 20,
+                borderRadius: 10,
+                alignItems: 'center',
+                width: '80%',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
+              }}>
+                <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                  Erro
+                </Text>
+                <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                  {errorMessage}
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: 'white',
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                    borderRadius: 5,
+                  }}
+                  onPress={() => setShowErrorModal(false)}
+                >
+                  <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+          <Modal
+          visible={showSuccessModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowSuccessModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.successModal}>
+              <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+              <Text style={styles.modalTitle}>Sucesso</Text>
+              <Text style={styles.modalMessage}>{successMessage}</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  
+                }}
+              >
+                <Text style={styles.closeButtonText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>    
     </SafeAreaView>
   );
 };
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+  },
+  scrollContent: {
+    padding: 16,
+    flexGrow: 1,
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  campo: {
+    marginVertical: 5,
+    borderRadius: 100,
+    borderWidth: 50,
+    borderColor: '#ffffff',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+  },
+  alunoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    elevation: 1,
+  },
+  selectedAlunoItem: {
+    backgroundColor: '#e0ffe0',
+  },
+  alunoText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  alunoCheck: {
+    fontSize: 18,
+    color: '#333',
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  errorModal: {
+    backgroundColor: 'red',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successModal: {
+    backgroundColor: 'green',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  modalMessage: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
+  },
+});
 
 export default CadastroTurma;

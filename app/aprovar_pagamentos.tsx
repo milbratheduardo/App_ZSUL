@@ -3,11 +3,14 @@ import { View, Text, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '@/components/CustomButton';
 import { getAllAlunos, updateAlunoFatura } from '@/lib/appwrite'; // Função para buscar todos os alunos e atualizar pagamento
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const AprovarPagamentos = () => {
   const [alunos, setAlunos] = useState([]);
   const [filteredAlunos, setFilteredAlunos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     fetchAlunos();
@@ -22,7 +25,8 @@ const AprovarPagamentos = () => {
       setAlunos(alunosComPagamentoPendente);
       setFilteredAlunos(alunosComPagamentoPendente.slice(0, 10)); // Inicia com 10 alunos
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os alunos');
+      setErrorMessage(`Erro ao carregar alunos. ${error.message}`);
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +50,8 @@ const AprovarPagamentos = () => {
       Alert.alert('Sucesso', 'Pagamento negado com sucesso!');
       fetchAlunos(); // Atualiza a lista de alunos
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível negar o pagamento.');
+      setErrorMessage(`Erro, não foi possível negar pagamentos. ${error.message}`);
+      setShowErrorModal(true);
     }
   };
 

@@ -7,6 +7,7 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import { router } from 'expo-router';
 import { getAllTurmas, getAlunosByTurmaId, getEventsForCurrentMonth, getAllUsers, getAllEvents } from '@/lib/appwrite';
 
+
 const Dashboard = () => {
   const { user } = useGlobalContext();
   const firstName = user?.nome?.split(' ')[0];
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [showPicker, setShowPicker] = useState(false);
   const [totalEventos, setTotalEventos] = useState(0); // Total de eventos
   const [eventosDoMes, setEventosDoMes] = useState(0); // Eventos do mês
+
 
 
   const handleDateChange = (event, date) => {

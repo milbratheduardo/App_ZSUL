@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TextInput, Alert } from 'react-native';
+import { View, Text, FlatList, TextInput, Alert, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAllAlunos, getAllUsers } from '@/lib/appwrite'; // Funções necessárias
 import { useLocalSearchParams } from 'expo-router'; // Para pegar os parâmetros passados via navegação
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const VerConfirmados = () => {
   const [alunos, setAlunos] = useState([]);
   const [users, setUsers] = useState([]);
   const [filteredConfirmados, setFilteredConfirmados] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Pegando os parâmetros passados via navegação
   const { confirmados: confirmadosParam, eventTitle } = useLocalSearchParams();
@@ -38,8 +43,8 @@ const VerConfirmados = () => {
         setFilteredConfirmados([...confirmadosAlunos, ...confirmadosUsers]);
       }
     } catch (error) {
-      console.error('Erro ao buscar dados:', error);
-      Alert.alert('Erro', 'Não foi possível carregar os dados');
+      setErrorMessage(`Não foi possível carregar os dados.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -93,6 +98,51 @@ const VerConfirmados = () => {
           </View>
         )}
       />
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
     </SafeAreaView>
   );
 };

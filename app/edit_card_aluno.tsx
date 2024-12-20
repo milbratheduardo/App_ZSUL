@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getAlunosById, updateAlunoStats } from '@/lib/appwrite';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const EditarAluno = () => {
   const { alunoId } = useLocalSearchParams();
@@ -13,6 +14,10 @@ const EditarAluno = () => {
   const [passe, setPasse] = useState('');
   const [geral, setGeral] = useState('');
   const [finalizacao, setFinalizacao] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchAluno();
@@ -28,7 +33,8 @@ const EditarAluno = () => {
       setGeral(alunoData.geral || '');
       setFinalizacao(alunoData.finalizacao || '');
     } catch (error) {
-      console.error('Erro ao buscar aluno:', error.message);
+      setErrorMessage(`Não ao buscar o alunos.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -48,8 +54,8 @@ const EditarAluno = () => {
         { text: 'OK', onPress: () => router.push(`/detalhesAluno?alunoId=${alunoId}`) },
       ]);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível atualizar os atributos. Tente novamente.');
-      console.error('Erro ao atualizar atributos:', error.message);
+      setErrorMessage(`Não foi possível atualizar os atributos.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -96,6 +102,51 @@ const EditarAluno = () => {
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveButtonText}>Salvar</Text>
       </TouchableOpacity>
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
     </View>
   );
 };

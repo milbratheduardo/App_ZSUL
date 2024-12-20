@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 
 const AdminOptions = () => {

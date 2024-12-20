@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Linking, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
 
+
 const Community = () => {
   const { user } = useGlobalContext();
   const router = useRouter();
+
 
   const getCommunityTopics = () => {
     if (user.role === 'responsavel') {

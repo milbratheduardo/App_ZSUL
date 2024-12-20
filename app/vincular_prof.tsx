@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { Picker } from '@react-native-picker/picker';
 import { getAllTurmas, getAllProfissionais, updateTurmaProfissionais } from '@/lib/appwrite'; // Substitua pelas funções reais
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const VincularProf = () => {
   const { user } = useGlobalContext();
@@ -11,6 +12,10 @@ const VincularProf = () => {
   const [profissionais, setProfissionais] = useState([]);
   const [selectedTurma, setSelectedTurma] = useState(null);
   const [filteredProfissionais, setFilteredProfissionais] = useState([]);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchTurmas = async () => {
@@ -59,7 +64,8 @@ const VincularProf = () => {
   const handleVincular = async (profissionalId) => {
     try {
       if (!selectedTurma) {
-        Alert.alert('Erro', 'Nenhuma turma selecionada.');
+      setErrorMessage(`Nenhuma turma vinculada.`);
+      setShowErrorModal(true);
         return;
       }
 
@@ -67,7 +73,8 @@ const VincularProf = () => {
       const turma = turmas.find((t) => t.$id === selectedTurma);
 
       if (!turma) {
-        Alert.alert('Erro', 'Turma selecionada não encontrada.');
+        setErrorMessage(`Turma selecionada não encontrada.`);
+        setShowErrorModal(true);
         return;
       }
 
@@ -93,8 +100,8 @@ const VincularProf = () => {
         )
       );
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível vincular o profissional.');
-      console.error('Erro ao vincular profissional:', error);
+      setErrorMessage(`Não foi possível vincular o profissional.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -127,6 +134,51 @@ const VincularProf = () => {
           </TouchableOpacity>
         ))}
       </ScrollView>
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
     </SafeAreaView>
   );
 };

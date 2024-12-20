@@ -110,7 +110,7 @@ const SignUp = () => {
       form.whatsapp === '' ||
       form.profession === '' ||
       form.modalidades === '' ||
-      form.faixa_etaria === ''
+      form.confirmPassword === ''
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
       setShowErrorModal(true);
@@ -171,6 +171,7 @@ const submitAtleta = async () => {
       form.anoEscolar === '' ||
       form.whatsapp === '' ||
       form.password === '' ||
+      form.email === '' ||
       form.confirmPassword === ''
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
@@ -211,7 +212,7 @@ const submitAtleta = async () => {
       setUser(result);
       setIsLoggedIn(true);
 
-      router.replace('/signin');
+      router.replace('/seu_atleta');
     } catch (error) {
       setErrorMessage(error.message);
       setShowErrorModal(true);
@@ -251,7 +252,9 @@ const submitAtleta = async () => {
       form.password === '' ||
       form.endereco === '' ||
       form.bairro === '' ||
-      form.whatsapp === '' 
+      form.whatsapp === '' ||
+      form.horarios === '' ||
+      form.confirmPassword === ''
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
       setShowErrorModal(true);
@@ -675,7 +678,7 @@ const submitAtleta = async () => {
               </Picker>
             </View>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Faixa Etária de Trabalho</Text>
+            {/*<Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Faixa Etária de Trabalho</Text>
             <View style={{ marginBottom: 20 }}>
               <Text>Idade Mínima: {minAge}</Text>
               <Text>Idade Máxima: {maxAge}</Text>
@@ -691,7 +694,7 @@ const submitAtleta = async () => {
               />
             </View>
             <Text className='mb-3'>Faixa Etária Selecionada: {form.faixa_etaria}</Text>
-
+*/}
             <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Dias da Semana de Trabalho</Text>
             <View style={{ flexDirection: 'row', marginBottom: 10, alignItems: 'center' }}>
               <View style={{ flex: 1 }}>

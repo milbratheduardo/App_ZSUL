@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, Alert, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, Modal, Alert, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Rect, Circle, Line, Text as SvgText } from 'react-native-svg';
 import CustomButton from '@/components/CustomButton';
 import TurmasCard2 from '@/components/TurmaCard2';
 import { getAllAlunos, addAlunoToTurma, getTurmaById } from '@/lib/appwrite'; 
 import { useLocalSearchParams, router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CampoFutebolSVG = ({ turmaId, handlePressPosition }) => {
   // Mapeamento das posições com os valores corretos para o Picker
@@ -82,6 +83,10 @@ const CadastrarAlunos = () => {
   const [selectedAlunos, setSelectedAlunos] = useState([]);
   const [turma, setTurma] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   const { turmaId, turmaTitle } = useLocalSearchParams();
 
@@ -104,7 +109,8 @@ const CadastrarAlunos = () => {
       setAlunos(alunosComTurmaIdNull);
       setFilteredAlunos(alunosComTurmaIdNull.slice(0, 10));
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os alunos');
+      setErrorMessage(`Não foi possível carregar os alunos.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -115,7 +121,8 @@ const CadastrarAlunos = () => {
       const turmaData = await getTurmaById(turmaId);
       setTurma(turmaData);
     } catch (error) {
-      console.error('Erro ao buscar turma:', error.message);
+      setErrorMessage(`Erro ao buscar turma.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -132,10 +139,12 @@ const CadastrarAlunos = () => {
       for (const alunoId of selectedAlunos) {
         await addAlunoToTurma(alunoId, turmaId);
       }
-      Alert.alert('Sucesso', 'Alunos cadastrados com sucesso');
+      setSuccessMessage('Alunos cadastrados com sucesso!');
+      setShowSuccessModal(true);
       router.replace(`/turmas`);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível cadastrar os alunos');
+      setErrorMessage(`Erro, não foi possível cadastrar os alunos.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -170,6 +179,74 @@ const CadastrarAlunos = () => {
 
         
       </ScrollView>
+       <Modal
+          visible={showErrorModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowErrorModal(false)}
+        >
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}>
+            <View style={{
+              backgroundColor: 'red',
+              padding: 20,
+              borderRadius: 10,
+              alignItems: 'center',
+              width: '80%',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              elevation: 5,
+            }}>
+              <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+              <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                Erro
+              </Text>
+              <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                {errorMessage}
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'white',
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 5,
+                }}
+                onPress={() => setShowErrorModal(false)}
+              >
+                <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.successModal}>
+            <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Sucesso</Text>
+            <Text style={styles.modalMessage}>{successMessage}</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                
+              }}
+            >
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -223,6 +300,57 @@ const styles = StyleSheet.create({
   buttonContainer: {
     alignItems: 'center',
     marginTop: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  errorModal: {
+    backgroundColor: 'red',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successModal: {
+    backgroundColor: 'green',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  modalMessage: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
   },
 });
 

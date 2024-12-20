@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { getAllUsers, getEventsForCurrentMonth, getAllEvents } from '@/lib/appwrite';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const GerenciamentoDados = () => {
   const [atletas, setAtletas] = useState({ total: 0, mes: 0, arquivados: 0 });
   const [profissionais, setProfissionais] = useState({ total: 0, mes: 0, arquivados: 0 });
   const [responsaveis, setResponsaveis] = useState({ total: 0, mes: 0, arquivados: 0 });
   const [eventos, setEventos] = useState({ total: 0, mes: 0, realizados: 0 });
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +58,8 @@ const GerenciamentoDados = () => {
           realizados: eventosRealizados,
         });
       } catch (error) {
-        console.error('Erro ao buscar dados:', error.message);
+      setErrorMessage(`Erro ao buscar dados.`);
+      setShowErrorModal(true);
       }
     };
 
@@ -111,6 +117,51 @@ const GerenciamentoDados = () => {
           </View>
         </View>
       </ScrollView>
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
     </SafeAreaView>
   );
 };

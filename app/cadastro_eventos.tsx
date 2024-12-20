@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
+  Modal
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +18,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { createEvent, createMatch, getAlunosById } from '../lib/appwrite';
 import { useGlobalContext } from "../context/GlobalProvider";
 import { TextInput } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CadastroEventos = () => {
   const { user } = useGlobalContext();
@@ -39,6 +41,10 @@ const CadastroEventos = () => {
   const [selectedAlunos, setSelectedAlunos] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     if (params.selectedAlunos) {
@@ -52,7 +58,8 @@ const CadastroEventos = () => {
       const alunosData = await Promise.all(alunosIds.map((id) => getAlunosById(id)));
       setSelectedAlunos(alunosData);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os dados dos alunos');
+      setErrorMessage(`Não foi possível carregar dados dos alunos. ${error.message}`);
+      setShowErrorModal(true);
     }
   };
 
@@ -72,11 +79,13 @@ const CadastroEventos = () => {
 
   const submitForm = async () => {
     if (!form.Title || !date || !form.Description || !time || !form.Local) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      setErrorMessage(`Por favor preencha todos os campos.`);
+      setShowErrorModal(true);
       return;
     }
     if (type === 'partida' && selectedAlunos.length === 0) {
-      Alert.alert('Erro', 'Por favor, adicione alunos para a partida.');
+      setErrorMessage(`Por favor adicione alunos a partida.`);
+      setShowErrorModal(true);
       return;
     }
 
@@ -99,12 +108,14 @@ const CadastroEventos = () => {
       } else if (type === 'partida') {
         await createMatch(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), selectedAlunos.map(aluno => aluno.userId), type, form.Local);
       } else {
-        Alert.alert('Erro', 'Selecione uma opção: Evento ou Partida');
+        setErrorMessage(`Selecione uma opção: partida ou evento. ${error.message}`);
+        setShowErrorModal(true);
         return;
       }
       router.replace('/eventos');
     } catch (error) {
-      Alert.alert('Erro', error.message);
+      setErrorMessage(`Erro.`);
+      setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -278,6 +289,51 @@ const CadastroEventos = () => {
           )}
         </View>
       </ScrollView>
+      <Modal
+          visible={showErrorModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowErrorModal(false)}
+        >
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}>
+            <View style={{
+              backgroundColor: 'red',
+              padding: 20,
+              borderRadius: 10,
+              alignItems: 'center',
+              width: '80%',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              elevation: 5,
+            }}>
+              <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+              <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                Erro
+              </Text>
+              <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                {errorMessage}
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'white',
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 5,
+                }}
+                onPress={() => setShowErrorModal(false)}
+              >
+                <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
     </SafeAreaView>
   );
 };

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { View, Text, ScrollView, Alert, Modal, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from '../constants';
@@ -8,9 +8,15 @@ import { Link, router } from 'expo-router';
 import { createAluno } from '../lib/appwrite';
 import { useGlobalContext } from "../context/GlobalProvider";
 import { TextInputMask } from 'react-native-masked-text'; // Importar a biblioteca para a máscara
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CadastroAtleta = () => {
   const { user, setIsLoggedIn } = useGlobalContext();
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
+
   const [form, setForm] = useState({
     username: '',
     nascimento: '',
@@ -28,12 +34,14 @@ const CadastroAtleta = () => {
   const handleSubmit = async () => {
     if (form.username === '' || form.nascimento === '' || form.rg === '' ||  
       form.escola === '' || form.ano === '') {
-      Alert.alert('Error', 'Por favor, preencha todos os campos');
+      setErrorMessage(`Por favor preencha todos os campos. ${error.message}`);
+      setShowErrorModal(true);
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      Alert.alert('Error', 'As senhas não coincidem');
+      setErrorMessage(`As senhas não coincidem. ${error.message}`);
+      setShowErrorModal(true);
       return;
     }
 
@@ -55,7 +63,8 @@ const CadastroAtleta = () => {
       
       router.replace('/profile');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      setErrorMessage(`Erro. ${error.message}`);
+      setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -158,6 +167,51 @@ const CadastroAtleta = () => {
           />
         </View>
       </ScrollView>
+        <Modal
+          visible={showErrorModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowErrorModal(false)}
+        >
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}>
+            <View style={{
+              backgroundColor: 'red',
+              padding: 20,
+              borderRadius: 10,
+              alignItems: 'center',
+              width: '80%',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              elevation: 5,
+            }}>
+              <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+              <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                Erro
+              </Text>
+              <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                {errorMessage}
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'white',
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 5,
+                }}
+                onPress={() => setShowErrorModal(false)}
+              >
+                <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
     </SafeAreaView>
   );
 };

@@ -1,4 +1,4 @@
-import { View, Text, Image, Alert, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, Image, Alert, TouchableOpacity, ScrollView, RefreshControl, Modal } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -6,7 +6,7 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import { images } from '@/constants'; 
 import { router } from 'expo-router';
 import { getAllEvents } from '@/lib/appwrite'; 
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Configurar o calendário para Português
 LocaleConfig.locales['pt'] = {
@@ -25,6 +25,8 @@ const Eventos = () => {
   const { user } = useGlobalContext();
   const [events, setEvents] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Função para converter 'dd-mm-yyyy' para 'yyyy-mm-dd'
   const convertDateToISO = (dateString) => {
@@ -42,7 +44,8 @@ const Eventos = () => {
       }));
       setEvents(formattedEvents);
     } catch (error) {
-      Alert.alert('Erro', error.message);
+      setErrorMessage(error.message);
+      setShowErrorModal(true);
     }
   };
 
@@ -139,6 +142,51 @@ const Eventos = () => {
           />
         </View>
       </ScrollView>
+      <Modal
+        visible={showErrorModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}>
+          <View style={{
+            backgroundColor: 'red',
+            padding: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            width: '80%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 5,
+          }}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+              Erro
+            </Text>
+            <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+              {errorMessage}
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'white',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 5,
+              }}
+              onPress={() => setShowErrorModal(false)}
+            >
+              <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

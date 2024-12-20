@@ -7,16 +7,22 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { getNovidades, salvarNovidade, deleteNovidade } from '@/lib/appwrite'; // Substitua pelas funções do Appwrite
 import { useGlobalContext } from '@/context/GlobalProvider';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Novidades = () => {
   const { user } = useGlobalContext(); // user contém informações como `role`
   const [novidades, setNovidades] = useState([]);
   const [novaNovidade, setNovaNovidade] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   const isAdmin = user.admin === 'admin'; 
 
@@ -26,7 +32,8 @@ const Novidades = () => {
         const data = await getNovidades();
         setNovidades(data);
       } catch (error) {
-        Alert.alert('Erro', 'Não foi possível carregar as novidades.');
+        setErrorMessage(`Não foi possível carregar as notícias.`);
+        setShowErrorModal(true);
       } finally {
         setLoading(false);
       }
@@ -37,7 +44,8 @@ const Novidades = () => {
 
   const handleAddNovidade = async () => {
     if (!novaNovidade.trim()) {
-      Alert.alert('Atenção', 'O campo de novidade não pode estar vazio.');
+      setErrorMessage(`O campo de novidade não pode estar vazio.`);
+      setShowErrorModal(true);
       return;
     }
   
@@ -52,7 +60,8 @@ const Novidades = () => {
       setNovidades((prev) => [...prev, newNovidade]); // Atualiza a lista de novidades
       setNovaNovidade(''); // Limpa o campo de entrada
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao adicionar a novidade: ' + error.message);
+      setErrorMessage(`Não foi possível salvar a notícia.`);
+      setShowErrorModal(true);
     }
   };
   
@@ -62,7 +71,8 @@ const Novidades = () => {
       await deleteNovidade(id);
       setNovidades(novidades.filter((item) => item.$id !== id));
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível excluir a novidade.');
+      setErrorMessage(`Não foi possível deletar a notícia.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -107,6 +117,51 @@ const Novidades = () => {
           </TouchableOpacity>
         </View>
       )}
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
     </View>
   );
 };

@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Modal, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { router } from 'expo-router';
 import { signOut } from '@/lib/appwrite';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Profile = () => {
   const { user } = useGlobalContext();
   const [refreshing, setRefreshing] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const firstName = user?.nome.split(' ')[0];
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
@@ -47,7 +50,8 @@ const Profile = () => {
       await signOut();
       router.push('/signin');
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      setErrorMessage(`Erro ao fazer logout.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -95,6 +99,51 @@ const Profile = () => {
       <TouchableOpacity style={styles.reportButton} onPress={logout}>
         <Text style={styles.reportButtonText}>Sair</Text>
       </TouchableOpacity>
+      <Modal
+        visible={showErrorModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}>
+          <View style={{
+            backgroundColor: 'red',
+            padding: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            width: '80%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 5,
+          }}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+              Erro
+            </Text>
+            <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+              {errorMessage}
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'white',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 5,
+              }}
+              onPress={() => setShowErrorModal(false)}
+            >
+              <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, Modal, TouchableOpacity} from 'react-native';
 import TurmasCard2 from '@/components/TurmaCard2';
 import { useLocalSearchParams } from 'expo-router';
 import { getTurmaById, getAllRelatorios } from '@/lib/appwrite';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const AllRelatorios = () => {
   const [turma, setTurma] = useState(null);
   const [relatorios, setRelatorios] = useState([]);
   const { turmaId } = useLocalSearchParams();
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
 
   useEffect(() => {
     const fetchTurma = async () => {
@@ -15,7 +18,8 @@ const AllRelatorios = () => {
         const turmaData = await getTurmaById(turmaId);
         setTurma(turmaData);
       } catch (error) {
-        console.error('Erro ao buscar turma:', error.message);
+        setErrorMessage(`Erro ao buscar turma.`);
+        setShowErrorModal(true);
       }
     };
 
@@ -27,8 +31,8 @@ const AllRelatorios = () => {
         );
         setRelatorios(filteredRelatorios);
       } catch (error) {
-        Alert.alert('Erro', 'Não foi possível buscar os relatórios');
-        console.error(error);
+        setErrorMessage(`Erro, não foi possível buscar os relatórios.`);
+        setShowErrorModal(true);
       }
     };
 
@@ -84,6 +88,51 @@ const AllRelatorios = () => {
           contentContainerStyle={styles.flatListContent}
         />
       )}
+      <Modal
+        visible={showErrorModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}>
+          <View style={{
+            backgroundColor: 'red',
+            padding: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            width: '80%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 5,
+          }}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+              Erro
+            </Text>
+            <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+              {errorMessage}
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'white',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 5,
+              }}
+              onPress={() => setShowErrorModal(false)}
+            >
+              <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

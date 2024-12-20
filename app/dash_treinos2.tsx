@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router'; // Importar o hook
 import { getTreinosPersonalizadosByAlunoId } from '@/lib/appwrite'; // Substitua pelo caminho real
 import { useGlobalContext } from '@/context/GlobalProvider';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const DashTreinos2 = () => {
   const { alunoId } = useLocalSearchParams(); 
   const [treinos, setTreinos] = useState([]);
   const [selectedTreino, setSelectedTreino] = useState(null);
   const { user } = useGlobalContext();
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchTreinos();
@@ -20,7 +25,8 @@ const DashTreinos2 = () => {
       const idAluno = alunoId && alunoId !== '' ? alunoId : user.userId; // Usa alunoId se não for vazio, senão usa user.userId
   
       if (!idAluno) {
-        Alert.alert('Erro', 'Aluno não identificado.');
+        setErrorMessage(`Erro, aluno não identificado.`);
+        setShowErrorModal(true);
         return;
       }
   
@@ -28,7 +34,8 @@ const DashTreinos2 = () => {
       const response = await getTreinosPersonalizadosByAlunoId(idAluno);
       setTreinos(response);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os treinos.');
+      setErrorMessage(`Não foi possivel carregar os treinos.`);
+      setShowErrorModal(true);
       console.error(error);
     }
   };
@@ -42,7 +49,8 @@ const DashTreinos2 = () => {
         style: 'destructive',
         onPress: () => {
           setTreinos(treinos.filter((t) => t.$id !== id));
-          Alert.alert('Sucesso', 'Treino excluído com sucesso!');
+          setSuccessMessage('Treino excluído com sucesso!');
+          setShowSuccessModal(true);
         },
       },
     ]);
@@ -86,6 +94,74 @@ const DashTreinos2 = () => {
           </View>
         }
       />
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
+              <Modal
+              visible={showSuccessModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowSuccessModal(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.successModal}>
+                  <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+                  <Text style={styles.modalTitle}>Sucesso</Text>
+                  <Text style={styles.modalMessage}>{successMessage}</Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => {
+                      setShowSuccessModal(false);
+                      
+                    }}
+                  >
+                    <Text style={styles.closeButtonText}>Fechar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
     </View>
   );
 };
@@ -160,5 +236,56 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 16,
     color: '#666',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  errorModal: {
+    backgroundColor: 'red',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successModal: {
+    backgroundColor: 'green',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  modalMessage: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
   },
 });

@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, TextInput, M
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAllTurmas, getAlunosByTurmaId, savePersonalizedTraining } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const TreinoPersonalizado = () => {
   const { user } = useGlobalContext();
@@ -12,6 +13,10 @@ const TreinoPersonalizado = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [newTreino, setNewTreino] = useState({ titulo: '', descricao: '', link: '' });
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchAlunosFromTurmas();
@@ -40,8 +45,8 @@ const TreinoPersonalizado = () => {
       setAlunos(todosAlunos);
       setFilteredAlunos(todosAlunos);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os alunos das suas turmas');
-      console.error(error);
+      setErrorMessage(`Não foi possível carregar os alunos.`);
+      setShowErrorModal(true);
     }
   };
   
@@ -60,12 +65,14 @@ const TreinoPersonalizado = () => {
 
   const handleSaveTreino = async () => {
     if (!newTreino.titulo || !newTreino.descricao || !newTreino.link) {
-      Alert.alert('Erro', 'Preencha todos os campos do treino.');
+      setErrorMessage(`Preencha todos os campos do treino.`);
+      setShowErrorModal(true);
       return;
     }
 
     if (!selectedAluno) {
-      Alert.alert('Erro', 'Selecione um aluno.');
+      setErrorMessage(`Selecione um aluno.`);
+      setShowErrorModal(true);
       return;
     }
 
@@ -77,13 +84,14 @@ const TreinoPersonalizado = () => {
         professor: user.userId,
         aluno: selectedAluno,
       });
-      Alert.alert('Sucesso', 'Treino salvo com sucesso!');
+      setSuccessMessage('Treino salvo com sucesso!');
+      setShowSuccessModal(true);
       setModalVisible(false);
       setNewTreino({ titulo: '', descricao: '', link: '' });
       setSelectedAluno(null);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível salvar o treino.');
-      console.error(error);
+      setErrorMessage(`Erro, não foi possível salvar o treino.`);
+      setShowErrorModal(true);
     }
   };
 
@@ -165,6 +173,74 @@ const TreinoPersonalizado = () => {
           </View>
         </View>
       </Modal>
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
+              <Modal
+              visible={showSuccessModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowSuccessModal(false)}
+            >
+              <View style={styles.modalOverlay2}>
+                <View style={styles.successModal}>
+                  <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+                  <Text style={styles.modalTitle2}>Sucesso</Text>
+                  <Text style={styles.modalMessage}>{successMessage}</Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => {
+                      setShowSuccessModal(false);
+                      
+                    }}
+                  >
+                    <Text style={styles.closeButtonText}>Fechar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
     </SafeAreaView>
   );
 };
@@ -262,6 +338,57 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalOverlay2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  errorModal: {
+    backgroundColor: 'red',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successModal: {
+    backgroundColor: 'green',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle2: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  modalMessage: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'black',
     fontWeight: 'bold',
   },
 });

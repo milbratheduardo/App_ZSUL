@@ -20,7 +20,7 @@ import EmptyState from '@/components/EmptyState';
 import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { router } from 'expo-router';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { AntDesign, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Galeria = () => {
   const [data, setData] = useState([]);
@@ -29,6 +29,8 @@ const Galeria = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { user } = useGlobalContext();
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -50,10 +52,8 @@ const Galeria = () => {
               username = alunos[0].nome || 'Professor'; // Pega o nome do primeiro aluno retornado
             }
           } catch (error) {
-            console.error(
-              `Erro ao buscar aluno para a imagem ${image.imageId}:`,
-              error.message
-            );
+            setErrorMessage(error.message);
+            setShowErrorModal(true);
           }
   
           return {
@@ -66,7 +66,8 @@ const Galeria = () => {
   
       setData(imagesWithDetails.reverse());
     } catch (error) {
-      Alert.alert('Erro', error.message);
+      setErrorMessage(error.message);
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -93,8 +94,10 @@ const Galeria = () => {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri);
       } else {
-        Alert.alert('Erro', 'Compartilhamento não disponível no dispositivo.');
+        setErrorMessage(`Erro: Compartilhamento não disponível no dispositivo.`);
+        setShowErrorModal(true);
       }
+      
 
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -104,9 +107,10 @@ const Galeria = () => {
         trigger: null,
       });
     } catch (error) {
-      console.error('Erro ao baixar a imagem:', error);
-      Alert.alert('Erro', 'Não foi possível baixar a imagem.');
+      setErrorMessage(`Não foi possível baixar a imagem.`);
+      setShowErrorModal(true);
     }
+      
   };
 
   const renderHeader = () => (
@@ -196,6 +200,51 @@ const Galeria = () => {
           </View>
         </Modal>
       )}
+       <Modal
+        visible={showErrorModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}>
+          <View style={{
+            backgroundColor: 'red',
+            padding: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            width: '80%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 5,
+          }}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+              Erro
+            </Text>
+            <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+              {errorMessage}
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'white',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 5,
+              }}
+              onPress={() => setShowErrorModal(false)}
+            >
+              <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

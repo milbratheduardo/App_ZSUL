@@ -8,17 +8,23 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { getAlunosById, updateStatusPagamento } from '@/lib/appwrite';
 import { createCardToken, handleIntegrationMP } from '../utils/MPIntegration';
 import { useLocalSearchParams } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Cartao = () => {
   const { user } = useGlobalContext();
   const [aluno, setAluno] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
   const [cardDetails, setCardDetails] = useState({
     card_number: '',
     expiration_month: '',
@@ -37,7 +43,8 @@ const Cartao = () => {
         const alunoData = await getAlunosById(atletaId);
         setAluno(alunoData);
       } catch (error) {
-        Alert.alert('Erro', 'Falha ao buscar os dados do aluno.');
+        setErrorMessage(`Falha ao buscar dados do aluno.`);
+        setShowErrorModal(true);
         console.error(error);
       } finally {
         setLoading(false);
@@ -49,13 +56,15 @@ const Cartao = () => {
 
   const handlePayment = async () => {
     if (!user?.email) {
-      Alert.alert('Erro', 'Usuário não identificado.');
+      setErrorMessage(`Usuário não identificado`);
+      setShowErrorModal(true);
       return;
     }
 
     const isCardDetailsValid = Object.values(cardDetails).every((field) => field.trim() !== '');
     if (!isCardDetailsValid) {
-      Alert.alert('Erro', 'Preencha todas as informações do cartão.');
+      setErrorMessage(`Preencha todas as informações do cartão.`);
+      setShowErrorModal(true);
       return;
     }
 
@@ -79,16 +88,16 @@ const Cartao = () => {
 
       if (result.status === "authorized") {
         const updatedAluno = await updateStatusPagamento(atletaId, plan_id, result.id, result.auto_recurring.end_date);
-        Alert.alert(
-          'Sucesso',
-          `Pagamento realizado com sucesso! O aluno ${updatedAluno.nome} agora está com o plano ${plan_id}.`
-        );
+        setSuccessMessage('Pagamento Realizado com Sucesso!');
+        setShowSuccessModal(true);
+
       } else {
-        Alert.alert('Erro', 'O pagamento não foi concluído.');
+        setErrorMessage(`Erro, pagamento não foi concluído.`);
+        setShowErrorModal(true);
       }
     } catch (error) {
-      console.error('Erro ao processar pagamento:', error);
-      Alert.alert('Erro', 'Falha ao processar o pagamento.');
+      setErrorMessage(`Erro ao processar pagamento.`);
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -173,6 +182,74 @@ const Cartao = () => {
           {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.paymentButtonText}>Pagar Agora</Text>}
         </TouchableOpacity>
       </ScrollView>
+      <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
+              <Modal
+              visible={showSuccessModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowSuccessModal(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.successModal}>
+                  <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+                  <Text style={styles.modalTitle}>Sucesso</Text>
+                  <Text style={styles.modalMessage}>{successMessage}</Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => {
+                      setShowSuccessModal(false);
+                      
+                    }}
+                  >
+                    <Text style={styles.closeButtonText}>Fechar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
     </SafeAreaView>
   );
 };
@@ -253,6 +330,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  errorModal: {
+    backgroundColor: 'red',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successModal: {
+    backgroundColor: 'green',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  modalMessage: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
   },
 });
 

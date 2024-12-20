@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Alert, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Alert, StyleSheet, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { Feather } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const EnviarFotoTreino = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [title, setTitle] = useState('');
   const { user, setSelectedImages } = useGlobalContext();
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   const pickImages = async () => {
     try {
@@ -26,19 +31,22 @@ const EnviarFotoTreino = () => {
         console.log('Seleção cancelada pelo usuário');
       }
     } catch (error) {
-      console.error('Erro ao selecionar arquivos:', error);
+      setErrorMessage(`Erro ao selecionar arquivos.`);
+      setShowErrorModal(true);
     }
   };
 
   const handleSetImagesForReport = () => {
     if (selectedFiles.length === 0) {
-      Alert.alert('Erro', 'Por favor, selecione pelo menos uma imagem.');
+      setErrorMessage(`Por favor selecione uma imagem.`);
+      setShowErrorModal(true);
       return;
     }
 
     const imagesToAdd = selectedFiles.map((file) => ({ ...file, title }));
     setSelectedImages((prevImages) => [...prevImages, ...imagesToAdd]); // Adiciona as imagens ao estado global
-    Alert.alert('Sucesso', 'Imagens adicionadas ao relatório.');
+    setSuccessMessage('Imagens adicionadas com sucesso!');
+    setShowSuccessModal(true);
     setSelectedFiles([]);
     setTitle('');
   };
@@ -75,6 +83,74 @@ const EnviarFotoTreino = () => {
       />
 
       <CustomButton title="Enviar" handlePress={handleSetImagesForReport} containerStyles={styles.addButton} />
+           <Modal
+              visible={showErrorModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowErrorModal(false)}
+            >
+              <View style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              }}>
+                <View style={{
+                  backgroundColor: 'red',
+                  padding: 20,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                  width: '80%',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 5,
+                }}>
+                  <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                  <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                    Erro
+                  </Text>
+                  <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                    {errorMessage}
+                  </Text>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: 'white',
+                      paddingHorizontal: 20,
+                      paddingVertical: 10,
+                      borderRadius: 5,
+                    }}
+                    onPress={() => setShowErrorModal(false)}
+                  >
+                    <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+            <Modal
+            visible={showSuccessModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowSuccessModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.successModal}>
+                <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+                <Text style={styles.modalTitle}>Sucesso</Text>
+                <Text style={styles.modalMessage}>{successMessage}</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => {
+                    setShowSuccessModal(false);
+                    
+                  }}
+                >
+                  <Text style={styles.closeButtonText}>Fechar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
     </SafeAreaView>
   );
 };
@@ -139,6 +215,57 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  errorModal: {
+    backgroundColor: 'red',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successModal: {
+    backgroundColor: 'green',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  modalMessage: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
   },
 });
 

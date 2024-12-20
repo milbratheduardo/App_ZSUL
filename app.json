@@ -7,25 +7,19 @@
     "icon": "./assets/images/icon.png",
     "scheme": "ZSul",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/escola_sp_transparente.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.rafaguthes.Zsul"
+      }
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/escola_sp_transparente.png"
     },
     "plugins": [
       "expo-router",

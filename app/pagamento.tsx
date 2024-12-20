@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
@@ -16,14 +17,20 @@ import { useRouter } from 'expo-router';
 import Checkbox from 'expo-checkbox';
 import { handlePixPaymentMP } from '../utils/MPIntegration';
 import { updateStatusPagamento } from '@/lib/appwrite';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Pagamentos2 = () => {
   const { user } = useGlobalContext();
   const [alunos, setAlunos] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [mensagemPlano, setMensagemPlano] = useState('');
   const [selectedAluno, setSelectedAluno] = useState(null);
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
 
   const planos = [
@@ -42,7 +49,8 @@ const Pagamentos2 = () => {
         );
         setAlunos(alunosFiltrados);
       } catch (error) {
-        Alert.alert('Erro', 'Falha ao buscar os dados dos alunos.');
+        setErrorMessage(`Não foi possível carregar os alunos.`);
+        setShowErrorModal(true);
         console.error(error);
       } finally {
         setLoading(false);
@@ -52,9 +60,27 @@ const Pagamentos2 = () => {
     fetchAlunos();
   }, [user.cpf]);
 
+  const handlePlanSelect = (plano) => {
+    setSelectedPlan(plano.id);
+    switch (plano.title) {
+      case 'Mensal':
+        setMensagemPlano('Este plano é ideal para quem deseja flexibilidade, com renovação mensal.');
+        break;
+      case 'Semestral':
+        setMensagemPlano('Este plano oferece um contrato único com validade de 6 meses, sem possibilidade de cancelamento. O valor será debitado automaticamente do crédito recorrente, sem impactar o limite disponível.');
+        break;
+      case 'Anual':
+        setMensagemPlano('Este plano oferece um contrato único com validade de 1 ano, sem possibilidade de cancelamento. O valor será debitado automaticamente do crédito recorrente, sem impactar o limite disponível.');
+        break;
+      default:
+        setMensagemPlano('');
+    }
+  };
+
   const handleContinue = () => {
     if (!selectedPlan || !selectedAluno || !termsAccepted) {
-      Alert.alert('Erro', 'Selecione um plano, um aluno e aceite os termos.');
+      setErrorMessage(`Selecione um plano, um aluno e aceite os termos.`);
+      setShowErrorModal(true);
       return;
     }
 
@@ -73,40 +99,38 @@ const Pagamentos2 = () => {
       Alert.alert('Erro', 'Selecione um plano, um aluno e aceite os termos.');
       return;
     }
-  
+
     try {
       setLoading(true);
       const pixResponse = await handlePixPaymentMP(user.email, user.cpf, user.nome);
-  
+
       if (pixResponse && pixResponse.id && pixResponse.point_of_interaction?.transaction_data?.ticket_url) {
         const pixUrl = pixResponse.point_of_interaction.transaction_data.ticket_url;
-  
-        // Captura o paymentId do charges_details
+
         const paymentId =
-          pixResponse.charges_details?.[0]?.id || pixResponse.id; // Fallback para `id` principal se não encontrado
+          pixResponse.charges_details?.[0]?.id || pixResponse.id;
         const planId = 'Pix Mensal - Pendente';
-  
-        // Calcula a data de expiração (+1 mês)
+
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 1);
         const formattedEndDate = endDate.toISOString();
-  
+
         console.log('Chamando updateStatusPagamento...');
         await updateStatusPagamento(selectedAluno.userId, planId, paymentId, formattedEndDate);
-  
+
         console.log('Redirecionando para Pix URL...');
         Linking.openURL(pixUrl);
       } else {
         throw new Error('URL Pix ou ID da transação não encontrada.');
       }
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao gerar o pagamento Pix.');
+      setErrorMessage(`Falha ao gerar pix.`);
+      setShowErrorModal(true);
       console.error('Erro ao processar pagamento Pix:', error);
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -120,13 +144,19 @@ const Pagamentos2 = () => {
             <TouchableOpacity
               key={plano.id}
               style={[styles.planCard, selectedPlan === plano.id && styles.selected]}
-              onPress={() => setSelectedPlan(plano.id)}
+              onPress={() => handlePlanSelect(plano)}
             >
               <Text style={styles.planTitle}>{plano.title}</Text>
               <Text style={styles.planPrice}>R$ {plano.price},00</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {mensagemPlano !== '' && (
+          <View style={styles.mensagemContainer}>
+            <Text style={styles.mensagemTexto}>{mensagemPlano}</Text>
+          </View>
+        )}
 
         <View style={styles.alunoList}>
           <Text style={styles.sectionTitle}>Alunos</Text>
@@ -193,6 +223,51 @@ const Pagamentos2 = () => {
           </TouchableOpacity>
         )}
       </ScrollView>
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
     </SafeAreaView>
   );
 };
@@ -206,7 +281,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFFFFF' },
   carousel: { paddingHorizontal: 16, marginBottom: 10 },
   planCard: {
-    width: 120,
+    width: 100,
     padding: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -216,6 +291,20 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   selected: { borderColor: '#126046', borderWidth: 2 },
+  mensagemContainer: {
+    marginTop: 10,
+    marginHorizontal: 16,
+    padding: 10,
+    backgroundColor: '#F0F8F5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#126046',
+  },
+  mensagemTexto: {
+    fontSize: 14,
+    color: '#126046',
+    textAlign: 'center',
+  },
   alunoList: { marginTop: 20, paddingHorizontal: 16 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
   alunoCard: {

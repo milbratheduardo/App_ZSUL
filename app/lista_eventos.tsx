@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Modal, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { getAllEvents } from '@/lib/appwrite'; // Certifique-se de que estas funções estão implementadas corretamente
 import { AntDesign } from '@expo/vector-icons';
 import EmptyState from '@/components/EmptyState';
 import EventCard from '@/components/EventCard';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const ListarEventos = () => {
   const [events, setEvents] = useState([]);
@@ -14,6 +15,10 @@ const ListarEventos = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(''); // Para armazenar o mês selecionado
   const { date } = useLocalSearchParams(); // Para filtrar eventos por data, se necessário
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
 
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -27,7 +32,8 @@ const ListarEventos = () => {
       setEvents(response);
       applyFilters(response, selectedMonth, date); // Aplica os filtros iniciais
     } catch (error) {
-      Alert.alert('Erro ao carregar eventos', error.message);
+      setErrorMessage(`Não foi possível carregar os eventos.`);
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -153,6 +159,51 @@ const ListarEventos = () => {
       >
         <AntDesign name="plus" size={24} color="white" />
       </TouchableOpacity>
+             <Modal
+                visible={showErrorModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowErrorModal(false)}
+              >
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}>
+                  <View style={{
+                    backgroundColor: 'red',
+                    padding: 20,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    width: '80%',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}>
+                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                      Erro
+                    </Text>
+                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
+                      {errorMessage}
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => setShowErrorModal(false)}
+                    >
+                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
     </SafeAreaView>
   );
 };
