@@ -44,7 +44,7 @@ const DashboardMetodologias = () => {
 
         setMetodologias(sortedMetodologias.map(([key]) => key));
       } catch (error) {
-        console.error('Erro ao buscar metodologias:', error);
+   
       }
     };
 

@@ -19,7 +19,7 @@ const InformacoesPessoais = () => {
           const turma = await getTurmaById(user.turmaId);
           setTurmaTitle(turma.title);
         } catch (error) {
-          console.error(error.message);
+       
           setTurmaTitle('Não encontrada');
         }
       } else {
@@ -73,13 +73,13 @@ const InformacoesPessoais = () => {
 
     emailjs.send('service_gciw5lm', 'template_le4ktiu', templateParams, 'ypSN4onrJ_W04LRlr')
       .then((response) => {
-        console.log('Email enviado com sucesso!', response.status, response.text);
+   
         setSelectedCategory('');
         setReportText('');
         setReportModalVisible(false);
       })
       .catch((error) => {
-        console.error('Erro ao enviar o email:', error);
+   
       });
   };
 

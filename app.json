@@ -1,25 +1,35 @@
 {
   "expo": {
-    "name": "Zona Sul Esportes",
+    "name": "Escola SP-RS",
     "slug": "Zsul",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon.png", // Logo do aplicativo
     "scheme": "ZSul",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash2.png", // Imagem para a splash screen
+      "resizeMode": "contain",              // Pode ser "contain", "cover" ou "native"
+      "backgroundColor": "#ffffff"         // Cor de fundo
+    },
     "ios": {
       "supportsTablet": true
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/escola_sp_transparente.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
+   "android": {
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/images/icon.png",
+    "backgroundColor": "#ffffff"
+  },
+  "splash": {
+    "image": "./assets/images/splash2.png", 
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
+  }
+},
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/escola_sp_transparente.png"
+      "favicon": "./assets/images/logo.png"
     },
     "plugins": [
       "expo-router",

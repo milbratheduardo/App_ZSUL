@@ -101,7 +101,7 @@ const CadastroEventos = () => {
         type,
         Local: form.Local
       };
-      console.log('Dados enviados para createEvent/createMatch:', eventData);
+    
 
       if (type === 'evento') {
         await createEvent(form.Title, formattedDate, form.Description, time.toLocaleTimeString(), type, form.Local);

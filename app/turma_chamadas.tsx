@@ -62,7 +62,7 @@ const TurmaChamadas = () => {
       setShowSuccessModal(true);
       router.replace(`/turmas`);
     } catch (error) {
-      console.log(error);
+   
       setErrorMessage(`Não foi possível salvar a chamada.`);
       setShowErrorModal(true);
     }

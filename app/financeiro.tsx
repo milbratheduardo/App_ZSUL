@@ -61,7 +61,6 @@ const Financeiro = () => {
       } catch (error) {
         setErrorMessage(`Não foi possível carregar os dados financeiros.`);
         setShowErrorModal(true);
-        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -71,7 +70,12 @@ const Financeiro = () => {
   }, []);
 
   const renderAlunoItem = ({ item }) => (
-    <View style={styles.card}>
+    <View style={[
+      styles.card,
+      item.plano !== null && item.plano !== 'N/A'
+        ? styles.cardGreen
+        : styles.cardYellow
+    ]}>
       <Text style={styles.alunoName}>{item.nome}</Text>
       <Text style={styles.info}>Plano: {item.plano}</Text>
       <Text style={styles.info}>ID Transação: {item.id_transacao || 'N/A'}</Text>
@@ -156,7 +160,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: 'bold', color: '#FFF' },
   listContent: { padding: 16 },
   card: {
-    backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 10,
     marginBottom: 12,
@@ -165,6 +168,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  cardGreen: { backgroundColor: '#d4edda' },
+  cardYellow: { backgroundColor: '#fff3cd' },
   alunoName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   info: { fontSize: 14, color: '#666', marginTop: 4 },
   emptyState: { alignItems: 'center', marginTop: 50 },

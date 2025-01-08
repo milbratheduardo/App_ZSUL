@@ -19,7 +19,7 @@ const VerRelacionados = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   const { confirmados: confirmadosParam, eventTitle, eventId } = useLocalSearchParams();
-  console.log('ConfirmadoParam: ', confirmadosParam);
+
 
   useEffect(() => {
     // Define os alunos confirmados a partir dos parâmetros na inicialização

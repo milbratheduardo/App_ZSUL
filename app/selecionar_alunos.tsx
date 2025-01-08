@@ -56,7 +56,7 @@ const SelecionarAlunos = () => {
     );
   };
 
-  console.log(Date_event)
+
   const handleSave = () => {
     router.replace({
       pathname: '/cadastro_eventos',

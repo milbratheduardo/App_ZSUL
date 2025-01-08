@@ -64,7 +64,7 @@ const VerChamadas = () => {
         const turmaData = await getTurmaById(turmaId);
         setTurma(turmaData);
       } catch (error) {
-        console.error('Erro ao buscar turma:', error.message);
+      
       }
     };
     fetchTurma();

@@ -42,7 +42,7 @@ const Relatorios = () => {
       const response = await salvarRelatorio(relatorioData);
       setSuccessMessage('Relatório salvo com sucesso!');
       setShowSuccessModal(true);
-      console.log('Relatório salvo:', response);
+
       setSelectedImages([]);
     } catch (error) {
       setErrorMessage(`Erro ao salvar relatório.`);

@@ -59,7 +59,7 @@ const Dashboard = () => {
         }
         setTotalAlunos(countAlunos);
   
-        console.log('IDs dos alunos:', alunosIds);
+       
   
         const today = new Date();
         const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -73,11 +73,11 @@ const Dashboard = () => {
         // Contar alunos do mês
         const fetchAlunosDoMes = async () => {
           const allUsers = await getAllUsers();
-          console.log('Usuários retornados de getAllUsers:', allUsers);
+         
   
           const selectedMonth = selectedDate.getMonth(); // Mês selecionado (0 = Janeiro)
           const selectedYear = selectedDate.getFullYear(); // Ano selecionado
-          console.log('Mês selecionado:', selectedMonth, 'Ano selecionado:', selectedYear);
+          
   
           // Filtrar usuários que estão no mês e ano selecionados
           const alunosDoMes = allUsers.filter((user) => {
@@ -87,7 +87,7 @@ const Dashboard = () => {
               userCreatedDate.getMonth() === selectedMonth &&
               userCreatedDate.getFullYear() === selectedYear;
             if (alunosIds.includes(user.userId)) {
-              console.log(`Usuário ${user.userId} | Data de criação: ${user.$createdAt} | Pertence ao mês: ${isInMonthYear}`);
+              
             }
             return alunosIds.includes(user.userId) && isInMonthYear;
           });
@@ -96,17 +96,17 @@ const Dashboard = () => {
         };
   
         const alunosDoMesCount = await fetchAlunosDoMes();
-        console.log('Alunos do mês:', alunosDoMesCount);
+       
         setAulasHoje(alunosDoMesCount);
   
         // Adicionando fetchEventos
         const fetchEventos = async () => {
           const allEvents = await getAllEvents();
-          console.log('Eventos retornados de getAllEvents:', allEvents);
+        
         
           const selectedMonth = selectedDate.getMonth() + 1; // Mês selecionado (1 = Janeiro)
           const selectedYear = selectedDate.getFullYear(); // Ano selecionado
-          console.log('Mês selecionado:', selectedMonth, 'Ano selecionado:', selectedYear);
+      
         
           // Filtrar eventos do mês
           const eventosFiltrados = allEvents.filter((event) => {
@@ -123,7 +123,7 @@ const Dashboard = () => {
         await fetchEventos(); // Chama fetchEventos aqui
   
       } catch (error) {
-        console.error('Erro ao buscar dados do dashboard:', error);
+        
       }
     };
   

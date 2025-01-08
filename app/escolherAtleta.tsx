@@ -55,7 +55,7 @@ const EscolherAtleta = () => {
             alunosFiltrados.push(aluno);
           }
         } catch (error) {
-          console.error(`Erro ao verificar status do aluno ${aluno.nome}:`, error.message);
+         
         }
       }
   
@@ -86,7 +86,7 @@ const EscolherAtleta = () => {
       setSuccessMessage('Alunos cadastrados com sucesso!');
       setShowSuccessModal(true);
     } catch (error) {
-      console.log(error);
+    
       setErrorMessage(`Não foi possível cadastrar os alunos.`);
       setShowErrorModal(true);
     }

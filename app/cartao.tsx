@@ -45,7 +45,7 @@ const Cartao = () => {
       } catch (error) {
         setErrorMessage(`Falha ao buscar dados do aluno.`);
         setShowErrorModal(true);
-        console.error(error);
+       
       } finally {
         setLoading(false);
       }

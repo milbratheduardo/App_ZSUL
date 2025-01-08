@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { getAllTurmas } from '@/lib/appwrite';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 
 const ResponsaveisGroup = () => {
   const router = useRouter();

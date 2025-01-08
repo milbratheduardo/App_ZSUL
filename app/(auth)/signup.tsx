@@ -22,7 +22,7 @@ const SignUp = () => {
   const { setUser, setIsLoggedIn } = useGlobalContext();
 
   const { role, cpf } = useLocalSearchParams();
-  console.log('dados:', role, cpf);
+
 
   useEffect(() => {
     if (cpf) {
@@ -230,7 +230,7 @@ const submitAtleta = async () => {
         return;
       }
     } catch (error) {
-      console.error("Erro ao abrir os termos de compromisso", error);
+    
     }
   };
 

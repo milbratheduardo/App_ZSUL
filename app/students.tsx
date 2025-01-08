@@ -24,9 +24,9 @@ const Students = () => {
           : turmas.filter(turma => turma.profissionalId.includes(user.userId)); // Filtra turmas relacionadas ao profissional
   
         setTurmas(turmasFiltradas);
-        console.log('Turmas filtradas:', turmasFiltradas);
+  
       } catch (error) {
-        console.error('Erro ao buscar turmas:', error);
+
       }
     };
   
@@ -38,7 +38,7 @@ const Students = () => {
     setSelectedTurma(turmaId);
     if (turmaId) {
       const alunos = await getAlunosByTurmaId(turmaId);
-      console.log('Alunos obtidos:', alunos);
+    
       calculateCounts(alunos);
     } else {
       setCounts({
@@ -59,7 +59,7 @@ const Students = () => {
       });
     });
 
-    console.log('Contagens calculadas:', initialCounts);
+  
     setCounts(initialCounts);
   };
 

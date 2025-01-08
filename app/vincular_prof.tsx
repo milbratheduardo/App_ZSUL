@@ -23,7 +23,7 @@ const VincularProf = () => {
         const allTurmas = await getAllTurmas();
         setTurmas(allTurmas);
       } catch (error) {
-        console.error('Erro ao buscar turmas:', error);
+      
       }
     };
 
@@ -43,7 +43,7 @@ const VincularProf = () => {
       const turmaSelecionada = turmas.find((turma) => turma.$id === turmaId);
 
       if (!turmaSelecionada) {
-        console.error('Turma selecionada não encontrada');
+  
         return;
       }
 
@@ -57,7 +57,7 @@ const VincularProf = () => {
 
       setFilteredProfissionais(naoVinculados);
     } catch (error) {
-      console.error('Erro ao buscar profissionais:', error);
+
     }
   };
 

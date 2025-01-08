@@ -51,7 +51,7 @@ const Pagamentos2 = () => {
       } catch (error) {
         setErrorMessage(`Não foi possível carregar os alunos.`);
         setShowErrorModal(true);
-        console.error(error);
+   
       } finally {
         setLoading(false);
       }
@@ -115,10 +115,10 @@ const Pagamentos2 = () => {
         endDate.setMonth(endDate.getMonth() + 1);
         const formattedEndDate = endDate.toISOString();
 
-        console.log('Chamando updateStatusPagamento...');
+       
         await updateStatusPagamento(selectedAluno.userId, planId, paymentId, formattedEndDate);
 
-        console.log('Redirecionando para Pix URL...');
+       
         Linking.openURL(pixUrl);
       } else {
         throw new Error('URL Pix ou ID da transação não encontrada.');
@@ -126,7 +126,52 @@ const Pagamentos2 = () => {
     } catch (error) {
       setErrorMessage(`Falha ao gerar pix.`);
       setShowErrorModal(true);
-      console.error('Erro ao processar pagamento Pix:', error);
+    
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  const handleCashPayment = async () => {
+    console.log('Iniciando handleCashPayment');
+    if (!selectedPlan || !selectedAluno || !termsAccepted) {
+      console.error('Erro: Plano, aluno ou termos não selecionados.');
+      Alert.alert('Erro', 'Selecione um plano, um aluno e aceite os termos.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      let planId = '';
+      const endDate = new Date();
+
+      switch (selectedPlan) {
+        case '2c93808493b072d70193be7c14b30582':
+          planId = 'Pago em Dinheiro - Mensal';
+          endDate.setMonth(endDate.getMonth() + 1);
+          break;
+        case '2c93808493b072d80193be79bea105ac':
+          planId = 'Pago em Dinheiro - Semestral';
+          endDate.setMonth(endDate.getMonth() + 6);
+          break;
+        case '2c93808493b073170193be7a300c053f':
+          planId = 'Pago em Dinheiro - Anual';
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          break;
+        default:
+          throw new Error('Plano inválido.');
+      }
+      
+
+      const formattedEndDate = endDate.toISOString();
+      console.log('DADOS: ', selectedAluno.userId, planId, formattedEndDate);
+      await updateStatusPagamento(selectedAluno.userId, planId, '---', formattedEndDate);
+      Alert.alert('Sucesso', 'Pagamento registrado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao registrar pagamento:', error);
+      setErrorMessage('Falha ao registrar pagamento.');
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -208,6 +253,15 @@ const Pagamentos2 = () => {
         >
           {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.paymentButtonText}>Continuar</Text>}
         </TouchableOpacity>
+
+        {selectedPlan && selectedAluno && termsAccepted && (
+          <TouchableOpacity
+            style={[styles.paymentButton,  { backgroundColor: '#161622' }]}
+            onPress={handleCashPayment}
+          >
+            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.paymentButtonText}>Pagar em Dinheiro</Text>}
+          </TouchableOpacity>
+        )}
 
         {selectedPlan === '2c93808493b072d70193be7c14b30582' && (
           <TouchableOpacity

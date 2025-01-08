@@ -48,7 +48,7 @@ const DashTreinos = () => {
     } catch (error) {
       setErrorMessage(`Erro ao carregar treinos.`);
       setShowErrorModal(true);
-      console.error(error);
+     
     }
   };
   

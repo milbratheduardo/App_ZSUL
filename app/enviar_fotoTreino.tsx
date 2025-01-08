@@ -26,9 +26,9 @@ const EnviarFotoTreino = () => {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const files = result.assets;
         setSelectedFiles([...selectedFiles, ...files]);
-        console.log('Arquivos selecionados:', files);
+      
       } else {
-        console.log('Seleção cancelada pelo usuário');
+       
       }
     } catch (error) {
       setErrorMessage(`Erro ao selecionar arquivos.`);

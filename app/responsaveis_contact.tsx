@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { getAlunosByTurmaId, getResponsavelByCpf } from '@/lib/appwrite';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 
 const ResponsaveisContact = () => {
   const { turmaId } = useLocalSearchParams();

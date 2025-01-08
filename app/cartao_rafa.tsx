@@ -38,7 +38,7 @@ const Cartao = () => {
         setAluno(alunoData);
       } catch (error) {
         Alert.alert('Erro', 'Falha ao buscar os dados do aluno.');
-        console.error(error);
+        
       } finally {
         setLoading(false);
       }
@@ -87,7 +87,7 @@ const Cartao = () => {
         Alert.alert('Erro', 'O pagamento não foi concluído.');
       }
     } catch (error) {
-      console.error('Erro ao processar pagamento:', error);
+     
       Alert.alert('Erro', 'Falha ao processar o pagamento.');
     } finally {
       setLoading(false);

@@ -42,7 +42,7 @@ const SignIn = () => {
           router.replace('/turmas');
         }
       } catch (error) {
-        console.log('Nenhuma sessão ativa encontrada', error.message);
+        
       }
     };
     checkSession();

@@ -66,7 +66,7 @@ const Faturas = () => {
       } catch (error) {
         setErrorMessage(`Não foi possível carregar as faturas.`);
         setShowErrorModal(true);
-        console.error(error);
+       
       } finally {
         setLoading(false);
       }

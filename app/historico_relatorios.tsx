@@ -62,7 +62,7 @@ const HistoricoRelatorios = () => {
                   const uri = await getImageUrlTreinos(imageId);
                   return { id: imageId, uri };
                 } catch {
-                  console.error(`Erro ao carregar imagem com ID ${imageId}`);
+                
                   return null;
                 }
               })
@@ -75,7 +75,7 @@ const HistoricoRelatorios = () => {
               imagens,
             };
           } catch (error) {
-            console.error('Erro ao buscar detalhes do relatório:', error.message);
+           
             return { ...relatorio, autor: 'Erro', turmaTitle: 'Erro', imagens: [] };
           }
         })
@@ -85,7 +85,7 @@ const HistoricoRelatorios = () => {
     } catch (error) {
       setErrorMessage(`Não foi possível carregar os relatórios.`);
       setShowErrorModal(true);
-      console.error(error);
+     
     } finally {
       setIsLoading(false);
     }

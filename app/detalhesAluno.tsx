@@ -36,7 +36,7 @@ const detalhesAluno = () => {
 
   const handleEdit = () => {
     router.push(`/edit_card_aluno?alunoId=${alunoId}`);
-    console.log('Editar Card clicado!');
+
   };
 
   const calculateAge = (birthDate) => {

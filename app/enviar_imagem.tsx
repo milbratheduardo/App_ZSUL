@@ -24,14 +24,14 @@ const EnviarImagem = () => {
         type: '*/*', // Permite selecionar qualquer tipo de arquivo
       });
   
-      console.log('Resultado da seleção:', result);
+      
       setSelectedFile(result.assets[0]);
   
       if (!result.canceled) {
         const file = result.assets[0];
-        console.log('Informações do arquivo selecionado:', file);
+      
       } else {
-        console.log('Seleção cancelada pelo usuário');
+   
       }
     } catch (error) {
       setErrorMessage(`Erro ao selecionar os arquivos.`);
@@ -50,7 +50,7 @@ const EnviarImagem = () => {
     try {
       // Chama a função para salvar a imagem no banco de dados
       const response = await salvarImagem(selectedFile, title, user.userId);
-      console.log('Imagem salva na galeria:', response);
+   
       setSuccessMessage('Imagem salva com sucesso!');
       setShowSuccessModal(true);
 

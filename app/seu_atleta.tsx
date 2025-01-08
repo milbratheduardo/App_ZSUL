@@ -46,7 +46,7 @@ const AlunoProfile = () => {
         }
         setAlunos(alunosData);
       } catch (error) {
-        console.error('Erro ao buscar dados de alunos:', error);
+      
       }
     };
   

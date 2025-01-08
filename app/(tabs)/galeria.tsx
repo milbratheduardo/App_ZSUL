@@ -138,14 +138,6 @@ const Galeria = () => {
       >
         <Feather name="send" size={20} color="white" />
       </TouchableOpacity>
-      {(user.admin === 'admin' || user.role === 'professor') && (
-        <TouchableOpacity
-          onPress={() => console.log('Excluir imagem', item.imageId)}
-          style={styles.deleteButton}
-        >
-          <AntDesign name="delete" size={20} color="white" />
-        </TouchableOpacity>
-      )}
     </TouchableOpacity>
   );
 
