@@ -4,28 +4,29 @@
     "slug": "Zsul",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png", // Logo do aplicativo
+    "icon": "./assets/images/icon.png",
     "scheme": "ZSul",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash2.png", // Imagem para a splash screen
-      "resizeMode": "contain",              // Pode ser "contain", "cover" ou "native"
-      "backgroundColor": "#ffffff"         // Cor de fundo
+      "image": "./assets/images/splash2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true
     },
-   "android": {
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/images/icon.png",
-    "backgroundColor": "#ffffff"
-  },
-  "splash": {
-    "image": "./assets/images/splash2.png", 
-    "resizeMode": "contain",
-    "backgroundColor": "#ffffff"
-  }
-},
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "splash": {
+        "image": "./assets/images/splash2.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.rafaguthes.Zsul"
+    },
     "web": {
       "bundler": "metro",
       "output": "static",

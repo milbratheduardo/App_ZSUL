@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getAlunosById, updateStatusPagamento } from '@/lib/appwrite';
+import { getAlunosById, updateStatusPagamento, createHistoricoPagamentos } from '@/lib/appwrite';
 import { createCardToken, handleIntegrationMP } from '../utils/MPIntegration';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -60,14 +60,14 @@ const Cartao = () => {
       setShowErrorModal(true);
       return;
     }
-
+  
     const isCardDetailsValid = Object.values(cardDetails).every((field) => field.trim() !== '');
     if (!isCardDetailsValid) {
       setErrorMessage(`Preencha todas as informações do cartão.`);
       setShowErrorModal(true);
       return;
     }
-
+  
     try {
       setLoading(true);
       const cardTokenId = await createCardToken({
@@ -83,14 +83,33 @@ const Cartao = () => {
           },
         },
       });
-
-      const result = await handleIntegrationMP(user.email, cardTokenId,plan_id);
-
-      if (result.status === "authorized") {
-        const updatedAluno = await updateStatusPagamento(atletaId, plan_id, result.id, result.auto_recurring.end_date);
+  
+      const result = await handleIntegrationMP(user.email, cardTokenId, plan_id);
+  
+      if (result.status === 'authorized') {
+        const formattedEndDate = result.auto_recurring?.end_date || new Date().toISOString();
+  
+        // Atualiza o status do pagamento
+        const updatedAluno = await updateStatusPagamento(
+          atletaId,
+          plan_id,
+          result.id,
+          formattedEndDate
+        );
+  
+        // Cria o histórico do pagamento
+        await createHistoricoPagamentos(
+          atletaId,
+          aluno?.nome || 'Nome não informado',
+          aluno?.cpf || 'CPF não informado',
+          aluno?.nomeResponsavel || 'Responsável não informado',
+          plan_id,
+          formattedEndDate,
+          result.id
+        );
+  
         setSuccessMessage('Pagamento Realizado com Sucesso!');
         setShowSuccessModal(true);
-
       } else {
         setErrorMessage(`Erro, pagamento não foi concluído.`);
         setShowErrorModal(true);

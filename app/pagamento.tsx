@@ -16,7 +16,7 @@ import { getAllAlunos } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import Checkbox from 'expo-checkbox';
 import { handlePixPaymentMP } from '../utils/MPIntegration';
-import { updateStatusPagamento } from '@/lib/appwrite';
+import { updateStatusPagamento, createHistoricoPagamentos } from '@/lib/appwrite';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Pagamentos2 = () => {
@@ -99,26 +99,36 @@ const Pagamentos2 = () => {
       Alert.alert('Erro', 'Selecione um plano, um aluno e aceite os termos.');
       return;
     }
-
+  
     try {
       setLoading(true);
       const pixResponse = await handlePixPaymentMP(user.email, user.cpf, user.nome);
-
+  
       if (pixResponse && pixResponse.id && pixResponse.point_of_interaction?.transaction_data?.ticket_url) {
         const pixUrl = pixResponse.point_of_interaction.transaction_data.ticket_url;
-
+  
         const paymentId =
           pixResponse.charges_details?.[0]?.id || pixResponse.id;
         const planId = 'Pix Mensal - Pendente';
-
+  
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 1);
         const formattedEndDate = endDate.toISOString();
-
-       
+  
+        // Atualiza o status do pagamento
         await updateStatusPagamento(selectedAluno.userId, planId, paymentId, formattedEndDate);
-
-       
+  
+        // Cria o histórico do pagamento
+        await createHistoricoPagamentos(
+          selectedAluno.userId,
+          selectedAluno.nome,
+          selectedAluno.cpf,
+          selectedAluno.nomeResponsavel,
+          planId,
+          formattedEndDate,
+          paymentId
+        );
+  
         Linking.openURL(pixUrl);
       } else {
         throw new Error('URL Pix ou ID da transação não encontrada.');
@@ -126,26 +136,22 @@ const Pagamentos2 = () => {
     } catch (error) {
       setErrorMessage(`Falha ao gerar pix.`);
       setShowErrorModal(true);
-    
     } finally {
       setLoading(false);
     }
   };
-
   
   const handleCashPayment = async () => {
-    console.log('Iniciando handleCashPayment');
     if (!selectedPlan || !selectedAluno || !termsAccepted) {
-      console.error('Erro: Plano, aluno ou termos não selecionados.');
       Alert.alert('Erro', 'Selecione um plano, um aluno e aceite os termos.');
       return;
     }
-
+  
     try {
       setLoading(true);
       let planId = '';
       const endDate = new Date();
-
+  
       switch (selectedPlan) {
         case '2c93808493b072d70193be7c14b30582':
           planId = 'Pago em Dinheiro - Mensal';
@@ -162,20 +168,32 @@ const Pagamentos2 = () => {
         default:
           throw new Error('Plano inválido.');
       }
-      
-
+  
       const formattedEndDate = endDate.toISOString();
-      console.log('DADOS: ', selectedAluno.userId, planId, formattedEndDate);
+  
+      // Atualiza o status do pagamento
       await updateStatusPagamento(selectedAluno.userId, planId, '---', formattedEndDate);
+      
+      // Cria o histórico do pagamento
+      await createHistoricoPagamentos(
+        selectedAluno.userId,
+        selectedAluno.nome,
+        selectedAluno.cpf,
+        selectedAluno.nomeResponsavel,
+        planId,
+        formattedEndDate,
+        '---'
+      );
+  
       Alert.alert('Sucesso', 'Pagamento registrado com sucesso!');
     } catch (error) {
-      console.error('Erro ao registrar pagamento:', error);
       setErrorMessage('Falha ao registrar pagamento.');
       setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>
