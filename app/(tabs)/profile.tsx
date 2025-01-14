@@ -31,7 +31,7 @@ const Profile = () => {
       { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
       { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
       { title: 'Turmas', icon: 'group', route: '/all_turmas' },
-      { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
+      { title: 'Criar Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
       { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
     ];
     if (user.admin === 'admin') {

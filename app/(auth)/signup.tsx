@@ -67,7 +67,6 @@ const SignUp = () => {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [isAccepted, setIsAccepted] = useState(false); // Aceitação dos termos de compromisso
 
   useEffect(() => {
     let iconInterval;
@@ -257,12 +256,6 @@ const submitAtleta = async () => {
       form.confirmPassword === ''
     ) {
       setErrorMessage('Por favor, preencha todos os campos');
-      setShowErrorModal(true);
-      return;
-    }
-
-    if (!isAccepted) {
-      setErrorMessage('Você precisa aceitar os termos de compromisso antes de continuar.');
       setShowErrorModal(true);
       return;
     }
@@ -825,25 +818,6 @@ const submitAtleta = async () => {
           secureTextEntry
         />
 
-        {/* Termos de compromisso */}
-        {role === "responsavel" && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-            <Switch
-              value={isAccepted}
-              onValueChange={(value) => setIsAccepted(value)}
-              thumbColor={isAccepted ? "#fff" : "#fff"}
-              trackColor={{ false: "#333", true: "#1e5f49" }}
-            />
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
-              <Text>Eu li e aceito os </Text>
-              <TouchableOpacity onPress={handleOpenTerms}>
-                <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>
-                  Termos de Compromisso
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
       </>
     );
   };
@@ -880,12 +854,12 @@ const submitAtleta = async () => {
             <TouchableOpacity
               onPress={() => router.push('/signin')} 
               disabled={isSubmitting}
-              className={`px-6 py-2 rounded-lg w-[150px] h-[40px] ${isSubmitting ? 'bg-blue-700' : 'bg-blue-900'}`}
+              className={`px-6 py-1 rounded-lg w-[150px] h-[40px] ${isSubmitting ? 'bg-blue-700' : 'bg-blue-900'}`}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="white" /> 
               ) : (
-                <Text className="text-white text-center font-pbold">Login</Text> 
+                <Text className="text-white text-center mt-2 font-pbold">Login</Text> 
               )}
             </TouchableOpacity>
           </View>

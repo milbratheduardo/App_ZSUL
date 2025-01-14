@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Image } from 'react-native'; 
+import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Image, TextInput } from 'react-native'; 
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FormField from '@/components/FormField';
@@ -9,6 +9,7 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import { useRouter } from 'expo-router';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'; // Adicionar ícones da biblioteca
 import { images } from '../../constants'; // Certifique-se de que o caminho das imagens está correto
+import emailjs from 'emailjs-com';
 
 
 const SignIn = () => {
@@ -24,6 +25,9 @@ const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
   const [showErrorModal, setShowErrorModal] = useState(false); // Exibir modal de erro
   const [showChoiceModal, setShowChoiceModal] = useState(false); // Exibir modal de erro
+  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
 
   const loadingIcons = [
     <FontAwesome name="soccer-ball-o" size={48} color="#126046" />,
@@ -99,6 +103,32 @@ const SignIn = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!recoveryEmail) {
+      setErrorMessage('Por favor, insira um email válido');
+      setShowErrorModal(true);
+      return;
+    }
+  
+    const templateParams = {
+      email: recoveryEmail,
+      assunto: 'Recuperação de Senha',
+      descricao: 'Solicitação para redefinição de senha.',
+    };
+  
+    try {
+      await emailjs.send('service_gciw5lm', 'template_le4ktiu', templateParams, 'ypSN4onrJ_W04LRlr');
+      setEmailSent(true);
+      setTimeout(() => {
+        setForgotPasswordModalVisible(false);
+        setEmailSent(false);
+      }, 3000);
+    } catch (error) {
+      setErrorMessage('Erro ao enviar email. Tente novamente.');
+      setShowErrorModal(true);
+    }
+  };
+
   return (
     <SafeAreaView className="bg-white h-full">
       {isSubmitting ? (
@@ -147,11 +177,9 @@ const SignIn = () => {
             />
 
             <View className= 'flex-row justify-between w-full pt-4 gap-2'>
-              <TouchableOpacity>
-                <Text className='text-sm text-black-100 font-pregular'>
-                  Esqueceu a senha?
-                </Text>
-              </TouchableOpacity>
+            <TouchableOpacity onPress={() => setForgotPasswordModalVisible(true)}>
+              <Text className="text-sm text-black-100 font-pregular">Esqueceu a senha?</Text>
+            </TouchableOpacity>
               <CustomButton
                 title='Entrar'
                 handlePress={submit}
@@ -173,12 +201,12 @@ const SignIn = () => {
                 <TouchableOpacity
                   onPress={() => modal_escolha()} // Navega para a rota /signup
                   disabled={isSubmitting}
-                  className={`px-6 py-2 rounded-lg w-[150px] h-[40px] ${isSubmitting ? 'bg-blue-700' : 'bg-blue-900'}`}
+                  className={`px-6 py-1 rounded-lg w-[150px] h-[40px] ${isSubmitting ? 'bg-blue-700' : 'bg-blue-900'}`}
                 >
                   {isSubmitting ? (
                     <ActivityIndicator color="white" /> 
                   ) : (
-                    <Text className="text-white text-center font-pbold">Cadastre-se</Text> 
+                    <Text className="text-white text-center mt-2 font-pbold">Cadastre-se</Text> 
                   )}
                 </TouchableOpacity>
             </View>
@@ -231,6 +259,74 @@ const SignIn = () => {
           </View>
         </View>
       </Modal>
+
+      <Modal
+  visible={forgotPasswordModalVisible}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={() => setForgotPasswordModalVisible(false)}
+>
+  <View style={{
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  }}>
+    <View style={{
+      backgroundColor: '#FFFFFF',
+      padding: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      width: '90%',
+    }}>
+      <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 10 }}>Recuperar Senha</Text>
+      {emailSent ? (
+        <Text style={{ color: 'green', marginBottom: 20 }}>Email enviado com sucesso!</Text>
+      ) : (
+        <>
+          <TextInput
+            style={{
+              width: '100%',
+              borderColor: '#ddd',
+              borderWidth: 1,
+              borderRadius: 10,
+              padding: 10,
+              marginBottom: 20,
+              backgroundColor: '#F9FAFB',
+            }}
+            placeholder="Digite seu email"
+            value={recoveryEmail}
+            onChangeText={setRecoveryEmail}
+          />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#CCCCCC',
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 8,
+              }}
+              onPress={() => setForgotPasswordModalVisible(false)}
+            >
+              <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#126046',
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 8,
+              }}
+              onPress={handleForgotPassword}
+            >
+              <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Enviar</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </View>
+  </View>
+</Modal>;
 
       
 <Modal

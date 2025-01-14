@@ -136,11 +136,11 @@ const TurmaChamadas = () => {
       />
 
       <View style={styles.buttonContainer}>
-        <CustomButton
-          containerStyles="rounded-lg w-[180px] h-[40px]"
-          title="Registrar"
-          handlePress={handleSave}
-        />
+      <CustomButton
+  containerStyles="rounded-lg w-[180px] h-[40px] bg-[#006400]" // Adicionando a cor ao estilo
+  title="Registrar"
+  handlePress={handleSave}
+/>
       </View>
              <Modal
                 visible={showErrorModal}

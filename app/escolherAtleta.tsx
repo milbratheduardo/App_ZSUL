@@ -58,6 +58,7 @@ const EscolherAtleta = () => {
          
         }
       }
+
   
       setAlunos(alunosFiltrados);
       setFilteredAlunos(alunosFiltrados.slice(0, 10)); // Exibir os primeiros 10 alunos
@@ -85,6 +86,9 @@ const EscolherAtleta = () => {
       
       setSuccessMessage('Alunos cadastrados com sucesso!');
       setShowSuccessModal(true);
+      setTimeout(() => {
+        router.push('/turmas');
+      }, 1000);
     } catch (error) {
     
       setErrorMessage(`Não foi possível cadastrar os alunos.`);

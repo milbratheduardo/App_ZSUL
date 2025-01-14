@@ -8,17 +8,18 @@ import { icons } from '../../constants';
 const TabIcon = ({ icon, color, name, focused }) => {
   const iconColor = focused ? '#126046' : '#808080';
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+    <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, minWidth: 70 }}>
       <Image 
         source={icon}
         resizeMode='contain'
-        style={{ tintColor: iconColor, width: 22, height: 26 }}
+        style={{ tintColor: iconColor, width: 22, height: 26, marginTop: 10 }}
       />
       <Text style={{ 
-        fontSize: focused ? 8 : 8, // Ajuste o tamanho da fonte aqui
+        fontSize: focused ? 12 : 12, 
         color: focused ? '#126046' : '#808080', 
-        fontWeight: focused ? '600' : '400' 
-      }}>
+        fontWeight: focused ? '600' : '400',
+      }} numberOfLines={1} 
+      >
         {name}
       </Text>
     </View>
@@ -46,7 +47,7 @@ const TabsLayout = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            height: 50,
+            height: 55,
             backgroundColor: '#FFFFFF',
             borderTopWidth: 1,
             borderTopColor: '#E0E0E0',

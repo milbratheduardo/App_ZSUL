@@ -7,22 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "ZSul",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash2.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "splash": {
-        "image": "./assets/images/splash2.png",
-        "resizeMode": "contain",
         "backgroundColor": "#ffffff"
       },
       "package": "com.rafaguthes.Zsul"

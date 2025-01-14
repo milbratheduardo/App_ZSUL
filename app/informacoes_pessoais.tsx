@@ -42,7 +42,6 @@ const InformacoesPessoais = () => {
         { label: 'CPF', value: user.cpf, icon: 'id-card' },
         { label: 'Email', value: user.email, icon: 'envelope' },
         { label: 'Modalidade', value: user.modalidade, icon: 'futbol-o' },
-        { label: 'Faixa Etária de Atuação', value: user.faixa_etaria, icon: 'group' },
         { label: 'Profissão', value: user.profissao, icon: 'briefcase' },
         { label: 'WhatsApp', value: user.whats, icon: 'whatsapp' },
       ];

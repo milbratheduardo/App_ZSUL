@@ -48,6 +48,17 @@ const VerChamadas = () => {
     }
   };
 
+  const formatDateToBR = (dateString) => {
+    const months = [
+      '01', '02', '03', '04', '05', '06',
+      '07', '08', '09', '10', '11', '12'
+    ];
+  
+    const [year, month, day] = dateString.split('-'); // Divida a data no formato "yyyy-mm-dd"
+    const monthName = months[parseInt(month, 10) - 1]; // Converta o mês para o nome
+    return `${day}-${monthName}-${year}`; // Retorne no formato "dd-mês-ano"
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchChamadas();
@@ -132,30 +143,31 @@ const VerChamadas = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={filteredChamadas}
-        keyExtractor={(item) => item.$id}
-        renderItem={({ item }) => (
-          <View style={styles.chamadaCard}>
-            <TouchableOpacity style={{ flex: 1 }} onPress={() => handleChamadaPress(item)}>
-              <View>
-                <Text style={styles.chamadaData}>{item.data}</Text>
-                <Text style={styles.chamadaText}>Presentes: {item.presentes.length}</Text>
-                <Text style={styles.chamadaText}>Ausentes: {item.ausentes.length}</Text>
-              </View>
-            </TouchableOpacity>
-
-            {(user.role === 'admin' || user.role === 'professor') && (
-              <TouchableOpacity onPress={() => handleDeleteChamada(item.$id)} style={styles.deleteButton}>
-                <AntDesign name="delete" size={24} color="red" />
-              </TouchableOpacity>
-            )}
+        <FlatList
+    data={filteredChamadas}
+    keyExtractor={(item) => item.$id}
+    renderItem={({ item }) => (
+      <View style={styles.chamadaCard}>
+        <TouchableOpacity style={{ flex: 1 }} onPress={() => handleChamadaPress(item)}>
+          <View>
+            {/* Formata a data usando a função formatDateToBR */}
+            <Text style={styles.chamadaData}>{formatDateToBR(item.data)}</Text>
+            <Text style={styles.chamadaText}>Presentes: {item.presentes.length}</Text>
+            <Text style={styles.chamadaText}>Ausentes: {item.ausentes.length}</Text>
           </View>
+        </TouchableOpacity>
+
+        {(user.role === 'admin' || user.role === 'professor') && (
+          <TouchableOpacity onPress={() => handleDeleteChamada(item.$id)} style={styles.deleteButton}>
+            <AntDesign name="delete" size={24} color="red" />
+          </TouchableOpacity>
         )}
+      </View>
+    )}
         contentContainerStyle={styles.listContainer}
         ListHeaderComponent={() => (
           <View style={styles.header}>
-            <Text style={styles.title}>Registro de Chamadas</Text>
+          
             {turma && (
               <TurmasCard2
                 turma={{
@@ -178,19 +190,30 @@ const VerChamadas = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       />
 
-      <View style={styles.searchContainer}>
-        <TouchableOpacity onPress={handleSearchToggle} style={styles.searchButton}>
-          <Feather name="search" size={24} color="white" />
-        </TouchableOpacity>
-        {searchVisible && (
-          <TextInput
-            placeholder="Pesquisar por data (dd-mm-yyyy)"
-            value={searchText}
-            onChangeText={handleSearch}
-            style={styles.searchInput}
-          />
-        )}
-      </View>
+<View style={styles.searchContainer}>
+  <TouchableOpacity onPress={handleSearchToggle} style={styles.searchButton}>
+    <Feather name="search" size={12} color="white" />
+  </TouchableOpacity>
+  {searchVisible && (
+    <TextInput
+      placeholder="Pesquisar por data (dd-mm-yyyy)"
+      value={searchText}
+      onChangeText={(text) => {
+        const formattedText = text
+          .replace(/[^0-9-]/g, '') // Permite apenas números e hífens
+          .replace(/^(\d{2})(\d)/, '$1-$2') // Insere o primeiro hífen após o dia
+          .replace(/-(\d{2})(\d)/, '-$1-$2') // Insere o segundo hífen após o mês
+          .slice(0, 10); // Limita o comprimento a 10 caracteres
+        setSearchText(formattedText); // Atualiza o estado com o texto formatado
+        handleSearch(formattedText); // Realiza a busca com o texto formatado
+      }}
+      style={styles.searchInput}
+      keyboardType="default" // Permite caracteres e símbolos, incluindo hífen
+    />
+  )}
+</View>
+
+
 
       <View style={styles.addButtonContainer}>
         {(user.role === 'admin' || user.role === 'profissional') && (
@@ -198,7 +221,7 @@ const VerChamadas = () => {
             onPress={() => router.push({ pathname: '/turma_chamadas', params: { turmaId, turmaTitle } })}
             style={styles.addButton}
           >
-            <AntDesign name="plus" size={24} color="white" />
+            <AntDesign name="plus" size={12} color="white" />
           </TouchableOpacity>
         )}
       </View>
@@ -440,9 +463,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchButton: {
-    backgroundColor: '#126046',
-    borderRadius: 50,
-    padding: 20,
+    backgroundColor: '#006400',
+    borderRadius: 15,
+    padding: 15,
     elevation: 5,
   },
   searchInput: {
@@ -455,13 +478,13 @@ const styles = StyleSheet.create({
   },
   addButtonContainer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 50,
     right: 30,
   },
   addButton: {
-    backgroundColor: '#126046',
-    borderRadius: 50,
-    padding: 20,
+    backgroundColor: '#006400',
+    borderRadius: 15,
+    padding: 15,
     elevation: 5,
   },
   modalItem: {

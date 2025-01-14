@@ -42,6 +42,9 @@ const Relatorios = () => {
       const response = await salvarRelatorio(relatorioData);
       setSuccessMessage('Relatório salvo com sucesso!');
       setShowSuccessModal(true);
+      setTimeout(() => {
+        router.push('/turmas');
+      }, 1500);
 
       setSelectedImages([]);
     } catch (error) {
@@ -163,13 +166,16 @@ const Relatorios = () => {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSaveRelatorio}>
-            <Icon name="save" size={24} color="#fff" />
+            <Icon name="save" size={34} color="#fff" />
+          
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuButton} onPress={handleUploadImages}>
-            <Icon name="image" size={24} color="#fff" />
+            <Icon name="image" size={34} color="#fff" />
+           
           </TouchableOpacity>
         </View>
+
       </ScrollView>
              <Modal
                 visible={showErrorModal}
@@ -261,6 +267,7 @@ const styles = StyleSheet.create({
     color: '#333',
     marginVertical: 8,
     fontWeight: '600',
+    justifyContent: 'center',
   },
   inputContainer: {
     backgroundColor: '#fff',
@@ -310,36 +317,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 5,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+buttonContainer: {
+    flexDirection: 'row', // Alinha os botões em linha
+    justifyContent: 'center', // Centraliza horizontalmente
+    alignItems: 'center', // Centraliza verticalmente
+    marginVertical: 20, // Espaço acima e abaixo do container
   },
   saveButton: {
+    marginTop: 100,
     backgroundColor: '#006400',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    padding: 10,
+    borderRadius: 8,
+    marginHorizontal: 10, // Espaço entre os botões
   },
   menuButton: {
-    backgroundColor: '#006400',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    marginTop: 100,
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 8,
+    marginHorizontal: 10, // Espaço entre os botões
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    marginTop: 5, // Espaço entre ícone e texto
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,

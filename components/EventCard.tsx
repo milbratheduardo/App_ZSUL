@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, Alert } from 'react-native';
 import CustomButton from './CustomButton'; // Botão reutilizável
-import { getImageUrl, getCurrentUser, updateEventConfirmados, getEventConfirmados } from '@/lib/appwrite';
+import { getImageUrl, getCurrentUser, updateEventConfirmados, getEventsConfirmados } from '@/lib/appwrite';
 import { router } from 'expo-router'; // Importe o router do expo-router
 import { useGlobalContext } from '@/context/GlobalProvider';
 
@@ -34,9 +34,8 @@ const EventCard = ({ event }) => {
     const fetchUser = async () => {
       try {
         const currentUser = await getCurrentUser(); // Supondo que getCurrentUser retorne o ID do usuário
-        setUserId(currentUser.$id);
+        setUserId(currentUser.userId);
         setUserRole(currentUser.role); // Adicionando o papel do usuário
-        checkIfConfirmed(currentUser.$id);
       } catch (error) {
         console.error("Erro ao buscar o usuário atual:", error);
       }
@@ -52,10 +51,17 @@ const EventCard = ({ event }) => {
     }
   }, [event]);
 
+  useEffect(() => {
+    if (userId && confirmados.length > 0) {
+      checkIfConfirmed(userId, confirmados);
+    }
+  }, [userId, confirmados]);
+  
+
   // Função para buscar a lista de confirmados do evento
   const fetchConfirmados = async () => {
     try {
-      const confirmadosList = await getEventConfirmados(event.$id); // Função para obter a lista de confirmados pelo ID do evento
+      const confirmadosList = await getEventsConfirmados(event.$id); // Função para obter a lista de confirmados pelo ID do evento
       setConfirmados(confirmadosList);
       checkIfConfirmed(userId, confirmadosList); // Verifica se o usuário está na lista de confirmados
     } catch (error) {

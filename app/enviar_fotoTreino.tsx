@@ -40,6 +40,9 @@ const EnviarFotoTreino = () => {
     if (selectedFiles.length === 0) {
       setErrorMessage(`Por favor selecione uma imagem.`);
       setShowErrorModal(true);
+      setTimeout(() => {
+        router.push('/controle_turmas');
+      }, 1000);
       return;
     }
 

@@ -186,7 +186,7 @@ const Turmas = () => {
               <Text className="text-primary text-lg font-pregular mb-1">
                 Turmas Disponíveis
               </Text>
-              {user.role === 'admin' || user.role === 'profissional' && (
+              {user.admin === 'admin' && (
                 <CustomButton
                   title="Criar Turma"
                   handlePress={() => router.push('/cadastro_turma')}

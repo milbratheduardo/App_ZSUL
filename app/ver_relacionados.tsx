@@ -96,8 +96,6 @@ const VerRelacionados = () => {
         style={styles.searchInput}
       />
 
-      <Text style={styles.subtitle}>Selecione apenas os presentes</Text>
-
       <ScrollView style={styles.alunoList}>
         {filteredAlunos.map((item) => (
           <TouchableOpacity

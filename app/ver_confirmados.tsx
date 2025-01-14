@@ -24,29 +24,29 @@ const VerConfirmados = () => {
 
   const fetchData = async () => {
     try {
-      // Buscar todos os alunos e usuários
+
       const allAlunos = await getAllAlunos();
       const allUsers = await getAllUsers();
 
-      setAlunos(allAlunos);
-      setUsers(allUsers);
-
-      // Definir os confirmados com base nos IDs fornecidos
+  
       if (confirmadosParam) {
         const confirmadosIds = confirmadosParam.split(',');
+       
+  
+        const confirmadosAlunos = allAlunos.filter((aluno) => confirmadosIds.includes(aluno.userId));
+        const confirmadosUsers = allUsers.filter((user) => confirmadosIds.includes(user.userId));
+  
 
-        // Filtrar os alunos e usuários confirmados
-        const confirmadosAlunos = allAlunos.filter((aluno) => confirmadosIds.includes(aluno.$id));
-        const confirmadosUsers = allUsers.filter((user) => confirmadosIds.includes(user.$id));
-
-        // Concatenar ambos na lista final
+  
         setFilteredConfirmados([...confirmadosAlunos, ...confirmadosUsers]);
       }
     } catch (error) {
-      setErrorMessage(`Não foi possível carregar os dados.`);
+      console.error('Erro ao carregar dados:', error);
+      setErrorMessage('Não foi possível carregar os dados.');
       setShowErrorModal(true);
     }
   };
+  
 
   const handleSearch = (text) => {
     setSearchQuery(text);
@@ -93,7 +93,7 @@ const VerConfirmados = () => {
               backgroundColor: 'white',
             }}
           >
-            <Text>{item.username}</Text>
+            <Text>{item.email}</Text>
             <Text style={{ fontSize: 18 }}>{'✓'}</Text>
           </View>
         )}

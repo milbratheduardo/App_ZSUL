@@ -6,33 +6,43 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Alert,
   Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getNovidades, salvarNovidade, deleteNovidade } from '@/lib/appwrite'; // Substitua pelas funções do Appwrite
+import { getNovidades, salvarNovidade, deleteNovidade, getAllProfissionais } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Novidades = () => {
-  const { user } = useGlobalContext(); // user contém informações como `role`
+  const { user } = useGlobalContext();
   const [novidades, setNovidades] = useState([]);
   const [novaNovidade, setNovaNovidade] = useState('');
   const [loading, setLoading] = useState(true);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); 
-  const [showSuccessModal, setShowSuccessModal] = useState(false); 
-  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const isAdmin = user.admin === 'admin'; 
+  const isAdmin = user.admin === 'admin';
 
   useEffect(() => {
     const fetchNovidades = async () => {
       try {
         const data = await getNovidades();
-        setNovidades(data);
+
+        // Adicionar o nome do autor para cada novidade
+        const profissionais = await getAllProfissionais();
+        const novidadesComAutor = data.map((novidade) => {
+          const profissional = profissionais.find(
+            (prof) => prof.userId === novidade.userId
+          );
+          return {
+            ...novidade,
+            authorName: profissional?.nome || 'Autor desconhecido',
+          };
+        });
+
+        setNovidades(novidadesComAutor);
       } catch (error) {
-        setErrorMessage(`Não foi possível carregar as notícias.`);
+        setErrorMessage('Não foi possível carregar as notícias.');
         setShowErrorModal(true);
       } finally {
         setLoading(false);
@@ -44,34 +54,43 @@ const Novidades = () => {
 
   const handleAddNovidade = async () => {
     if (!novaNovidade.trim()) {
-      setErrorMessage(`O campo de novidade não pode estar vazio.`);
+      setErrorMessage('O campo de novidade não pode estar vazio.');
       setShowErrorModal(true);
       return;
     }
-  
-    // Dados a serem enviados
+
     const novidadeData = {
-      novidade: novaNovidade, // Texto da novidade
-      userId: user?.userId || 'Desconhecido', // Adiciona o ID do usuário ou um valor padrão
+      novidade: novaNovidade,
+      userId: user?.userId || 'Desconhecido',
     };
-  
+
     try {
       const newNovidade = await salvarNovidade(novidadeData);
-      setNovidades((prev) => [...prev, newNovidade]); // Atualiza a lista de novidades
-      setNovaNovidade(''); // Limpa o campo de entrada
+      const profissionais = await getAllProfissionais();
+      const profissional = profissionais.find(
+        (prof) => prof.userId === newNovidade.userId
+      );
+
+      setNovidades((prev) => [
+        ...prev,
+        {
+          ...newNovidade,
+          authorName: profissional?.nome || 'Autor desconhecido',
+        },
+      ]);
+      setNovaNovidade('');
     } catch (error) {
-      setErrorMessage(`Não foi possível salvar a notícia.`);
+      setErrorMessage('Não foi possível salvar a notícia.');
       setShowErrorModal(true);
     }
   };
-  
 
   const handleDeleteNovidade = async (id) => {
     try {
       await deleteNovidade(id);
       setNovidades(novidades.filter((item) => item.$id !== id));
     } catch (error) {
-      setErrorMessage(`Não foi possível deletar a notícia.`);
+      setErrorMessage('Não foi possível deletar a notícia.');
       setShowErrorModal(true);
     }
   };
@@ -79,6 +98,7 @@ const Novidades = () => {
   const renderNovidadeCard = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.novidadeText}>{item.novidade}</Text>
+      <Text style={styles.authorText}>Por: {item.authorName}</Text>
       {isAdmin && (
         <TouchableOpacity
           style={styles.deleteButton}
@@ -117,51 +137,23 @@ const Novidades = () => {
           </TouchableOpacity>
         </View>
       )}
-             <Modal
-                visible={showErrorModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowErrorModal(false)}
-              >
-                <View style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                }}>
-                  <View style={{
-                    backgroundColor: 'red',
-                    padding: 20,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    width: '80%',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}>
-                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
-                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
-                      Erro
-                    </Text>
-                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
-                      {errorMessage}
-                    </Text>
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: 'white',
-                        paddingHorizontal: 20,
-                        paddingVertical: 10,
-                        borderRadius: 5,
-                      }}
-                      onPress={() => setShowErrorModal(false)}
-                    >
-                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Modal>
+      <Modal
+        visible={showErrorModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Erro</Text>
+            <Text style={styles.modalText}>{errorMessage}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setShowErrorModal(false)}>
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -196,26 +188,31 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     padding: 16,
     borderRadius: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 3,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 16,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
   },
   novidadeText: {
     fontSize: 16,
     color: '#333',
-    flex: 1,
+    marginBottom: 8,
+  },
+  authorText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
   },
   deleteButton: {
-    marginLeft: 10,
+    marginTop: 10,
+    alignSelf: 'flex-end',
   },
   adminContainer: {
     marginTop: 20,
@@ -237,6 +234,40 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'red',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    marginVertical: 10,
+  },
+  modalText: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'red',
     fontWeight: 'bold',
   },
 });

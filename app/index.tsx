@@ -27,7 +27,7 @@ export default function App () {
 
                     <View className='relative mt-2'>
                         <Text className='text-3xl text-black font-bold text-center'>
-                       Escola de futebol de base da Região {' '}
+                        A <Text className="text-verde">melhor</Text> escola de futebol de base da Região {''}
                         <Text className="text-vermelho">SUL</Text>
                         </Text>
                     </View>

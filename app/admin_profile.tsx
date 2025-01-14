@@ -25,9 +25,8 @@ const AdminOptions = () => {
   const adminOptions = [
     { title: 'Gerenciar Usuários', icon: 'users-cog', route: '/gerenciar_usuarios' },
     { title: 'Vincular Profissional', icon: 'user-plus', route: '/vincular_prof' },
-    { title: 'Pagamentos Atuais', icon: 'wallet', route: '/pagamentos_atuais' },
+    { title: 'Pagamentos Recentes', icon: 'wallet', route: '/pagamentos_atuais' },
     { title: 'Histórico de Pagamentos', icon: 'history', route: '/historico_pagamentos' },
-    { title: 'Gerenciamento de Dados', icon: 'chart-line', route: '/gerenciamento_dados' },
   ];
 
   const renderOption = ({ item }: { item: { title: string; icon: string; route: string } }) => (

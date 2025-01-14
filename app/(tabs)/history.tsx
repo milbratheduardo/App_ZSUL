@@ -24,7 +24,7 @@ const History = () => {
         const allAlunos = await getAllAlunos();
         const alunosData = await Promise.all(
           allAlunos.map(async aluno => {
-            let turmaTitle = 'Sem Turma Associada';
+            let turmaTitle = 'Nenhuma Turma';
             if (aluno.turmaId) {
               try {
                 const turma = await getTurmaById(aluno.turmaId);
@@ -92,17 +92,17 @@ const History = () => {
 
   const renderAluno = ({ item }) => {
     const positionDetails = {
-      goleiro: { abbreviation: 'GL', color: '#800080' },
-      'zagueiro central': { abbreviation: 'ZC', color: '#1E90FF' },
-      'lateral direito': { abbreviation: 'LD', color: '#1E90FF' },
-      'lateral esquerdo': { abbreviation: 'LE', color: '#1E90FF' },
-      volante: { abbreviation: 'VOL', color: '#32CD32' },
-      'meia central': { abbreviation: 'MC', color: '#32CD32' },
-      'meia ofensivo': { abbreviation: 'MO', color: '#32CD32' },
-      'meia defensivo': { abbreviation: 'MD', color: '#32CD32' },
-      'ponta direita': { abbreviation: 'PD', color: '#FF6347' },
-      'ponta esquerda': { abbreviation: 'PE', color: '#FF6347' },
-      centroavante: { abbreviation: 'CA', color: '#FF6347' },
+      'goleiro': { abbreviation: 'GL', color: '#800080' },
+      'zagueiro-central': { abbreviation: 'ZC', color: '#1E90FF' },
+      'lateral-direito': { abbreviation: 'LD', color: '#1E90FF' },
+      'lateral-esquerdo': { abbreviation: 'LE', color: '#1E90FF' },
+      'volante': { abbreviation: 'VOL', color: '#32CD32' },
+      'meia-central': { abbreviation: 'MC', color: '#32CD32' },
+      'meia-ofensivo': { abbreviation: 'MO', color: '#32CD32' },
+      'meia-defensivo': { abbreviation: 'MD', color: '#32CD32' },
+      'ponta-direita': { abbreviation: 'PD', color: '#FF6347' },
+      'ponta-esquerda': { abbreviation: 'PE', color: '#FF6347' },
+      'centroavante': { abbreviation: 'CA', color: '#FF6347' },
     };
 
     const position = positionDetails[item.posicao.toLowerCase()] || {};
