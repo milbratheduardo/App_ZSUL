@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from '@/constants';
 import { getAllImages, getImageUrl, getAlunosByUserId } from '@/lib/appwrite';
 import * as FileSystem from 'expo-file-system';
-import * as Notifications from 'expo-notifications';
 import * as Sharing from 'expo-sharing';
 import EmptyState from '@/components/EmptyState';
 import CustomButton from '@/components/CustomButton';
@@ -98,14 +97,6 @@ const Galeria = () => {
         setShowErrorModal(true);
       }
       
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Download Completo',
-          body: 'Imagem baixada e pronta para compartilhamento.',
-        },
-        trigger: null,
-      });
     } catch (error) {
       setErrorMessage(`Não foi possível baixar a imagem.`);
       setShowErrorModal(true);
