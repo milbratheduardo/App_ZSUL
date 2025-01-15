@@ -114,8 +114,17 @@ const PagamentosAtuais = () => {
           aluno.planId === '2c93808493b072d70193be7c14b30582' ||
           aluno.planId === '2c93808493b073170193be7a300c053f'
       );
-    } else if (filter === 'Pendente') {
-      filtered = alunos.filter((aluno) => !aluno.plano || aluno.plano.trim() === '');
+    } else if (filter === 'Pendentes') {
+      filtered = alunos.filter(
+        (aluno) =>
+          !(
+            (aluno.plano && aluno.plano.toLowerCase().includes('pix')) ||
+            (aluno.plano && aluno.plano.toLowerCase().includes('dinheiro')) ||
+            aluno.planId === '2c93808493b072d80193be79bea105ac' ||
+            aluno.planId === '2c93808493b072d70193be7c14b30582' ||
+            aluno.planId === '2c93808493b073170193be7a300c053f'
+          )
+      );
     }
 
     setFilteredAlunos(filtered);
@@ -132,8 +141,8 @@ const PagamentosAtuais = () => {
   const renderAluno = ({ item }) => (
     <View style={styles.userCard}>
       <Text style={styles.userName}>Nome do Atleta: {item.nome}</Text>
-      <Text style={styles.userInfo}>Plano: {item.plano || 'Pendente'}</Text>
       <Text style={styles.userInfo}>Data de Vencimento: {item.formattedEndDate}</Text>
+      <Text style={styles.userInfo}>Status do Pagamento: {item.status_pagamento}</Text>
     </View>
   );
 
@@ -150,10 +159,10 @@ const PagamentosAtuais = () => {
 
       <View style={styles.filterContainer}>
         {[
-          { filter: 'Pix', icon: 'wallet', label: 'Pix', count: counts.pix },
+          { filter: 'Pix', icon: 'qrcode', label: 'Pix', count: counts.pix },
           { filter: 'Dinheiro', icon: 'money-bill-wave', label: 'Dinheiro', count: counts.dinheiro },
           { filter: 'Cartão de Crédito', icon: 'credit-card', label: 'Cartão de Crédito', count: counts.cartao },
-          { filter: 'Pendente', icon: 'exclamation-circle', label: 'Pendentes', count: counts.pendente },
+          { filter: 'Pendentes', icon: 'exclamation-circle', label: 'Pendentes', count: counts.pendente },
         ].map(({ filter, icon, label, count }) => (
           <TouchableOpacity
             key={filter}
@@ -161,11 +170,14 @@ const PagamentosAtuais = () => {
             onPress={() => handleFilter(filter)}
           >
             <Icon name={icon} size={24} color="#126046" />
-            <Text style={styles.filterText}>{label}</Text>
             <Text style={styles.filterCount}>{count}</Text>
           </TouchableOpacity>
         ))}
       </View>
+
+      {selectedFilter && (
+        <Text style={[styles.filterHeader, { textAlign: 'center' }]}>{selectedFilter}</Text>
+      )}
 
       {loading ? (
         <ActivityIndicator size="large" color="#126046" style={styles.loader} />
@@ -249,16 +261,18 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#126046',
   },
-  filterText: {
-    fontSize: 14,
-    marginTop: 8,
-    color: '#333',
-  },
   filterCount: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#126046',
     marginTop: 4,
+  },
+  filterHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+    marginBottom: 10,
+    textAlign: 'center', // Garante que o texto ficará centralizado
   },
   userList: {
     paddingBottom: 16,

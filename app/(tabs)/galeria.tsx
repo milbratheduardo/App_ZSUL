@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { images } from '@/constants';
-import { getAllImages, getImageUrl, getAlunosByUserId } from '@/lib/appwrite';
+import { getAllImages, getImageUrl, getAlunosByUserId, deleteImageByImageId } from '@/lib/appwrite';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import EmptyState from '@/components/EmptyState';
@@ -83,6 +83,32 @@ const Galeria = () => {
     setSelectedImage(null);
   };
 
+  const handleDeleteImage = async (imageId) => {
+    Alert.alert(
+      "Confirmar Exclusão",
+      "Tem certeza que deseja excluir esta imagem?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          onPress: async () => {
+            try {
+              await deleteImageByImageId(imageId);
+              Alert.alert("Sucesso", "Imagem excluída com sucesso.");
+              fetchData(); // Atualiza a lista após a exclusão
+            } catch (error) {
+              setErrorMessage(error.message);
+              setShowErrorModal(true);
+            }
+          },
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+  
+
   const handleDownloadAndShareImage = async (imageId) => {
     try {
       const fileUrl = await getImageUrl(imageId);
@@ -123,14 +149,25 @@ const Galeria = () => {
       )}
       <Text style={styles.imageTitle}>{item.title}</Text>
       <Text style={styles.imageAuthor}>Enviado por: {item.username}</Text>
-      <TouchableOpacity
-        onPress={() => handleDownloadAndShareImage(item.imageId)}
-        style={styles.shareButton}
-      >
-        <Feather name="send" size={20} color="white" />
-      </TouchableOpacity>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          onPress={() => handleDownloadAndShareImage(item.imageId)}
+          style={styles.shareButton}
+        >
+          <Feather name="send" size={20} color="white" />
+        </TouchableOpacity>
+        {user.admin === 'admin' && (
+          <TouchableOpacity
+            onPress={() => handleDeleteImage(item.imageId)}
+            style={styles.deleteButton}
+          >
+            <Feather name="trash-2" size={20} color="white" />
+          </TouchableOpacity>
+        )}
+      </View>
     </TouchableOpacity>
   );
+  
 
   
   return (
@@ -310,19 +347,24 @@ const styles = StyleSheet.create({
   shareButton: {
     backgroundColor: '#126046',
     borderRadius: 10,
-    padding: 8,
+    padding: 10,
     alignItems: 'center',
-    alignSelf: 'center',
-    width: 80,
-    marginTop: 10,
+    justifyContent: 'center',
+    width: 100,
+    marginBottom: 10, // Espaçamento entre os botões
   },
   deleteButton: {
     backgroundColor: '#D30A0C',
     borderRadius: 10,
-    padding: 8,
+    padding: 10,
     alignItems: 'center',
-    alignSelf: 'center',
-    width: 80,
+    justifyContent: 'center',
+    width: 100,
+  },  
+  actionButtons: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 10,
   },
   modalBackground: {

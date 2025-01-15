@@ -208,10 +208,8 @@ const submitAtleta = async () => {
         form.primeiraEscola,     // Primeira Escola de Futebol (Sim/Não)
         form.anoEscolar          // Ano Escolar
       );
-      setUser(result);
-      setIsLoggedIn(true);
 
-      router.replace('/seu_atleta');
+      router.push('/signin');
     } catch (error) {
       setErrorMessage(error.message);
       setShowErrorModal(true);

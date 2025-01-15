@@ -11,6 +11,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import {
   getAllRelatorios,
   getAllProfissionais,
@@ -23,6 +25,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const HistoricoRelatorios = () => {
   const { user } = useGlobalContext();
+  const firstName = user?.nome?.split(' ')[0];
+  const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
   const [relatorios, setRelatorios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImages, setSelectedImages] = useState([]);
@@ -62,7 +66,6 @@ const HistoricoRelatorios = () => {
                   const uri = await getImageUrlTreinos(imageId);
                   return { id: imageId, uri };
                 } catch {
-                
                   return null;
                 }
               })
@@ -75,7 +78,6 @@ const HistoricoRelatorios = () => {
               imagens,
             };
           } catch (error) {
-           
             return { ...relatorio, autor: 'Erro', turmaTitle: 'Erro', imagens: [] };
           }
         })
@@ -85,7 +87,6 @@ const HistoricoRelatorios = () => {
     } catch (error) {
       setErrorMessage(`Não foi possível carregar os relatórios.`);
       setShowErrorModal(true);
-     
     } finally {
       setIsLoading(false);
     }
@@ -167,17 +168,33 @@ const HistoricoRelatorios = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.pageTitle}>Histórico de Relatórios</Text>
-      {isLoading ? (
-        <Text style={styles.loadingText}>Carregando...</Text>
-      ) : (
-        <FlatList
-          data={relatorios}
-          keyExtractor={(item) => item.$id.toString()}
-          renderItem={renderRelatorioCard}
-        />
-      )}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.profileDetails}>
+            <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
+            <View style={styles.headerText}>
+              <Text style={styles.greeting}>Olá, {firstName}</Text>
+              <Text style={styles.userInfo}>Treinador de Futebol</Text>
+              <Text style={styles.userInfo}>Histórico de Relatórios</Text>
+            </View>
+          </View>
+          <Icon name="shield" size={50} color="#126046" style={styles.teamLogo} />
+        </View>
+      </View>
+
+      <View style={styles.content}>
+
+        {isLoading ? (
+          <Text style={styles.loadingText}>Carregando...</Text>
+        ) : (
+          <FlatList
+            data={relatorios}
+            keyExtractor={(item) => item.$id.toString()}
+            renderItem={renderRelatorioCard}
+          />
+        )}
+      </View>
 
       {selectedImages.length > 0 && (
         <Modal visible={isModalVisible} transparent={true} animationType="fade">
@@ -204,75 +221,39 @@ const HistoricoRelatorios = () => {
           </View>
         </Modal>
       )}
-             <Modal
-                visible={showErrorModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowErrorModal(false)}
-              >
-                <View style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                }}>
-                  <View style={{
-                    backgroundColor: 'red',
-                    padding: 20,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    width: '80%',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}>
-                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
-                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
-                      Erro
-                    </Text>
-                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
-                      {errorMessage}
-                    </Text>
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: 'white',
-                        paddingHorizontal: 20,
-                        paddingVertical: 10,
-                        borderRadius: 5,
-                      }}
-                      onPress={() => setShowErrorModal(false)}
-                    >
-                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Modal>
-              <Modal
-              visible={showSuccessModal}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={() => setShowSuccessModal(false)}
+
+      <Modal visible={showErrorModal} transparent={true} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.errorModal}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Erro</Text>
+            <Text style={styles.modalMessage}>{errorMessage}</Text>
+            <TouchableOpacity
+              style={styles.closeButton2}
+              onPress={() => setShowErrorModal(false)}
             >
-              <View style={styles.modalOverlay}>
-                <View style={styles.successModal}>
-                  <MaterialCommunityIcons name="check-circle" size={48} color="white" />
-                  <Text style={styles.modalTitle}>Sucesso</Text>
-                  <Text style={styles.modalMessage}>{successMessage}</Text>
-                  <TouchableOpacity
-                    style={styles.closeButton2}
-                    onPress={() => {
-                      setShowSuccessModal(false);
-                      
-                    }}
-                  >
-                    <Text style={styles.closeButtonText}>Fechar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-    </View>
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showSuccessModal} transparent={true} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.successModal}>
+            <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Sucesso</Text>
+            <Text style={styles.modalMessage}>{successMessage}</Text>
+            <TouchableOpacity
+              style={styles.closeButton2}
+              onPress={() => setShowSuccessModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 };
 
@@ -281,8 +262,47 @@ export default HistoricoRelatorios;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#F9FAFB',
+  },
+  header: {
     padding: 20,
+    backgroundColor: '#126046',
+    borderBottomWidth: 0,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  profileDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+  },
+  headerText: {
+    marginLeft: -80,
+  },
+  greeting: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  userInfo: {
+    fontSize: 14,
+    color: '#D1FAE5',
+    marginTop: 4,
+  },
+  teamLogo: {
+    marginLeft: 16,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
   },
   pageTitle: {
     fontSize: 20,

@@ -134,10 +134,10 @@ const HistoricoPagamentos = () => {
 
       <View style={styles.filterContainer}>
         {[
-          { filter: 'Pix', icon: 'wallet', label: 'Pix', count: counts.pix },
+          { filter: 'Pix', icon: 'qrcode', label: 'Pix', count: counts.pix },
           { filter: 'Dinheiro', icon: 'money-bill-wave', label: 'Dinheiro', count: counts.dinheiro },
           { filter: 'Cartão de Crédito', icon: 'credit-card', label: 'Cartão de Crédito', count: counts.cartao },
-          { filter: 'Pendente', icon: 'exclamation-circle', label: 'Pendentes', count: counts.pendente },
+          { filter: 'Pendentes', icon: 'exclamation-circle', label: 'Pendentes', count: counts.pendente },
         ].map(({ filter, icon, label, count }) => (
           <TouchableOpacity
             key={filter}
@@ -145,28 +145,31 @@ const HistoricoPagamentos = () => {
             onPress={() => handleFilter(filter)}
           >
             <Icon name={icon} size={24} color="#126046" />
-            <Text style={styles.filterText}>{label}</Text>
             <Text style={styles.filterCount}>{count}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
+      {selectedFilter && (
+        <Text style={[styles.filterHeader, { textAlign: 'center' }]}>{selectedFilter}</Text>
+      )}
+
       {loading ? (
         <ActivityIndicator size="large" color="#126046" style={styles.loader} />
       ) : (
         <FlatList
-            data={filteredHistorico}
-            renderItem={renderPagamento}
-            keyExtractor={(item, index) => `${item.$id}-${index}`} // Combina ID com o índice
-            contentContainerStyle={styles.userList}
-            ListEmptyComponent={() => (
-                <Text style={styles.emptyText}>
-                {selectedFilter || searchQuery
-                    ? `Nenhum pagamento encontrado para a pesquisa ou filtro.`
-                    : 'Selecione um filtro para exibir os dados.'}
-                </Text>
-            )}
-            />
+          data={filteredHistorico}
+          renderItem={renderPagamento}
+          keyExtractor={(item, index) => `${item.$id}-${index}`}
+          contentContainerStyle={styles.userList}
+          ListEmptyComponent={() => (
+            <Text style={styles.emptyText}>
+              {selectedFilter || searchQuery
+                ? `Nenhum pagamento encontrado para a pesquisa ou filtro.`
+                : 'Selecione um filtro para exibir os dados.'}
+            </Text>
+          )}
+        />
       )}
 
       <Modal
@@ -246,6 +249,13 @@ const styles = StyleSheet.create({
   },
   userList: {
     paddingBottom: 16,
+  },
+  filterHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+    marginBottom: 10,
+    textAlign: 'center', // Garante que o texto ficará centralizado
   },
   userCard: {
     backgroundColor: '#FFFFFF',

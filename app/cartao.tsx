@@ -158,7 +158,12 @@ const Cartao = () => {
             placeholder="Número do Cartão"
             keyboardType="number-pad"
             value={cardDetails.card_number}
-            onChangeText={(text) => setCardDetails({ ...cardDetails, card_number: text })}
+            onChangeText={(text) =>
+              setCardDetails({
+                ...cardDetails,
+                card_number: text.replace(/[^0-9]/g, '').slice(0, 16), 
+              })
+            }
           />
           <View style={styles.row}>
             <TextInput

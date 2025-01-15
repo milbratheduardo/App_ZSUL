@@ -60,7 +60,7 @@ const TurmaChamadas = () => {
 
       setSuccessMessage('Chamada registrada com sucesso!');
       setShowSuccessModal(true);
-      router.replace(`/turmas`);
+      
     } catch (error) {
    
       setErrorMessage(`Não foi possível salvar a chamada.`);
@@ -202,6 +202,7 @@ const TurmaChamadas = () => {
                     style={styles.closeButton}
                     onPress={() => {
                       setShowSuccessModal(false);
+                      router.back();
                       
                     }}
                   >

@@ -68,8 +68,8 @@ const TurmasList = () => {
         <View style={styles.headerContent}>
           <View style={styles.profileDetails}>
             <View style={styles.headerText}>
-              <Text style={styles.greeting}>{firstName}</Text>
-              <Text style={styles.userInfo}>{user?.nome} - E.F. SC São Paulo RS</Text>
+              <Text style={styles.greeting}>Olá, {firstName}</Text>
+              <Text style={styles.userInfo}>Todas as Turmas Disponíveis</Text>
             </View>
           </View>
           <Icon name="shield" size={50} color="#126046" style={styles.teamLogo} />

@@ -143,18 +143,36 @@ const GerenciarUsuarios = () => {
   };
 
   const handleDelete = async (userId) => {
-    try {
-      await deleteUser(userId);
-      setSuccessMessage('Usuário deletado com sucesso!');
-      setShowSuccessModal(true);
-
-      // Remove o usuário da lista
-      setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== userId));
-    } catch (error) {
-      setErrorMessage(`Não foi possível deletar usuário.`);
-      setShowErrorModal(true);
-    }
+    Alert.alert(
+      "Confirmação",
+      "Você realmente quer excluir este usuário?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Excluir",
+          onPress: async () => {
+            try {
+              await deleteUser(userId);
+              setSuccessMessage('Usuário deletado com sucesso!');
+              setShowSuccessModal(true);
+  
+              // Remove o usuário da lista
+              setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== userId));
+            } catch (error) {
+              setErrorMessage(`Não foi possível deletar usuário.`);
+              setShowErrorModal(true);
+            }
+          },
+          style: "destructive", // Define o estilo vermelho para o botão "Excluir"
+        },
+      ],
+      { cancelable: true } // Permite fechar o alerta ao tocar fora
+    );
   };
+  
 
   const handleRestoreUser = async (userId) => {
     try {
@@ -218,7 +236,6 @@ const GerenciarUsuarios = () => {
           onPress={() => handleSelectUserType('profissionais')}
         >
           <Icon name="briefcase" size={24} color="#126046" />
-          <Text style={styles.userTypeText}>Profissionais</Text>
           <Text style={styles.userCount}>{userCounts.profissionais}</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -226,7 +243,6 @@ const GerenciarUsuarios = () => {
           onPress={() => handleSelectUserType('atletas')}
         >
           <Icon name="running" size={24} color="#126046" />
-          <Text style={styles.userTypeText}>Atletas</Text>
           <Text style={styles.userCount}>{userCounts.atletas}</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -234,7 +250,6 @@ const GerenciarUsuarios = () => {
           onPress={() => handleSelectUserType('responsaveis')}
         >
           <Icon name="user-friends" size={24} color="#126046" />
-          <Text style={styles.userTypeText}>Responsáveis</Text>
           <Text style={styles.userCount}>{userCounts.responsaveis}</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -242,18 +257,28 @@ const GerenciarUsuarios = () => {
           onPress={() => handleSelectUserType('arquivados')}
         >
           <Icon name="folder-open" size={24} color="#126046" />
-          <Text style={styles.userTypeText}>Arquivados</Text>
           <Text style={styles.userCount}>{userCounts.arquivados}</Text>
         </TouchableOpacity>
       </View>
+
 
       <FlatList
         data={users}
         renderItem={renderUser}
         keyExtractor={(item) => item.userId}
         contentContainerStyle={styles.userList}
+        ListHeaderComponent={() =>
+          selectedUserType && (
+            <Text style={styles.listHeader}>
+              {selectedUserType === 'profissionais' && 'Lista de Profissionais'}
+              {selectedUserType === 'atletas' && 'Lista de Atletas'}
+              {selectedUserType === 'responsaveis' && 'Lista de Responsáveis'}
+              {selectedUserType === 'arquivados' && 'Usuários Arquivados'}
+            </Text>
+          )
+        }
         ListEmptyComponent={() => (
-          <Text style={styles.emptyText}>Selecione um tipo de usuário para exibir a lista.</Text>
+          <Text style={styles.emptyText}>Nenhum usuário encontrado.</Text>
         )}
       />
        <Modal
@@ -347,6 +372,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  listHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 12,
+    textAlign: 'center',
+  },  
   userTypeCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -365,7 +397,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   userTypeText: {
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: '500',
     color: '#333',
     marginTop: 8,

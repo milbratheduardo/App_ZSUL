@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { getTreinosPersonalizados, getAllTreinosPersonalizados, getAlunosById } from '@/lib/appwrite'; // Substitua pelo caminho real
+import { getTreinosPersonalizados, getAllTreinosPersonalizados, getAlunosById } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DashTreinos = () => {
   const { user } = useGlobalContext();
   const [treinos, setTreinos] = useState([]);
   const [selectedTreino, setSelectedTreino] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); 
-  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const firstName = user?.nome.split(' ')[0];
 
   useEffect(() => {
     fetchTreinos();
@@ -21,41 +23,34 @@ const DashTreinos = () => {
   const fetchTreinos = async () => {
     try {
       let response;
-  
       if (user.admin === 'admin') {
-        // Caso o usuário seja admin, buscar todos os treinos personalizados
-        response = await getAllTreinosPersonalizados(); // Certifique-se de que essa função retorna todos os treinos
+        response = await getAllTreinosPersonalizados();
       } else {
-        // Caso contrário, buscar apenas os treinos do usuário atual
         response = await getTreinosPersonalizados(user.userId);
       }
-  
-      // Atualizar cada treino com o nome do aluno
+
       const treinosComNomes = await Promise.all(
         response.map(async (treino) => {
           try {
-            const aluno = await getAlunosById(treino.aluno); // Buscar o aluno pelo ID
-            return { ...treino, nomeAluno: aluno.nome }; // Adicionar o nome do aluno ao treino
+            const aluno = await getAlunosById(treino.aluno);
+            return { ...treino, nomeAluno: aluno.nome };
           } catch (error) {
-            setErrorMessage(`Erro ao buscar aluno para treino.`);
+            setErrorMessage('Erro ao buscar aluno para treino.');
             setShowErrorModal(true);
-            return { ...treino, nomeAluno: 'Aluno não encontrado' }; // Valor padrão se houver erro
+            return { ...treino, nomeAluno: 'Aluno não encontrado' };
           }
         })
       );
-  
+
       setTreinos(treinosComNomes);
     } catch (error) {
-      setErrorMessage(`Erro ao carregar treinos.`);
+      setErrorMessage('Erro ao carregar treinos.');
       setShowErrorModal(true);
-     
     }
   };
-  
 
   const openEditModal = (treino) => {
     Alert.alert('Editar', `Editar treino: ${treino.titulo}`);
-    // Implemente a lógica de edição aqui
   };
 
   const deleteTreino = (id) => {
@@ -66,7 +61,7 @@ const DashTreinos = () => {
         style: 'destructive',
         onPress: () => {
           setTreinos(treinos.filter((t) => t.$id !== id));
-          setSuccessMessage('Treino Excluído com Sucesso!');
+          setSuccessMessage('Treino excluído com sucesso!');
           setShowSuccessModal(true);
         },
       },
@@ -74,110 +69,84 @@ const DashTreinos = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Treinos Personalizados</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.greeting}>Olá, {firstName}</Text>
+        <Text style={styles.subtitle}>Treinos Personalizados</Text>
+      </View>
+
       <FlatList
         data={treinos}
         keyExtractor={(item) => item.$id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[
-              styles.treinoContainer,
-              selectedTreino?.$id === item.$id && styles.treinoSelecionado,
-            ]}
+            style={[styles.treinoContainer, selectedTreino?.$id === item.$id && styles.treinoSelecionado]}
             onPress={() => setSelectedTreino(item)}
           >
-            <Text style={styles.treinoText}>
-              {item.titulo} - {item.nomeAluno}
-            </Text>
+            <View style={styles.headerContainer}>
+              <Text style={styles.treinoTitle}>{item.titulo}</Text>
+              <Text style={styles.alunoName}>Aluno {item.nomeAluno.split(' ')[0]}</Text>
+            </View>
             <Text style={styles.descricao}>{item.descricao}</Text>
             {item.link && (
               <Text
                 style={styles.videoLink}
-                onPress={() => Linking.openURL(item.link)}
+                onPress={() => {
+                  const url = item.link.startsWith('http') ? item.link : `https://${item.link}`;
+                  Linking.openURL(url);
+                }}
               >
                 Assistir Vídeo
               </Text>
             )}
             <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => deleteTreino(item.$id)}>
+              <TouchableOpacity onPress={() => deleteTreino(item.$id)} style={styles.iconButton}>
                 <Feather name="trash" size={20} color="red" />
               </TouchableOpacity>
             </View>
-            {selectedTreino?.$id === item.$id && (
-              <Text style={styles.checkmarkTreino}>✓</Text>
-            )}
           </TouchableOpacity>
         )}
       />
-             <Modal
-                visible={showErrorModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowErrorModal(false)}
-              >
-                <View style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                }}>
-                  <View style={{
-                    backgroundColor: 'red',
-                    padding: 20,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    width: '80%',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}>
-                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
-                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
-                      Erro
-                    </Text>
-                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
-                      {errorMessage}
-                    </Text>
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: 'white',
-                        paddingHorizontal: 20,
-                        paddingVertical: 10,
-                        borderRadius: 5,
-                      }}
-                      onPress={() => setShowErrorModal(false)}
-                    >
-                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Modal>
-              <Modal
-              visible={showSuccessModal}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={() => setShowSuccessModal(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.successModal}>
-                  <MaterialCommunityIcons name="check-circle" size={48} color="white" />
-                  <Text style={styles.modalTitle}>Sucesso</Text>
-                  <Text style={styles.modalMessage}>{successMessage}</Text>
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => {
-                      setShowSuccessModal(false);
-                    }}
-                  >
-                    <Text style={styles.closeButtonText}>Fechar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-    </View>
+
+      {/* Modal de Erro */}
+      <Modal
+        visible={showErrorModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContentError}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Erro</Text>
+            <Text style={styles.modalMessage}>{errorMessage}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setShowErrorModal(false)}>
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Sucesso */}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContentSuccess}>
+            <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Sucesso</Text>
+            <Text style={styles.modalMessage}>{successMessage}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setShowSuccessModal(false)}>
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 };
 
@@ -186,63 +155,72 @@ export default DashTreinos;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
-    padding: 20,
+    backgroundColor: '#F9FAFB',
   },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#126046',
-    textAlign: 'center',
-    marginBottom: 20,
-    marginTop: 30,
+  header: {
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    backgroundColor: '#126046',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  greeting: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#D1FAE5',
+    marginTop: 4,
   },
   treinoContainer: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    marginBottom: 8,
-    position: 'relative',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginTop:10
   },
   treinoSelecionado: {
-    backgroundColor: '#d0f0d0',
+    borderColor: '#126046',
+    borderWidth: 2,
   },
-  treinoText: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  treinoTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#333333',
+  },
+  alunoName: {
+    fontSize: 14,
+    color: '#888888',
   },
   descricao: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 5,
+    color: '#555555',
+    marginTop: 8,
   },
   videoLink: {
     color: '#126046',
-    textAlign: 'center',
-    marginTop: 5,
     textDecorationLine: 'underline',
-  },
-  checkmarkTreino: {
-    fontSize: 24,
-    color: '#126046',
-    position: 'absolute',
-    top: 10,
-    right: 10,
+    marginTop: 8,
   },
   cardActions: {
-    position: 'absolute',
-    top: 2, // Posiciona no topo
-    right: -40, // Posiciona à direita
-    borderRadius: 0, // Faz o botão ser crcula
-    padding: 50,
+    marginTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
-  icon: {
-    padding: 5,
+  iconButton: {
+    padding: 8,
   },
   modalOverlay: {
     flex: 1,
@@ -250,50 +228,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  errorModal: {
-    backgroundColor: 'red',
-    padding: 20,
-    borderRadius: 10,
+  modalContentError: {
+    backgroundColor: '#ff4d4f',
+    padding: 24,
+    borderRadius: 12,
     alignItems: 'center',
-    width: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
-  successModal: {
-    backgroundColor: 'green',
-    padding: 20,
-    borderRadius: 10,
+  modalContentSuccess: {
+    backgroundColor: '#4CAF50',
+    padding: 24,
+    borderRadius: 12,
     alignItems: 'center',
-    width: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
   modalTitle: {
-    color: 'white',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginVertical: 10,
+    color: '#ffffff',
+    marginTop: 12,
   },
   modalMessage: {
-    color: 'white',
+    fontSize: 16,
+    color: '#ffffff',
     textAlign: 'center',
-    marginBottom: 20,
+    marginVertical: 12,
   },
   closeButton: {
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
+    backgroundColor: '#ffffff',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 12,
   },
   closeButtonText: {
-    color: 'black',
+    fontSize: 16,
+    color: '#333333',
     fontWeight: 'bold',
   },
 });
-

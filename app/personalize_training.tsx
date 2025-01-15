@@ -152,7 +152,7 @@ const TreinoPersonalizado = () => {
             />
             <TextInput
               style={styles.modalInputDescription}
-              placeholder="Descrição"
+              placeholder="Descrição do treino ou tarefa"
               value={newTreino.descricao}
               multiline={true} // Permite múltiplas linhas
               numberOfLines={4} // Inicializa com 4 linhas visíveis
@@ -160,7 +160,7 @@ const TreinoPersonalizado = () => {
             />
             <TextInput
               style={styles.modalInput}
-              placeholder="Link do Vídeo (Youtube)"
+              placeholder="Insira o link de um vídeo ou mídia"
               value={newTreino.link}
               onChangeText={(text) => setNewTreino({ ...newTreino, link: text })}
             />

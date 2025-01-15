@@ -90,7 +90,6 @@ const InformacoesPessoais = () => {
             <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
             <View style={styles.headerText}>
               <Text style={styles.greeting}>Olá, {firstName}</Text>
-              <Text style={styles.userInfo}>{user?.nome || 'Usuário'}</Text>
               <Text style={styles.userInfo}>Informações Pessoais</Text>
             </View>
           </View>
@@ -140,7 +139,7 @@ const InformacoesPessoais = () => {
                 onPress={() => setSelectedCategory('Erro de Sistema')}
               >
                 <Text style={selectedCategory === 'Erro de Sistema' ? styles.selectedText : styles.categoryText}>
-                  Erro de Sistema
+                  Aplicativo
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -221,7 +220,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerText: {
-    justifyContent: 'center',
+    marginLeft: -80,
   },
   greeting: {
     fontSize: 22,
@@ -344,7 +343,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cancelButton: {
-    backgroundColor: '#CCCCCC',
+    backgroundColor: 'red',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,

@@ -135,9 +135,9 @@ const Dashboard = () => {
   
 
   const options = [
-    { title: 'Características dos Atletas', icon: 'users', route: '/students' },
+    { title: 'Características dos Alunos', icon: 'users', route: '/students' },
     { title: 'Alunos', icon: 'user-circle', route: '/alunos_stats' },
-    { title: 'Treinos Personalizados', icon: 'calendar', route: '/dash_treinos' },
+    { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/dash_treinos' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
     { title: 'Eventos e Jogos', icon: 'trophy', route: '/lista_eventos' },
     { title: 'Histórico de Relatórios', icon: 'file-text', route: '/historico_relatorios' }
@@ -161,7 +161,7 @@ const Dashboard = () => {
             <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
             <View style={styles.headerText}>
               <Text style={styles.greeting}>Olá, {firstName}</Text>
-              <Text style={styles.userInfo}>{user?.nome} - Treinador de Futebol</Text>
+              <Text style={styles.userInfo}>Treinador de Futebol</Text>
               <Text style={styles.userInfo}>Dashboard</Text>
             </View>
           </View>
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerText: {
-    justifyContent: 'center',
+    marginLeft: -80,
   },
   greeting: {
     fontSize: 22,

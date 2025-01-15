@@ -265,35 +265,63 @@ const Pagamentos2 = () => {
         <Text style={styles.contractNote}>*Levar contrato preenchido no próximo treino</Text>
 
         <TouchableOpacity
-          style={[styles.paymentButton, !termsAccepted && styles.buttonDisabled]}
+          style={[
+            styles.paymentButton,
+            !termsAccepted && styles.buttonDisabled,
+            { backgroundColor: '#28a745', flexDirection: 'row', alignItems: 'center' },
+          ]}
           onPress={handleContinue}
           disabled={!termsAccepted}
         >
-          {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.paymentButtonText}>Continuar</Text>}
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="credit-card" size={24} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.paymentButtonText}>Cartão de Crédito</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         {selectedPlan && selectedAluno && termsAccepted && (
           <TouchableOpacity
-            style={[styles.paymentButton,  { backgroundColor: '#161622' }]}
+            style={[
+              styles.paymentButton,
+              { backgroundColor: '#161622', flexDirection: 'row', alignItems: 'center' },
+            ]}
             onPress={handleCashPayment}
           >
-            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.paymentButtonText}>Pagar em Dinheiro</Text>}
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="cash-multiple" size={24} color="#FFF" style={{ marginRight: 8 }} />
+                <Text style={styles.paymentButtonText}>Pagar em Dinheiro</Text>
+              </>
+            )}
           </TouchableOpacity>
         )}
 
         {selectedPlan === '2c93808493b072d70193be7c14b30582' && (
           <TouchableOpacity
-            style={[styles.paymentButton, { backgroundColor: '#FFC107' }]}
+            style={[
+              styles.paymentButton,
+              { backgroundColor: '#FFC107', flexDirection: 'row', alignItems: 'center' },
+            ]}
             onPress={handlePixPayment}
             disabled={loading || !termsAccepted || !selectedAluno}
           >
             {loading ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.paymentButtonText}>Pagar com Pix</Text>
+              <>
+                <MaterialCommunityIcons name="qrcode-scan" size={24} color="#FFF" style={{ marginRight: 8 }} />
+                <Text style={styles.paymentButtonText}>Pagar com Pix</Text>
+              </>
             )}
           </TouchableOpacity>
         )}
+
       </ScrollView>
              <Modal
                 visible={showErrorModal}
@@ -393,12 +421,24 @@ const styles = StyleSheet.create({
   contractNote: { fontSize: 12, color: '#888', marginHorizontal: 16 },
   paymentButton: {
     marginHorizontal: 16,
-    marginVertical: 20,
+    marginVertical: 10,
     paddingVertical: 12,
-    backgroundColor: '#126046',
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  buttonDisabled: { backgroundColor: '#AAA' },
-  paymentButtonText: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF' },
+  buttonDisabled: {
+    backgroundColor: '#d3d3d3',
+  },
+  paymentButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
 });

@@ -7,6 +7,7 @@ import { AntDesign } from '@expo/vector-icons';
 import EmptyState from '@/components/EmptyState';
 import EventCard from '@/components/EventCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import EventCard2 from '@/components/EventCard2';
 
 const ListarEventos = () => {
   const [events, setEvents] = useState([]);
@@ -76,7 +77,7 @@ const ListarEventos = () => {
   }, [date]);
 
   const renderItem = ({ item }) => (
-    <EventCard event={item} /> // Exibe cada evento usando o componente de card
+    <EventCard2 event={item} /> // Exibe cada evento usando o componente de card
   );
 
   return (
@@ -134,7 +135,7 @@ const ListarEventos = () => {
                   onPress={clearFilters}
                   style={styles.clearFilterButton}
                 >
-                  <Text style={styles.clearFilterText}>Limpar</Text>
+                  <Text style={styles.clearFilterText}>X</Text>
                 </TouchableOpacity>
               )}
             </View>

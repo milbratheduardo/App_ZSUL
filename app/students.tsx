@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#333',
+    color: '#126046',
   },
   picker: {
     marginVertical: 10,

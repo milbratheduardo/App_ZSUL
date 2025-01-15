@@ -28,7 +28,7 @@ const Profile = () => {
   } else if (user.role === 'profissional') {
     navigationOptions = [
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
-      { title: 'Metodologia de Trabalho', icon: 'cogs', route: '/metodologia' },
+      { title: 'Metodologia de Trabalho', icon: 'book', route: '/metodologia' },
       { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
       { title: 'Turmas', icon: 'group', route: '/all_turmas' },
       { title: 'Criar Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
@@ -80,11 +80,11 @@ const Profile = () => {
           <View style={styles.profileDetails}>
             <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
             <View style={styles.headerText}>
-              <Text style={styles.greeting}>{firstName}</Text>
-              <Text style={styles.userInfo}>{user?.nome} - E.F. SC São Paulo RS</Text>
+              <Text style={styles.greeting}>Olá, {firstName}</Text>
+              <Text style={styles.userInfo}>E.F. SC São Paulo RS</Text>
             </View>
           </View>
-          <Icon name="shield" size={50} color="#126046" style={styles.teamLogo} />
+
         </View>
       </View>
 
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerText: {
-    justifyContent: 'center',
+    marginLeft: -80,
   },
   greeting: {
     fontSize: 22,

@@ -70,7 +70,7 @@ const Metodologia = () => {
             <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
             <View style={styles.headerText}>
               <Text style={styles.greeting}>Olá, {firstName}</Text>
-              <Text style={styles.userInfo}>{user?.nome} - E.F. SC São Paulo RS</Text>
+              <Text style={styles.userInfo}>Metodologia de Trabalho</Text>
             </View>
           </View>
           <Icon name="shield" size={50} color="#126046" style={styles.teamLogo} />
@@ -83,8 +83,12 @@ const Metodologia = () => {
       </ScrollView>
 
       {/* Botão de adicionar nova metodologia centralizado na parte inferior */}
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <AntDesign name="plus" size={24} color="#FFFFFF" />
+      <TouchableOpacity
+        style={styles.circularButton}
+        onPress={() => setModalVisible(true)}
+     
+      >
+        <Text style={styles.circularButtonText}>+</Text>
       </TouchableOpacity>
 
       {/* Modal para adicionar nova metodologia */}
@@ -159,6 +163,18 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     marginBottom: 16,
   },
+  circularButton: {
+    backgroundColor: '#126046',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    elevation: 5,
+  },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -175,7 +191,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerText: {
-    justifyContent: 'center',
+    marginLeft: -80,
   },
   greeting: {
     fontSize: 22,
@@ -189,6 +205,13 @@ const styles = StyleSheet.create({
   },
   teamLogo: {
     marginLeft: 16,
+  },
+  circularButtonText: { color: 'white', fontSize: 24, lineHeight: 24 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   metodologiasContainer: {
     paddingHorizontal: 16,
@@ -233,7 +256,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     alignSelf: 'center',
     backgroundColor: '#126046',
-    borderRadius: 50,
+    borderRadius: 100,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',

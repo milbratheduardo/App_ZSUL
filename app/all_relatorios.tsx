@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert, Modal, TouchableOpacity} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, Modal, TouchableOpacity,RefreshControl} from 'react-native';
 import TurmasCard2 from '@/components/TurmaCard2';
 import { useLocalSearchParams } from 'expo-router';
 import { getTurmaById, getAllRelatorios } from '@/lib/appwrite';
@@ -11,6 +11,7 @@ const AllRelatorios = () => {
   const { turmaId } = useLocalSearchParams();
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(''); 
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchTurma = async () => {
@@ -22,7 +23,11 @@ const AllRelatorios = () => {
         setShowErrorModal(true);
       }
     };
-
+    const onRefresh = async () => {
+      setRefreshing(true);
+      await fetchData();
+      setRefreshing(false);
+    };
     const fetchRelatorios = async () => {
       try {
         const allRelatorios = await getAllRelatorios();
@@ -86,6 +91,9 @@ const AllRelatorios = () => {
           keyExtractor={(item) => item.$id}
           renderItem={renderRelatorio}
           contentContainerStyle={styles.flatListContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
       <Modal

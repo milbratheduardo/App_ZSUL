@@ -15,38 +15,50 @@ const AlunoProfile = () => {
   useEffect(() => {
     const fetchAlunos = async () => {
       try {
-        const allTurmas = await getAllTurmas();
-        const alunosData = [];
+        const allTurmas = await getAllTurmas(); // Obtenha todas as turmas
+        const turmasData = await Promise.all(
+          allTurmas.map(async (turma) => {
+            const [turmaAlunos, chamadas] = await Promise.all([
+              getAlunosByTurmaId(turma.$id), // Obtenha os alunos da turma
+              getChamadasByTurmaId(turma.$id), // Obtenha as chamadas da turma
+            ]);
   
-        for (const turma of allTurmas) {
-          const turmaAlunos = await getAlunosByTurmaId(turma.$id);
-          const chamadas = await getChamadasByTurmaId(turma.$id);
-          const totalChamadas = chamadas.length;
+            const totalChamadas = chamadas.length;
   
-          const filteredAlunos = turmaAlunos.filter(
-            (aluno) => user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
-          );
+            // Filtra alunos com base no CPF do responsável
+            const filteredAlunos = turmaAlunos.filter(
+              (aluno) => user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
+            );
   
-          for (const aluno of filteredAlunos) {
-            const presencas = chamadas.filter((chamada) =>
-              chamada.presentes.includes(aluno.userId)
-            ).length;
-            const presencaPercentual = totalChamadas > 0 ? ((presencas / totalChamadas) * 100).toFixed(1) : '0.0';
+            // Processa os alunos para incluir presença e treinos
+            const alunosData = await Promise.all(
+              filteredAlunos.map(async (aluno) => {
+                const presencas = chamadas.filter((chamada) =>
+                  chamada.presentes.includes(aluno.userId)
+                ).length;
   
-            const treinos = await getTreinosPersonalizadosByAlunoId(aluno.userId);
-            const totalTreinos = treinos.length;
+                const presencaPercentual = totalChamadas > 0 ? ((presencas / totalChamadas) * 100).toFixed(1) : '0.0';
   
-            alunosData.push({
-              ...aluno,
-              turmaTitle: turma.title,
-              presenca: presencaPercentual,
-              treinosConcluidos: totalTreinos,
-            });
-          }
-        }
-        setAlunos(alunosData);
+                const treinos = await getTreinosPersonalizadosByAlunoId(aluno.userId);
+                const totalTreinos = treinos.length;
+  
+                return {
+                  ...aluno,
+                  turmaTitle: turma.title,
+                  presenca: presencaPercentual,
+                  treinosConcluidos: totalTreinos,
+                };
+              })
+            );
+  
+            return alunosData;
+          })
+        );
+  
+        
+        setAlunos(turmasData.flat());
       } catch (error) {
-      
+        console.error('Erro ao carregar dados:', error.message);
       }
     };
   
