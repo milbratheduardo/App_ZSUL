@@ -66,9 +66,9 @@ const Pagamentos2 = () => {
       setPlanos(
         countDesconto > 0
           ? [
-              { id: '2c9380849469a4a101946ae6d35700aa', title: 'Mensal', price: 80 },
-              { id: '2c9380849469a43201946ae4a44100a4', title: 'Semestral', price: 70 },
-              { id: '2c9380849469a43201946add8ee300a0', title: 'Anual', price: 50 },
+              { id: '2c9380849469a4a101946ae6d35700aa', title: 'Mensal', price: 50 },
+              { id: '2c9380849469a43201946ae4a44100a4', title: 'Semestral', price: 45 },
+              { id: '2c9380849469a43201946add8ee300a0', title: 'Anual', price: 40 },
             ]
           : [
               { id: '2c93808493b073170193d2317ddb0ac2 ', title: 'Mensal', price: 100 },

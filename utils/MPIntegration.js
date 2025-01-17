@@ -140,7 +140,7 @@ export const handlePixPaymentMP3 = async (userEmail, userCPF, userNome) => {
     const idempotencyKey = `key-${new Date().getTime()}`; // Geração do X-Idempotency-Key
 
     const pixPaymentData = {
-      transaction_amount: 80, // Valor do plano
+      transaction_amount: 50, // Valor do plano
       description: 'Pagamento do Plano Mensal - Irmãos',
       payment_method_id: 'pix',
       payer: {
