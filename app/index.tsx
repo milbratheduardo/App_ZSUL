@@ -44,7 +44,7 @@ export default function App () {
 
                     <CustomButton 
                         title='Sobre o Aplicativo' // Texto mais claro e atrativo
-                        handlePress={() => Linking.openURL('https://www.suaempresa.com.br')} // Substitua pela URL real
+                        handlePress={() => Linking.openURL('https://vulcanrg.netlify.app/construcao/html/')} // Substitua pela URL real
                         containerStyles='w-full mt-5 h-[55px] bg-blue-500 rounded-lg justify-center items-center shadow-md'
                     />
 

@@ -15,12 +15,16 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import { getAllAlunos } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import Checkbox from 'expo-checkbox';
-import { handlePixPaymentMP } from '../utils/MPIntegration';
+import { handlePixPaymentMP, handlePixPaymentMP2, handlePixPaymentMP3 } from '../utils/MPIntegration';
 import { updateStatusPagamento, createHistoricoPagamentos } from '@/lib/appwrite';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { TextInput,RefreshControl  } from 'react-native';
 
 const Pagamentos2 = () => {
   const { user } = useGlobalContext();
+  const [couponCode, setCouponCode] = useState('');
+  const [handleApplyCoupon, sethandleApplyCoupon] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const [alunos, setAlunos] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [mensagemPlano, setMensagemPlano] = useState('');
@@ -31,34 +35,100 @@ const Pagamentos2 = () => {
   const [errorMessage, setErrorMessage] = useState(''); 
   const [showSuccessModal, setShowSuccessModal] = useState(false); 
   const [successMessage, setSuccessMessage] = useState('');
+  const [alunosComDesconto, setAlunosComDesconto] = useState(0);
+  const [alunos50, setAlunos50] = useState(0);
   const router = useRouter();
+  const [planos, setPlanos] = useState([
+    { id: '2c93808493b073170193d2317ddb0ac2', title: 'Mensal', price: 100 },
+    { id: '2c93808493b072d70193d233e9eb0b23', title: 'Semestral', price: 90 },
+    { id: '2c93808493b072d80193d234fe0e0b24', title: 'Anual', price: 80 },
+  ]);
+  
 
-  const planos = [
-    { id: '2c93808493b072d70193be7c14b30582', title: 'Mensal', price: 45 },
-    { id: '2c93808493b072d80193be79bea105ac', title: 'Semestral', price: 50 },
-    { id: '2c93808493b073170193be7a300c053f', title: 'Anual', price: 60 },
-  ];
+  const fetchAlunos = async () => {
+    try {
+      setLoading(true);
+      const allAlunos = await getAllAlunos();
+
+      const alunosFiltrados = allAlunos.filter(
+        (aluno) => aluno.nomeResponsavel === user.cpf && aluno.status_pagamento == null
+      );
+      setAlunos(alunosFiltrados);
+
+      const alunosprodesconto = allAlunos.filter(
+        (aluno) => aluno.nomeResponsavel === user.cpf
+      );
+
+      const countDesconto = alunosprodesconto.filter((aluno) => aluno.desconto === 'sim').length;
+      setAlunosComDesconto(countDesconto);
+
+      // Atualize os planos dinamicamente
+      setPlanos(
+        countDesconto > 0
+          ? [
+              { id: '2c9380849469a4a101946ae6d35700aa', title: 'Mensal', price: 80 },
+              { id: '2c9380849469a43201946ae4a44100a4', title: 'Semestral', price: 70 },
+              { id: '2c9380849469a43201946add8ee300a0', title: 'Anual', price: 50 },
+            ]
+          : [
+              { id: '2c93808493b073170193d2317ddb0ac2 ', title: 'Mensal', price: 100 },
+              { id: '2c93808493b072d70193d233e9eb0b23', title: 'Semestral', price: 90 },
+              { id: '2c93808493b072d80193d234fe0e0b24', title: 'Anual', price: 80 },
+            ]
+      );
+    } catch (error) {
+      setErrorMessage(`Não foi possível carregar os alunos.`);
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAlunos = async () => {
-      try {
-        setLoading(true);
-        const allAlunos = await getAllAlunos();
-        const alunosFiltrados = allAlunos.filter(
-          (aluno) => aluno.nomeResponsavel === user.cpf && aluno.status_pagamento == null
-        );
-        setAlunos(alunosFiltrados);
-      } catch (error) {
-        setErrorMessage(`Não foi possível carregar os alunos.`);
-        setShowErrorModal(true);
-   
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAlunos();
   }, [user.cpf]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAlunos(); // Chama a função de busca para atualizar os dados
+    setRefreshing(false);
+  };
+
+  const handleAlunoSelect = (aluno) => {
+    setSelectedAluno(aluno);
+  
+    if (aluno.off === '50Off') {
+      setPlanos([
+        {
+          id: '2c9380849469a43201946ae827c500a9',
+          title: 'Mensal',
+          price: 50,
+        },
+      ]);
+      setSelectedPlan('2c9380849469a43201946ae827c500a9'); 
+      setMensagemPlano(
+        'Plano especial com desconto de 50%.'
+      );
+    } else {
+      // Voltar para os planos normais
+      setPlanos(
+        alunosComDesconto > 0
+          ? [
+              { id: '2c9380849469a4a101946ae6d35700aa', title: 'Mensal', price: 80 },
+              { id: '2c9380849469a43201946ae4a44100a4', title: 'Semestral', price: 70 },
+              { id: '2c9380849469a43201946add8ee300a0', title: 'Anual', price: 50 },
+            ]
+          : [
+              { id: '2c93808493b073170193d2317ddb0ac2', title: 'Mensal', price: 100 },
+              { id: '2c93808493b072d70193d233e9eb0b23', title: 'Semestral', price: 90 },
+              { id: '2c93808493b072d80193d234fe0e0b24', title: 'Anual', price: 80 },
+            ]
+      );
+      setSelectedPlan(null);
+      setMensagemPlano('');
+    }
+  };
+  
 
   const handlePlanSelect = (plano) => {
     setSelectedPlan(plano.id);
@@ -102,21 +172,82 @@ const Pagamentos2 = () => {
   
     try {
       setLoading(true);
-      const pixResponse = await handlePixPaymentMP(user.email, user.cpf, user.nome);
+
+      const cupom = alunosComDesconto > 0 ? null : 'sim';
+
+      const pixResponse =
+      selectedPlan === '2c93808493b073170193d2317ddb0ac2'
+        ? await handlePixPaymentMP(user.email, user.cpf, user.nome)
+        : await handlePixPaymentMP3(user.email, user.cpf, user.nome);
   
       if (pixResponse && pixResponse.id && pixResponse.point_of_interaction?.transaction_data?.ticket_url) {
         const pixUrl = pixResponse.point_of_interaction.transaction_data.ticket_url;
   
-        const paymentId =
-          pixResponse.charges_details?.[0]?.id || pixResponse.id;
-        const planId = 'Pix Mensal - Pendente';
+        const paymentId = pixResponse.charges_details?.[0]?.id || pixResponse.id;
+        
+        const planId = cupom === null 
+          ? 'Pix Mensal - Pendente' 
+          : 'Pix Mensal - Pendente (Irmãos)';
+        
   
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 1);
         const formattedEndDate = endDate.toISOString();
   
         // Atualiza o status do pagamento
-        await updateStatusPagamento(selectedAluno.userId, planId, paymentId, formattedEndDate);
+        await updateStatusPagamento(selectedAluno.userId, planId, paymentId, formattedEndDate, cupom);
+  
+        // Cria o histórico do pagamento
+        await createHistoricoPagamentos(
+          selectedAluno.userId,
+          selectedAluno.nome,
+          selectedAluno.cpf,
+          selectedAluno.nomeResponsavel,
+          planId,
+          formattedEndDate,
+          paymentId
+        );
+  
+        Linking.openURL(pixUrl);
+      } else {
+        throw new Error('URL Pix ou ID da transação não encontrada.');
+      }
+    } catch (error) {
+      setErrorMessage(`Falha ao gerar pix.`);
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handlePixPayment2 = async () => {
+    if (!selectedPlan || !selectedAluno || !termsAccepted) {
+      Alert.alert('Erro', 'Selecione um plano, um aluno e aceite os termos.');
+      return;
+    }
+  
+    try {
+      setLoading(true);
+
+      const cupom = alunosComDesconto > 0 ? null : 'sim';
+
+      const pixResponse = await handlePixPaymentMP2(user.email, user.cpf, user.nome);
+  
+      if (pixResponse && pixResponse.id && pixResponse.point_of_interaction?.transaction_data?.ticket_url) {
+        const pixUrl = pixResponse.point_of_interaction.transaction_data.ticket_url;
+  
+        const paymentId = pixResponse.charges_details?.[0]?.id || pixResponse.id;
+        
+        const planId = 'Pix Mensal - Pendente (50%)' ;
+        
+  
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + 1);
+        const formattedEndDate = endDate.toISOString();
+  
+        // Atualiza o status do pagamento
+        await updateStatusPagamento(selectedAluno.userId, planId, paymentId, formattedEndDate, cupom);
   
         // Cria o histórico do pagamento
         await createHistoricoPagamentos(
@@ -149,20 +280,36 @@ const Pagamentos2 = () => {
   
     try {
       setLoading(true);
+  
+      // Utilize alunosComDesconto para definir cupom
+      const cupom = alunosComDesconto > 0 ? null : 'sim';
+  
       let planId = '';
       const endDate = new Date();
   
       switch (selectedPlan) {
-        case '2c93808493b072d70193be7c14b30582':
+        case '2c93808493b073170193d2317ddb0ac2':
           planId = 'Pago em Dinheiro - Mensal';
           endDate.setMonth(endDate.getMonth() + 1);
           break;
-        case '2c93808493b072d80193be79bea105ac':
+        case '2c93808493b072d70193d233e9eb0b23':
           planId = 'Pago em Dinheiro - Semestral';
           endDate.setMonth(endDate.getMonth() + 6);
           break;
-        case '2c93808493b073170193be7a300c053f':
+        case '2c93808493b072d80193d234fe0e0b24':
           planId = 'Pago em Dinheiro - Anual';
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          break;
+        case '2c9380849469a4a101946ae6d35700aa':
+          planId = 'Pago em Dinheiro - Irmãos Mensal';
+          endDate.setMonth(endDate.getMonth() + 1);
+          break;
+        case '2c9380849469a43201946ae4a44100a4':
+          planId = 'Pago em Dinheiro - Irmãos Semestral';
+          endDate.setMonth(endDate.getMonth() + 6);
+          break;
+        case '2c9380849469a43201946add8ee300a0':
+          planId = 'Pago em Dinheiro - Irmãos Anual';
           endDate.setFullYear(endDate.getFullYear() + 1);
           break;
         default:
@@ -172,8 +319,8 @@ const Pagamentos2 = () => {
       const formattedEndDate = endDate.toISOString();
   
       // Atualiza o status do pagamento
-      await updateStatusPagamento(selectedAluno.userId, planId, '---', formattedEndDate);
-      
+      await updateStatusPagamento(selectedAluno.userId, planId, '---', formattedEndDate, cupom);
+  
       // Cria o histórico do pagamento
       await createHistoricoPagamentos(
         selectedAluno.userId,
@@ -194,10 +341,15 @@ const Pagamentos2 = () => {
     }
   };
   
+  
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#126046']} />
+      }
+      >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Selecione um Plano e um Aluno</Text>
         </View>
@@ -210,7 +362,13 @@ const Pagamentos2 = () => {
               onPress={() => handlePlanSelect(plano)}
             >
               <Text style={styles.planTitle}>{plano.title}</Text>
-              <Text style={styles.planPrice}>R$ {plano.price},00</Text>
+              {alunosComDesconto !== 0 && (
+                <Text style={styles.planPrice}>R$ {plano.price},00</Text>
+              )}
+
+              {alunosComDesconto == 0 && (
+                <Text>R$ {plano.price},00</Text>
+              )}
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -233,13 +391,14 @@ const Pagamentos2 = () => {
               <TouchableOpacity
                 key={aluno.$id}
                 style={[styles.alunoCard, selectedAluno?.userId === aluno.userId && styles.selected]}
-                onPress={() => setSelectedAluno(aluno)}
+                onPress={() => handleAlunoSelect(aluno)}
               >
                 <Text style={styles.alunoName}>{aluno.nome}</Text>
               </TouchableOpacity>
             ))
           )}
         </View>
+
 
         <View style={styles.checkboxContainer}>
           <Checkbox
@@ -261,66 +420,67 @@ const Pagamentos2 = () => {
             </Text>
           </Text>
         </View>
+        <View style={styles.couponContainer}>
+      </View>
 
         <Text style={styles.contractNote}>*Levar contrato preenchido no próximo treino</Text>
 
-        <TouchableOpacity
-          style={[
-            styles.paymentButton,
-            !termsAccepted && styles.buttonDisabled,
-            { backgroundColor: '#28a745', flexDirection: 'row', alignItems: 'center' },
-          ]}
-          onPress={handleContinue}
-          disabled={!termsAccepted}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <>
-              <MaterialCommunityIcons name="credit-card" size={24} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.paymentButtonText}>Cartão de Crédito</Text>
-            </>
-          )}
-        </TouchableOpacity>
-
         {selectedPlan && selectedAluno && termsAccepted && (
-          <TouchableOpacity
-            style={[
-              styles.paymentButton,
-              { backgroundColor: '#161622', flexDirection: 'row', alignItems: 'center' },
-            ]}
-            onPress={handleCashPayment}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="cash-multiple" size={24} color="#FFF" style={{ marginRight: 8 }} />
-                <Text style={styles.paymentButtonText}>Pagar em Dinheiro</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={[
+                styles.paymentButton,
+                { backgroundColor: '#28a745', flexDirection: 'row', alignItems: 'center' },
+              ]}
+              onPress={handleContinue}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="credit-card" size={24} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.paymentButtonText}>Cartão de Crédito</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentButton,
+                { backgroundColor: '#161622', flexDirection: 'row', alignItems: 'center' },
+              ]}
+              onPress={handleCashPayment}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="cash-multiple" size={24} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.paymentButtonText}>Pagar em Dinheiro</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentButton,
+                { backgroundColor: '#FFC107', flexDirection: 'row', alignItems: 'center' },
+              ]}
+              onPress={selectedAluno.off === "50Off" ? handlePixPayment2 : handlePixPayment}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="qrcode-scan" size={24} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.paymentButtonText}>Pagar com Pix</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </>
         )}
 
-        {selectedPlan === '2c93808493b072d70193be7c14b30582' && (
-          <TouchableOpacity
-            style={[
-              styles.paymentButton,
-              { backgroundColor: '#FFC107', flexDirection: 'row', alignItems: 'center' },
-            ]}
-            onPress={handlePixPayment}
-            disabled={loading || !termsAccepted || !selectedAluno}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="qrcode-scan" size={24} color="#FFF" style={{ marginRight: 8 }} />
-                <Text style={styles.paymentButtonText}>Pagar com Pix</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
+
 
       </ScrollView>
              <Modal
@@ -375,6 +535,21 @@ const Pagamentos2 = () => {
 export default Pagamentos2;
 
 const styles = StyleSheet.create({
+  couponContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  applyButton: {
+    backgroundColor: '#126046',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  applyButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   scrollContent: { paddingBottom: 30 },
   header: { paddingVertical: 24, paddingHorizontal: 20, backgroundColor: '#126046', marginBottom: 16 },
@@ -399,6 +574,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#126046',
+  },
+  planPrice:{
+    color: 'red',
+
   },
   mensagemTexto: {
     fontSize: 14,

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getAllUsers, getAllProfissionais, getAllAlunos, getAllResponsaveis, updateUserStatus, deleteUser } from '@/lib/appwrite';
+import { getAllUsers, getAllProfissionais, getAllAlunos, getAllResponsaveis, updateUserStatus, deleteUser, updateAlunoOff } from '@/lib/appwrite';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const GerenciarUsuarios = () => {
@@ -79,6 +79,7 @@ const GerenciarUsuarios = () => {
               cpf: atleta?.cpf || 'CPF não informado',
               posicao: atleta?.posicao || 'Posição não informada',
               role: 'atleta',
+              off: atleta?.off || 'Sem desconto'
             };
           });
       } else if (type === 'responsaveis') {
@@ -120,6 +121,7 @@ const GerenciarUsuarios = () => {
                 cpf: atleta?.cpf || 'CPF não informado',
                 role: 'atleta',
                 posicao: atleta?.posicao || 'Posição não informada',
+                off: atleta?.off || 'Sem desconto'
               };
             } else if (user.role === 'responsavel') {
               const responsavel = responsaveis.find((r) => r.userId === user.userId);
@@ -141,6 +143,28 @@ const GerenciarUsuarios = () => {
       setShowErrorModal(true);
     }
   };
+
+
+  const handleSpecialAction = async (userId) => {
+    try {
+      await updateAlunoOff(userId, { off: '50Off' }); // Atualiza a coluna 'off' na tabela atletas_v1
+      Alert.alert('Aviso', 'Cupom aplicado de 50% OFF!', [{ text: 'OK' }]);
+      handleSelectUserType(selectedUserType); // Atualiza a lista de usuários
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível aplicar o cupom.', [{ text: 'OK' }]);
+    }
+  };
+  
+  const handleSpecialAct = async (userId) => {
+    try {
+      await updateAlunoOff(userId, { off: null }); // Atualiza a coluna 'off' na tabela atletas_v1 para null
+      Alert.alert('Aviso', 'Cupom retirado!', [{ text: 'OK' }]);
+      handleSelectUserType(selectedUserType); // Atualiza a lista de usuários
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível retirar o cupom.', [{ text: 'OK' }]);
+    }
+  };
+  
 
   const handleDelete = async (userId) => {
     Alert.alert(
@@ -200,32 +224,47 @@ const GerenciarUsuarios = () => {
     }
   };
 
-  const renderUser = ({ item }) => (
-    <View style={styles.userCard}>
-      <Text style={styles.userName}>{item.nome}</Text>
-      {item.role === 'profissional' && <Text style={styles.userInfo}>Profissão: {item.profissao}</Text>}
-      {item.role === 'atleta' && <Text style={styles.userInfo}>Posição: {item.posicao}</Text>}
-      {item.role === 'responsavel' && <Text style={styles.userInfo}>WhatsApp: {item.whatsapp}</Text>}
-      <Text style={styles.userCpf}>CPF: {item.cpf}</Text>
-
-      <View style={styles.iconContainer}>
-        {selectedUserType === 'arquivados' ? (
-          <TouchableOpacity onPress={() => handleRestoreUser(item.userId)}>
-            <Icon name="check" size={20} color="#126046" style={styles.icon} />
-          </TouchableOpacity>
-        ) : (
-          <>
-            <TouchableOpacity onPress={() => handleArchive(item.userId)}>
-              <Icon name="archive" size={20} color="#126046" style={styles.icon} />
+  const renderUser = ({ item }) => {
+  
+    return (
+      <View style={styles.userCard}>
+        <Text style={styles.userName}>{item.nome}</Text>
+        {item.role === 'profissional' && <Text style={styles.userInfo}>Profissão: {item.profissao}</Text>}
+        {item.role === 'atleta' && <Text style={styles.userInfo}>Posição: {item.posicao}</Text>}
+        {item.role === 'responsavel' && <Text style={styles.userInfo}>WhatsApp: {item.whatsapp}</Text>}
+        <Text style={styles.userCpf}>CPF: {item.cpf}</Text>
+  
+        <View style={styles.iconContainer}>
+          {selectedUserType === 'arquivados' ? (
+            <TouchableOpacity onPress={() => handleRestoreUser(item.userId)}>
+              <Icon name="check" size={20} color="#126046" style={styles.icon} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDelete(item.userId)}>
-              <Icon name="trash" size={20} color="#E53935" style={styles.icon} />
-            </TouchableOpacity>
-          </>
-        )}
+          ) : (
+            <>
+              <TouchableOpacity onPress={() => handleArchive(item.userId)}>
+                <Icon name="archive" size={20} color="#126046" style={styles.icon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDelete(item.userId)}>
+                <Icon name="trash" size={20} color="#E53935" style={styles.icon} />
+              </TouchableOpacity>
+  
+              {item.role === 'atleta' && item.off === 'Sem desconto' && (
+                <TouchableOpacity onPress={() => handleSpecialAction(item.userId)}>
+                  <Icon name="money-bill" size={20} color="#FFD700" style={styles.icon} />
+                </TouchableOpacity>
+              )}
+              {item.role === 'atleta' && item.off === '50Off' && (
+                <TouchableOpacity onPress={() => handleSpecialAct(item.userId)}>
+                  <Icon name="times" size={20} color="gray" style={styles.icon} />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+  
 
   return (
     <SafeAreaView style={styles.container}>

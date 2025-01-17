@@ -8,12 +8,18 @@
     "scheme": "ZSul",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rafaguthes.Zsul"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "splash": {
+      "image": "./assets/images/icon.png", 
+      "resizeMode": "contain",             
+      "backgroundColor": "#ffffff"       
       },
       "package": "com.rafaguthes.Zsul"
     },
