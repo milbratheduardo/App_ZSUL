@@ -114,9 +114,9 @@ const Pagamentos2 = () => {
       setPlanos(
         alunosComDesconto > 0
           ? [
-              { id: '2c9380849469a4a101946ae6d35700aa', title: 'Mensal', price: 80 },
-              { id: '2c9380849469a43201946ae4a44100a4', title: 'Semestral', price: 70 },
-              { id: '2c9380849469a43201946add8ee300a0', title: 'Anual', price: 50 },
+              { id: '2c9380849469a4a101946ae6d35700aa', title: 'Mensal', price: 50 },
+              { id: '2c9380849469a43201946ae4a44100a4', title: 'Semestral', price: 45 },
+              { id: '2c9380849469a43201946add8ee300a0', title: 'Anual', price: 40 },
             ]
           : [
               { id: '2c93808493b073170193d2317ddb0ac2', title: 'Mensal', price: 100 },
@@ -312,6 +312,10 @@ const Pagamentos2 = () => {
           planId = 'Pago em Dinheiro - Irmãos Anual';
           endDate.setFullYear(endDate.getFullYear() + 1);
           break;
+        case '2c9380849469a43201946ae827c500a9':
+          planId = 'Pago em Dinheiro - 50Off';
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          break;
         default:
           throw new Error('Plano inválido.');
       }
@@ -354,6 +358,26 @@ const Pagamentos2 = () => {
           <Text style={styles.headerTitle}>Selecione um Plano e um Aluno</Text>
         </View>
 
+        <View style={styles.alunoList}>
+          <Text style={styles.sectionTitle}>Alunos</Text>
+          {loading ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="large" color="#126046" />
+              <Text style={styles.emptyStateText}>Carregando...</Text>
+            </View>
+          ) : (
+            alunos.map((aluno) => (
+              <TouchableOpacity
+                key={aluno.$id}
+                style={[styles.alunoCard, selectedAluno?.userId === aluno.userId && styles.selected]}
+                onPress={() => handleAlunoSelect(aluno)}
+              >
+                <Text style={styles.alunoName}>{aluno.nome}</Text>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
           {planos.map((plano) => (
             <TouchableOpacity
@@ -378,27 +402,6 @@ const Pagamentos2 = () => {
             <Text style={styles.mensagemTexto}>{mensagemPlano}</Text>
           </View>
         )}
-
-        <View style={styles.alunoList}>
-          <Text style={styles.sectionTitle}>Alunos</Text>
-          {loading ? (
-            <View style={styles.emptyState}>
-              <ActivityIndicator size="large" color="#126046" />
-              <Text style={styles.emptyStateText}>Carregando...</Text>
-            </View>
-          ) : (
-            alunos.map((aluno) => (
-              <TouchableOpacity
-                key={aluno.$id}
-                style={[styles.alunoCard, selectedAluno?.userId === aluno.userId && styles.selected]}
-                onPress={() => handleAlunoSelect(aluno)}
-              >
-                <Text style={styles.alunoName}>{aluno.nome}</Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-
 
         <View style={styles.checkboxContainer}>
           <Checkbox
