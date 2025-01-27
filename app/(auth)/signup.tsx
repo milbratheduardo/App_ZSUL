@@ -154,7 +154,6 @@ const submitAtleta = async () => {
     if (
       form.username === '' ||
       form.cpf === '' ||
-      form.rg === '' ||
       form.birthDate === '' ||
       form.endereco === '' ||
       form.posicao === '' ||
@@ -162,11 +161,7 @@ const submitAtleta = async () => {
       form.altura === '' ||
       form.peso === '' ||
       form.objetivo === '' ||
-      form.alergias === '' ||
-      form.condicoesMedicas === '' ||
-      form.lesoesAnteriores === '' ||
       form.nomeResponsavel === '' ||
-      form.primeiraEscola === '' ||
       form.anoEscolar === '' ||
       form.whatsapp === '' ||
       form.password === '' ||
@@ -328,14 +323,14 @@ const submitAtleta = async () => {
     return (
       <>
         {/* Campos comuns */}
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Nome Completo</Text>
+        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Nome Completo *</Text>
         <FormField 
           title='Nome Completo'
           value={form.username}
           handleChangeText={(e) => setForm({ ...form, username: e })}
         />
 
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">CPF</Text>
+        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">CPF *</Text>
         <FormField 
           title='CPF'
           value={form.cpf}
@@ -345,7 +340,7 @@ const submitAtleta = async () => {
 
         {role === 'responsavel' && (
           <>
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">RG</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">RG *</Text>
             <FormField 
               title='RG'
               value={form.rg}
@@ -358,7 +353,7 @@ const submitAtleta = async () => {
             />
 
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento *</Text>
             <View style={commonInputStyle}>
               <TextInputMask
                 type={'datetime'}
@@ -369,21 +364,21 @@ const submitAtleta = async () => {
               />
             </View>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Endereço</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Endereço *</Text>
             <FormField 
               title='Endereço'
               value={form.endereco}
               handleChangeText={(e) => setForm({ ...form, endereco: e })}
             />
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Bairro</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Bairro *</Text>
             <FormField 
               title='Bairro'
               value={form.bairro}
               handleChangeText={(e) => setForm({ ...form, bairro: e })}
             />
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Parentesco</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Parentesco *</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
                 selectedValue={form.parentesco}
@@ -401,19 +396,7 @@ const submitAtleta = async () => {
 
         {role === 'atleta' && (
           <>
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">RG</Text>
-            <FormField 
-              title='RG'
-              value={form.rg}
-              handleChangeText={(e) => {
-                const onlyNumbers = e.replace(/[^0-9]/g, '');
-                setForm({ ...form, rg: onlyNumbers });
-              }}
-              keyboardType="numeric" // Abre o teclado numérico no celular
-            />
-
-
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Data de Nascimento *</Text>
             <View style={commonInputStyle}>
               <TextInputMask
                 type={'datetime'}
@@ -424,7 +407,7 @@ const submitAtleta = async () => {
               />
             </View>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Endereço</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Endereço *</Text>
             <FormField 
               title='Endereço'
               value={form.endereco}
@@ -432,7 +415,7 @@ const submitAtleta = async () => {
             />
 
             {/* Informações Esportivas */}
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Posição</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Posição *</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
               selectedValue={form.posicao}
@@ -453,7 +436,7 @@ const submitAtleta = async () => {
               </Picker>
             </View>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Pé Dominante</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Pé Dominante *</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
                 selectedValue={form.peDominante}
@@ -467,7 +450,7 @@ const submitAtleta = async () => {
               </Picker>
             </View>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Altura (em cm)</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Altura (em cm) *</Text>
             <FormField 
               title='Altura'
               value={form.altura}
@@ -479,7 +462,7 @@ const submitAtleta = async () => {
               keyboardType='numeric' // Abre o teclado numérico no celular
             />
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Peso (em kg)</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Peso (em kg) *</Text>
             <FormField 
               title='Peso'
               value={form.peso}
@@ -492,7 +475,7 @@ const submitAtleta = async () => {
             />
 
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Objetivo</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Objetivo *</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
                 selectedValue={form.objetivo}
@@ -515,7 +498,7 @@ const submitAtleta = async () => {
             {/* Informações de Saúde */}
             <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações de Saúde</Text>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Alergias ou Restrições</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Alergias ou Restrições </Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>  
               <Picker
                 selectedValue={form.alergias}
@@ -590,7 +573,7 @@ const submitAtleta = async () => {
             <Text className="text-black-900 text-lg font-bold mb-4 mt-6">Informações Educacionais e Familiares</Text>
             
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">CPF do Responsável</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">CPF do Responsável *</Text>
             <FormField 
               title='Nome do Responsável'
               value={form.nomeResponsavel}
@@ -613,7 +596,7 @@ const submitAtleta = async () => {
               </Picker>
             </View>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Ano Escolar</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Ano Escolar *</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
                 selectedValue={form.anoEscolar}
@@ -641,7 +624,7 @@ const submitAtleta = async () => {
 
         {role === 'professor' && (
           <>
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Modalidade</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Modalidade *</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
                 selectedValue={form.modalidades}
@@ -655,7 +638,7 @@ const submitAtleta = async () => {
               </Picker>
             </View>
 
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Profissão</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Profissão *</Text>
             <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 20 }}>
               <Picker
                 selectedValue={form.profession}
@@ -686,7 +669,7 @@ const submitAtleta = async () => {
             </View>
             <Text className='mb-3'>Faixa Etária Selecionada: {form.faixa_etaria}</Text>
 */}
-            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Dias da Semana de Trabalho</Text>
+            <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Dias da Semana de Trabalho *</Text>
             <View style={{ flexDirection: 'row', marginBottom: 10, alignItems: 'center' }}>
               <View style={{ flex: 1 }}>
                 <Picker
@@ -775,7 +758,7 @@ const submitAtleta = async () => {
         )}
 
         {/* Campo de WhatsApp */}
-        <Text className="text-black-700 text-sm font-pbold mb-2">Whatsapp</Text>
+        <Text className="text-black-700 text-sm font-pbold mb-2">Whatsapp *</Text>
         <FormField 
           title='Whatsapp'
           value={form.whatsapp}
@@ -791,7 +774,7 @@ const submitAtleta = async () => {
         {/* Campo de Email e Senha */}
         
         
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Email</Text>
+        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Email *</Text>
         <FormField 
           title='Email'
           value={form.email}
@@ -800,7 +783,7 @@ const submitAtleta = async () => {
         />
         
 
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Senha</Text>
+        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Senha *</Text>
         <FormField 
           title='Senha'
           placeholder={'Insira no mínimo 8 caracteres'}
@@ -808,7 +791,7 @@ const submitAtleta = async () => {
           handleChangeText={(e) => setForm({ ...form, password: e })}
         />
 
-        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Confirmar Senha</Text>
+        <Text className="text-black-700 text-sm font-pbold mb-2 mt-3">Confirmar Senha *</Text>
         <FormField 
           title='Confirmar Senha'
           value={form.confirmPassword}
