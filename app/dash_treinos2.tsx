@@ -295,4 +295,13 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontWeight: 'bold',
   },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyStateText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
 });

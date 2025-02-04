@@ -129,7 +129,7 @@ const AlunoProfile = () => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Icon name="user" size={64} color="#ccc" />
-            <Text style={styles.emptyStateText}>Aguarde</Text>
+            <Text style={styles.emptyStateText}>Aguarde seu Atleta ser Cadastrado em uma Turma</Text>
           </View>
         }
       />
