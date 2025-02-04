@@ -4,13 +4,38 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import emailjs from 'emailjs-com';
-import { getTurmaById } from '@/lib/appwrite'; // Importe a função corretamente
+import { getTurmaById, updateUserData } from '@/lib/appwrite'; // Importe a função corretamente
 
 const InformacoesPessoais = () => {
   const { user } = useGlobalContext();
   const [turmaTitle, setTurmaTitle] = useState('Carregando...');
   const firstName = user?.nome?.split(' ')[0] || 'Usuário';
   const profileImageUrl = user?.profileImageUrl || 'https://example.com/default-profile.png';
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [currentField, setCurrentField] = useState('');
+  const [currentValue, setCurrentValue] = useState('');
+
+  const handleEditField = (fieldLabel, fieldValue) => {
+    setCurrentField(fieldLabel);
+    setCurrentValue(fieldValue);
+    setEditModalVisible(true);
+  };
+  
+
+  const handleSaveEdit = async () => {
+    const updatedField = currentField.toLowerCase();
+  
+    const success = await updateUserData(user.$id, updatedField, currentValue, user.role);
+  
+    if (success) {
+      const updatedUser = { ...user, [updatedField]: currentValue };
+      user[updatedField] = currentValue;
+  
+      setEditModalVisible(false);
+    } else {
+      console.error('Erro ao salvar as alterações.');
+    }
+  };
 
   useEffect(() => {
     const fetchTurmaTitle = async () => {
@@ -33,9 +58,9 @@ const InformacoesPessoais = () => {
   const userInfoArray = (() => {
     if (user.role === 'responsavel') {
       return [
-        { label: 'CPF', value: user.cpf, icon: 'id-card' },
-        { label: 'Email', value: user.email, icon: 'envelope' },
-        { label: 'WhatsApp', value: user.whatsapp, icon: 'whatsapp' },
+        { label: 'CPF', value: user.cpf, icon: 'id-card', editable: true },
+        { label: 'Email', value: user.email, icon: 'envelope', editable: false },
+        { label: 'WhatsApp', value: user.whatsapp, icon: 'whatsapp', editable: true },
       ];
     } else if (user.role === 'profissional') {
       return [
@@ -101,15 +126,24 @@ const InformacoesPessoais = () => {
         {userInfoArray.map((item, index) => (
           <View key={index} style={styles.infoCard}>
             <Icon name={item.icon} size={24} color="#126046" style={styles.icon} />
+
             <View style={styles.textContainer}>
               <Text style={styles.label}>{item.label}</Text>
               <Text style={styles.value}>
                 {item.value === user.faixa_etaria ? `${item.value} anos` : item.value}
               </Text>
             </View>
+
+            {item.editable && (
+              <TouchableOpacity onPress={() => handleEditField(item.label, item.value)}>
+                <Icon name="pencil" size={20} color="#126046" style={styles.editIcon} />
+              </TouchableOpacity>
+            )}
           </View>
         ))}
       </ScrollView>
+
+
 
       {/* Botão para Suporte */}
       {user.role !== 'atleta' && (
@@ -185,6 +219,34 @@ const InformacoesPessoais = () => {
           </View>
         </View>
       </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Editar {currentField}</Text>
+
+            <TextInput
+              style={styles.textInput}
+              value={currentValue}
+              onChangeText={setCurrentValue}
+              autoFocus
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.submitButton} onPress={handleSaveEdit}>
+                <Text style={styles.buttonText}>Salvar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -196,6 +258,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
+  editIcon: {
+    marginLeft: 10,
+    padding: 5,
+  },
+  textInput: {
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: '#F9FAFB',
+    color: '#333',
+    marginBottom: 20,
+  },  
   header: {
     paddingVertical: 24,
     paddingHorizontal: 20,
@@ -222,6 +297,10 @@ const styles = StyleSheet.create({
   headerText: {
     marginLeft: -80,
   },
+  editIcon: {
+    marginLeft: 10,
+    padding: 5,
+  },  
   greeting: {
     fontSize: 22,
     fontWeight: '600',

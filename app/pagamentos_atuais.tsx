@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { getAllAlunos } from '@/lib/appwrite';
+import { getAllAlunos, updateStatusPagamento2 } from '@/lib/appwrite';
 import { format } from 'date-fns';
 
 const PagamentosAtuais = () => {
@@ -138,13 +138,61 @@ const PagamentosAtuais = () => {
     setFilteredAlunos(filtered);
   };
 
+  const togglePagamentoStatus = async (alunoId, statusAtual) => {
+    
+    try {
+      if (!statusAtual) throw new Error('Status do pagamento inválido.');
+  
+      const novoStatus = statusAtual.includes('Pendente')
+        ? statusAtual.replace('Pendente', 'Pago')
+        : statusAtual.replace('Pago', 'Pendente');
+      
+      // Atualizar o status no banco de dados
+      await updateStatusPagamento2(alunoId, novoStatus);
+  
+      // Atualizar o estado local
+      const updatedAlunos = alunos.map((aluno) =>
+        aluno.userId === alunoId ? { ...aluno, status_pagamento: novoStatus } : aluno
+      );
+  
+      setAlunos(updatedAlunos);
+      setFilteredAlunos(updatedAlunos);
+    } catch (error) {
+      console.error('Erro ao atualizar o status:', error);  // Ajuda na depuração
+      setErrorMessage(error.message || 'Erro ao atualizar o status do pagamento.');
+      setShowErrorModal(true);
+    }
+  };
+  
+
+
+  
+
   const renderAluno = ({ item }) => (
     <View style={styles.userCard}>
       <Text style={styles.userName}>Nome do Atleta: {item.nome}</Text>
       <Text style={styles.userInfo}>Data de Vencimento: {item.formattedEndDate}</Text>
       <Text style={styles.userInfo}>Status do Pagamento: {item.status_pagamento}</Text>
+  
+      {item.plano && item.plano.toLowerCase().includes('dinheiro') && item.status_pagamento && (
+        item.status_pagamento.includes('Pendente') || item.status_pagamento.includes('Pago') ? (
+          <TouchableOpacity
+            style={[
+              styles.paymentButton,
+              { backgroundColor: item.status_pagamento.includes('Pendente') ? '#126046' : '#FFC107' }
+            ]}
+            onPress={() => togglePagamentoStatus(item.userId, item.status_pagamento)}
+          >
+            <Text style={styles.paymentButtonText}>
+              {item.status_pagamento.includes('Pendente') ? 'Confirmar Pagamento' : 'Marcar como Pendente'}
+            </Text>
+          </TouchableOpacity>
+        ) : null
+      )}
     </View>
-  );
+  ); 
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -223,6 +271,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
     paddingHorizontal: 16,
+  },
+  paymentButton: {
+    marginTop: 10,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  paymentButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   headerText: {
     fontSize: 22,

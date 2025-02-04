@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Image, ImageBackground, Modal, Dimensions } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { getAlunosById } from '@/lib/appwrite';
+import { getAlunosById, getAllTurmas } from '@/lib/appwrite';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -27,6 +27,22 @@ const detalhesAluno = () => {
   const fetchAluno = async () => {
     try {
       const alunoData = await getAlunosById(alunoId);
+
+      // Verifica se o aluno tem uma turma associada
+      if (alunoData.turmaId) {
+        try {
+          const turmas = await getAllTurmas();
+          const turma = turmas.find((t) => t.$id === alunoData.turmaId);
+          alunoData.turmaTitle = turma ? turma.title : 'Nenhuma Turma';
+        } catch (error) {
+          setErrorMessage(`Erro ao buscar título da turma.`);
+          setShowErrorModal(true);
+          alunoData.turmaTitle = 'Nenhuma Turma';
+        }
+      } else {
+        alunoData.turmaTitle = 'Nenhuma Turma';
+      }
+
       setAluno(alunoData);
     } catch (error) {
       setErrorMessage(`Erro ao buscar aluno.`);
@@ -36,7 +52,6 @@ const detalhesAluno = () => {
 
   const handleEdit = () => {
     router.push(`/edit_card_aluno?alunoId=${alunoId}`);
-
   };
 
   const calculateAge = (birthDate) => {
@@ -70,6 +85,8 @@ const detalhesAluno = () => {
         >
           <Text style={styles.rating}>{aluno.geral || '80'}</Text>
           <Text style={styles.position}>{aluno.posicao}</Text>
+
+          <Text style={styles.turmaText}>Turma: {aluno.turmaTitle || 'Nenhuma Turma'}</Text>
 
           <View style={styles.imageContainer}>
             <Image 
@@ -246,6 +263,16 @@ const styles = StyleSheet.create({
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 5,
+  },
+  turmaText: {
+    position: 'absolute',
+    top: '20%',
+    left: '10%',
+    fontSize: 12,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginTop: 2,
+    fontWeight: 'light',
   },
   position: {
     position: 'absolute',

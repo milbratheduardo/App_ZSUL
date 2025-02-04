@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import TurmasCard2 from '@/components/TurmaCard2';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useLocalSearchParams } from 'expo-router';
-import { getTurmaById, getAlunosByTurmaId, getAllRelatorios } from '@/lib/appwrite';
+import { getTurmaById, getAlunosByTurmaId, getAllRelatorios, updateAlunoTurma, deleteTurma } from '@/lib/appwrite';
 import { router } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ const ControleTurmas = () => {
   const [errorMessage, setErrorMessage] = useState(''); 
   const [showSuccessModal, setShowSuccessModal] = useState(false); 
   const [successMessage, setSuccessMessage] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const { turmaId } = useLocalSearchParams();
 
@@ -102,6 +103,38 @@ const ControleTurmas = () => {
             });
 };
 
+const toggleEditTurma = async () => {
+    router.push({
+      pathname: '/edit_turmas',
+      params: { turmaId: turma.$id }
+  });  
+};
+
+const handleDelete = async () => {
+  try {
+    const alunos = await getAlunosByTurmaId(turmaId);
+
+    // Atualizar todos os alunos removendo o turmaId
+    for (const aluno of alunos) {
+      await updateAlunoTurma(aluno.$id);
+    }
+
+    // Excluir a turma
+    await deleteTurma(turmaId);
+
+    setSuccessMessage('Turma deletada com sucesso!');
+    setShowSuccessModal(true);
+    setConfirmDelete(false); // Fechar o modal
+    router.push('/turmas'); // Redirecionar para a tela de turmas
+  } catch (error) {
+    setErrorMessage(`Erro ao deletar turma: ${error.message}`);
+    setShowErrorModal(true);
+  }
+};
+
+const toggleDeleteTurma = () => {
+  setConfirmDelete(true); // Abre o modal de confirmação
+};
 
   // Definições para abreviações e cores das posições dos atletas
   const positionDetails = {
@@ -191,7 +224,7 @@ const ControleTurmas = () => {
 
       {menuOpen && (
         <View style={styles.menuOptions}>
-          {user.role === 'profissional' ? (
+          {(user.role === 'profissional' || user.admin === 'admin') ? (
             <>
               <TouchableOpacity style={styles.menuOption} onPress={toggleRelatorio}>
                 <Icon name="file-text" size={18} color="#006400" style={styles.menuIcon} />
@@ -209,6 +242,20 @@ const ControleTurmas = () => {
                 <Icon name="bell" size={18} color="#006400" style={styles.menuIcon} />
                 <Text style={styles.menuText}>Notificação</Text>
               </TouchableOpacity>
+
+              {/* Opções exclusivas para admin */}
+              {user.admin === 'admin' && (
+                <>
+                  <TouchableOpacity style={styles.menuOption} onPress={toggleEditTurma}>
+                    <Icon name="edit" size={18} color="#006400" style={styles.menuIcon} />
+                    <Text style={styles.menuText}>Editar Turma</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuOption} onPress={toggleDeleteTurma}>
+                    <Icon name="trash" size={18} color="#8B0000" style={styles.menuIcon} />
+                    <Text style={styles.deleteText}>Deletar Turma</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </>
           ) : (
             <>
@@ -266,6 +313,67 @@ const ControleTurmas = () => {
             >
               <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={confirmDelete}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setConfirmDelete(false)}
+      >
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            padding: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            width: '80%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 5,
+          }}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="red" />
+            <Text style={{ color: 'black', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+              Confirmar Exclusão
+            </Text>
+            <Text style={{ color: 'black', textAlign: 'center', marginBottom: 20 }}>
+              Tem certeza que deseja deletar esta turma? Esta ação não poderá ser desfeita.
+            </Text>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'red',
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 5,
+                  marginRight: 10,
+                }}
+                onPress={handleDelete}
+              >
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>Confirmar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#ddd',
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 5,
+                }}
+                onPress={() => setConfirmDelete(false)}
+              >
+                <Text style={{ color: 'black', fontWeight: 'bold' }}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -386,6 +494,11 @@ const styles = StyleSheet.create({
   },
   menuText: {
     color: '#006400',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  deleteText: {
+    color: '#8B0000',
     fontSize: 16,
     fontWeight: '500',
   },

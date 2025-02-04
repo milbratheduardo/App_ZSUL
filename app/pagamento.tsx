@@ -213,7 +213,7 @@ const Pagamentos2 = () => {
         throw new Error('URL Pix ou ID da transação não encontrada.');
       }
     } catch (error) {
-      setErrorMessage(`Falha ao gerar pix.`);
+      setErrorMessage(`Falha ao gerar pix. Verifique seu CPF.`);
       setShowErrorModal(true);
     } finally {
       setLoading(false);
@@ -289,31 +289,31 @@ const Pagamentos2 = () => {
   
       switch (selectedPlan) {
         case '2c93808493b073170193d2317ddb0ac2':
-          planId = 'Pago em Dinheiro - Mensal';
+          planId = 'Pendente em Dinheiro - Mensal';
           endDate.setMonth(endDate.getMonth() + 1);
           break;
         case '2c93808493b072d70193d233e9eb0b23':
-          planId = 'Pago em Dinheiro - Semestral';
+          planId = 'Pendente em Dinheiro - Semestral';
           endDate.setMonth(endDate.getMonth() + 6);
           break;
         case '2c93808493b072d80193d234fe0e0b24':
-          planId = 'Pago em Dinheiro - Anual';
+          planId = 'Pendente em Dinheiro - Anual';
           endDate.setFullYear(endDate.getFullYear() + 1);
           break;
         case '2c9380849469a4a101946ae6d35700aa':
-          planId = 'Pago em Dinheiro - Irmãos Mensal';
+          planId = 'Pendente em Dinheiro - Irmãos Mensal';
           endDate.setMonth(endDate.getMonth() + 1);
           break;
         case '2c9380849469a43201946ae4a44100a4':
-          planId = 'Pago em Dinheiro - Irmãos Semestral';
+          planId = 'Pendente em Dinheiro - Irmãos Semestral';
           endDate.setMonth(endDate.getMonth() + 6);
           break;
         case '2c9380849469a43201946add8ee300a0':
-          planId = 'Pago em Dinheiro - Irmãos Anual';
+          planId = 'Pendente em Dinheiro - Irmãos Anual';
           endDate.setFullYear(endDate.getFullYear() + 1);
           break;
         case '2c9380849469a43201946ae827c500a9':
-          planId = 'Pago em Dinheiro - 50Off';
+          planId = 'Pendente em Dinheiro - 50Off';
           endDate.setFullYear(endDate.getFullYear() + 1);
           break;
         default:
@@ -344,8 +344,6 @@ const Pagamentos2 = () => {
       setLoading(false);
     }
   };
-  
-  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -447,43 +445,45 @@ const Pagamentos2 = () => {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.paymentButton,
-                { backgroundColor: '#161622', flexDirection: 'row', alignItems: 'center' },
-              ]}
-              onPress={handleCashPayment}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="cash-multiple" size={24} color="#FFF" style={{ marginRight: 8 }} />
-                  <Text style={styles.paymentButtonText}>Pagar em Dinheiro</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            {(selectedPlan === '2c9380849469a43201946ae827c500a9' || selectedPlan === '2c9380849469a4a101946ae6d35700aa' || selectedPlan === '2c93808493b073170193d2317ddb0ac2') && (
+              <>
+                <TouchableOpacity
+                  style={[
+                    styles.paymentButton,
+                    { backgroundColor: '#161622', flexDirection: 'row', alignItems: 'center' },
+                  ]}
+                  onPress={handleCashPayment}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="cash-multiple" size={24} color="#FFF" style={{ marginRight: 8 }} />
+                      <Text style={styles.paymentButtonText}>Pagar em Dinheiro</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.paymentButton,
-                { backgroundColor: '#FFC107', flexDirection: 'row', alignItems: 'center' },
-              ]}
-              onPress={selectedAluno.off === "50Off" ? handlePixPayment2 : handlePixPayment}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="qrcode-scan" size={24} color="#FFF" style={{ marginRight: 8 }} />
-                  <Text style={styles.paymentButtonText}>Pagar com Pix</Text>
-                </>
-              )}
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.paymentButton,
+                    { backgroundColor: '#FFC107', flexDirection: 'row', alignItems: 'center' },
+                  ]}
+                  onPress={selectedAluno.off === "50Off" ? handlePixPayment2 : handlePixPayment}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="qrcode-scan" size={24} color="#FFF" style={{ marginRight: 8 }} />
+                      <Text style={styles.paymentButtonText}>Pagar com Pix</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
           </>
         )}
-
-
 
       </ScrollView>
              <Modal

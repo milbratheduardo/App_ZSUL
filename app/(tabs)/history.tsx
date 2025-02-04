@@ -20,50 +20,60 @@ const History = () => {
 
   const fetchData = useCallback(async () => {
     try {
+      let alunosData = [];
+  
+      // Função auxiliar para buscar o título da turma
+      const getTurmaTitle = async (turmaId) => {
+        try {
+          const turmas = await getAllTurmas();
+          const turma = turmas.find((t) => t.$id === turmaId);
+          return turma ? turma.title : 'Nenhuma Turma';
+        } catch (error) {
+          setErrorMessage('Erro ao buscar título da turma.');
+          setShowErrorModal(true);
+          return 'Nenhuma Turma';
+        }
+      };
+  
       if (user.admin === 'admin') {
         const allAlunos = await getAllAlunos();
-        const alunosData = await Promise.all(
-          allAlunos.map(async aluno => {
-            let turmaTitle = 'Nenhuma Turma';
-            if (aluno.turmaId) {
-              try {
-                const turma = await getTurmaById(aluno.turmaId);
-                turmaTitle = turma.title;
-              } catch (error) {
-                setErrorMessage(`Erro ao buscar título da turma.`);
-                setShowErrorModal(true);
-              }
-
-            }
+        alunosData = await Promise.all(
+          allAlunos.map(async (aluno) => {
+            const turmaTitle = aluno.turmaId ? await getTurmaTitle(aluno.turmaId) : 'Nenhuma Turma';
             return { ...aluno, turmaTitle };
           })
         );
-        setAlunos(alunosData);
-        setFilteredAlunos(alunosData);
-      } else {
-        const allTurmas = await getAllTurmas();
-        const userTurmas = allTurmas.filter(turma =>
-          turma.profissionalId.includes(user.userId) || user.role === 'responsavel' || user.role === `atleta`
+      } else if (user.role === 'responsavel') {
+        const allAlunos = await getAllAlunos();
+        alunosData = await Promise.all(
+          allAlunos
+            .filter((aluno) => aluno.nomeResponsavel === user.cpf)
+            .map(async (aluno) => {
+              const turmaTitle = aluno.turmaId ? await getTurmaTitle(aluno.turmaId) : 'Nenhuma Turma';
+              return { ...aluno, turmaTitle };
+            })
         );
-        setTurmas(userTurmas);
-        const alunosData = [];
-        for (const turma of userTurmas) {
-          const turmaAlunos = await getAlunosByTurmaId(turma.$id);
-          const filteredAlunos = turmaAlunos.filter(aluno =>
-            user.role !== 'responsavel' || aluno.nomeResponsavel === user.cpf
-          );
-          filteredAlunos.forEach(aluno => {
-            alunosData.push({ ...aluno, turmaTitle: turma.title });
-          });
-        }
-        setAlunos(alunosData);
-        setFilteredAlunos(alunosData);
+      } else if (user.role === 'atleta') {
+        const allAlunos = await getAllAlunos();
+        alunosData = await Promise.all(
+          allAlunos
+            .filter((aluno) => aluno.$id === user.userId)
+            .map(async (aluno) => {
+              const turmaTitle = aluno.turmaId ? await getTurmaTitle(aluno.turmaId) : 'Nenhuma Turma';
+              return { ...aluno, turmaTitle };
+            })
+        );
       }
+  
+      setAlunos(alunosData);
+      setFilteredAlunos(alunosData);
     } catch (error) {
-      setErrorMessage(`Erro ao buscar dados.`);
+      setErrorMessage('Erro ao buscar dados.');
       setShowErrorModal(true);
     }
   }, [user]);
+  
+  
 
   useEffect(() => {
     fetchData();
@@ -106,7 +116,7 @@ const History = () => {
     };
 
     const position = positionDetails[item.posicao.toLowerCase()] || {};
-    const alunoInfo = `${item.nome} - ${item.turmaTitle}`;
+    const alunoInfo = `${item.nome}`;
 
     return (
       <TouchableOpacity style={styles.alunoContainer} onPress={() => handleAlunoPress(item.userId)}>
