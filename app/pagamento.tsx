@@ -172,6 +172,7 @@ const Pagamentos2 = () => {
   
     try {
       setLoading(true);
+      console.log('Selected Plan: ', selectedPlan)
 
       const cupom = alunosComDesconto > 0 ? null : 'sim';
 
@@ -236,7 +237,9 @@ const Pagamentos2 = () => {
   
       if (pixResponse && pixResponse.id && pixResponse.point_of_interaction?.transaction_data?.ticket_url) {
         const pixUrl = pixResponse.point_of_interaction.transaction_data.ticket_url;
-  
+        
+        console.log('Selected Plan: ', selectedPlan)
+        console.log('Resposta Pix: ', pixUrl);
         const paymentId = pixResponse.charges_details?.[0]?.id || pixResponse.id;
         
         const planId = 'Pix Mensal - Pendente (50%)' ;

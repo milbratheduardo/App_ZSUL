@@ -18,7 +18,7 @@ export const createCardToken = async (cardData) => {
     const data = await response.json();
     return data.id; // Retorna o card_token_id
   } catch (error) {
-    console.error('Erro ao criar o card_token_id:', error);
+    
     throw error;
   }
 };
@@ -51,13 +51,14 @@ export const handleIntegrationMP = async (userEmail, cardTokenId, planId) => {
 
     return data;
   } catch (error) {
-    console.error('Erro ao criar preapproval:', error);
+    
     throw error;
   }
 };
 
 export const handlePixPaymentMP = async (userEmail, userCPF, userNome) => {
   try {
+    
     const idempotencyKey = `key-${new Date().getTime()}`; // Geração do X-Idempotency-Key
 
     const pixPaymentData = {
@@ -81,8 +82,7 @@ export const handlePixPaymentMP = async (userEmail, userCPF, userNome) => {
       body: JSON.stringify(pixPaymentData),
     });
 
-    const data = await response.json();
-    console.log('Resposta completa da API Mercado Pago:', data);
+    const data = await response.json();    
 
     if (data.id && data.point_of_interaction?.transaction_data?.ticket_url) {
       return data; 
@@ -90,7 +90,7 @@ export const handlePixPaymentMP = async (userEmail, userCPF, userNome) => {
       throw new Error('Erro: Resposta não contém ID da transação ou ticket_url.');
     }
   } catch (error) {
-    console.error('Erro ao processar pagamento com Pix:', error.message);
+    
     throw error;
   }
 };
@@ -122,7 +122,7 @@ export const handlePixPaymentMP2 = async (userEmail, userCPF, userNome) => {
     });
 
     const data = await response.json();
-    console.log('Resposta completa da API Mercado Pago:', data);
+    
 
     if (data.id && data.point_of_interaction?.transaction_data?.ticket_url) {
       return data; 
@@ -130,7 +130,7 @@ export const handlePixPaymentMP2 = async (userEmail, userCPF, userNome) => {
       throw new Error('Erro: Resposta não contém ID da transação ou ticket_url.');
     }
   } catch (error) {
-    console.error('Erro ao processar pagamento com Pix:', error.message);
+    
     throw error;
   }
 };
@@ -161,7 +161,7 @@ export const handlePixPaymentMP3 = async (userEmail, userCPF, userNome) => {
     });
 
     const data = await response.json();
-    console.log('Resposta completa da API Mercado Pago:', data);
+    
 
     if (data.id && data.point_of_interaction?.transaction_data?.ticket_url) {
       return data; 
@@ -169,7 +169,7 @@ export const handlePixPaymentMP3 = async (userEmail, userCPF, userNome) => {
       throw new Error('Erro: Resposta não contém ID da transação ou ticket_url.');
     }
   } catch (error) {
-    console.error('Erro ao processar pagamento com Pix:', error.message);
+    
     throw error;
   }
 };
