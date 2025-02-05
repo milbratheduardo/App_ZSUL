@@ -116,8 +116,11 @@ const History = () => {
     };
 
     const position = positionDetails[item.posicao.toLowerCase()] || {};
-    const alunoInfo = `${item.nome}`;
-
+    const nomeCompleto = item.nome.trim().split(' ');
+    const alunoInfo = nomeCompleto.length > 1 
+      ? `${nomeCompleto[0]} ${nomeCompleto[nomeCompleto.length - 1]}` 
+      : nomeCompleto[0];
+    
     return (
       <TouchableOpacity style={styles.alunoContainer} onPress={() => handleAlunoPress(item.userId)}>
         <View style={styles.alunoInfo}>
@@ -129,7 +132,7 @@ const History = () => {
         </View>
       </TouchableOpacity>
     );
-  };
+  }    
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
