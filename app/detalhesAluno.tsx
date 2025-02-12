@@ -72,10 +72,17 @@ const detalhesAluno = () => {
   return (
     <View style={styles.screenContainer}>
       {user.role == 'profissional' && (
-    <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+        <>
+      <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
         <Icon name="edit" size={18} color="#FFFFFF" />
         <Text style={styles.editButtonText}>Editar Card</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.editButton1}>
+        <Icon name="remove" size={18} color="#FFFFFF" />
+        <Text style={styles.editButtonText}>Disvincular Aluno</Text>
+      </TouchableOpacity>
+      </>
       )}
       <View style={styles.cardContainer}>
         <ImageBackground 
@@ -182,6 +189,10 @@ const detalhesAluno = () => {
                   </View>
                 </View>
               </Modal>
+              <TouchableOpacity style={styles.editButton2}>
+              <Icon name="info" size={18} color="#FFFFFF" />
+              <Text style={styles.editButtonText}>Info Geral</Text>
+            </TouchableOpacity>
     </View>
 
 
@@ -199,6 +210,35 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     backgroundColor: '#004225', // Verde escuro
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  editButton1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'red', // Verde escuro
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  editButton2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop:20,
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'blue', // Verde escuro
     borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },

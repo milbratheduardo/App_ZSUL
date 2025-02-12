@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '@/components/CustomButton';
-import { getAllAlunos, updateEventConfirmados } from '@/lib/appwrite';
+import { getAllAlunos, getEventsConfirmados, updateEventConfirmados } from '@/lib/appwrite';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,37 +14,32 @@ const VerRelacionados = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useGlobalContext();
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); 
-  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { confirmados: confirmadosParam, eventTitle, eventId } = useLocalSearchParams();
-
+  const { eventTitle, eventId } = useLocalSearchParams();
 
   useEffect(() => {
-    // Define os alunos confirmados a partir dos parâmetros na inicialização
-    if (confirmadosParam) {
-      const confirmadosIds = confirmadosParam.split(',');
-      setConfirmados(confirmadosIds);
-    }
-    fetchAlunos();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    // Atualiza `filteredAlunos` com base em `confirmados` assim que `confirmados` e `alunos` estiverem prontos
-    const updatedFilteredAlunos = alunos.map((aluno) => ({
-      ...aluno,
-      selected: confirmados.includes(aluno.userId),
-    }));
-    setFilteredAlunos(updatedFilteredAlunos);
-  }, [confirmados, alunos]);
-
-  const fetchAlunos = async () => {
+  const fetchData = async () => {
     try {
+      const confirmadosIds = await getEventsConfirmados(eventId);
+      console.log('Confirmados IDs:', confirmadosIds);
+
       const allAlunos = await getAllAlunos();
-      setAlunos(allAlunos);
+      const updatedAlunos = allAlunos.map((aluno) => ({
+        ...aluno,
+        selected: confirmadosIds.includes(aluno.userId),
+      }));
+
+      setAlunos(updatedAlunos);
+      setFilteredAlunos(updatedAlunos);
+      setConfirmados(confirmadosIds);
     } catch (error) {
-      setErrorMessage(`Não foi possível carregar os alunos.`);
+      setErrorMessage('Não foi possível carregar os alunos.');
       setShowErrorModal(true);
     }
   };
@@ -55,6 +50,11 @@ const VerRelacionados = () => {
     } else {
       setConfirmados([...confirmados, userId]);
     }
+
+    const updatedAlunos = alunos.map((aluno) =>
+      aluno.userId === userId ? { ...aluno, selected: !aluno.selected } : aluno
+    );
+    setFilteredAlunos(updatedAlunos);
   };
 
   const handleSearch = (text) => {
@@ -76,7 +76,7 @@ const VerRelacionados = () => {
       setShowSuccessModal(true);
       router.back();
     } catch (error) {
-      setErrorMessage(`Não foi possível salvar as alterações.`);
+      setErrorMessage('Não foi possível salvar as alterações.');
       setShowErrorModal(true);
     }
   };
@@ -108,9 +108,7 @@ const VerRelacionados = () => {
             onPress={() => isEditable && handleSelectAluno(item.userId)}
           >
             <Text style={styles.alunoText}>{item.nome}</Text>
-            <Text style={styles.checkmark}>
-              {item.selected ? '✓' : '○'}
-            </Text>
+            <Text style={styles.checkmark}>{item.selected ? '✓' : '○'}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -124,74 +122,34 @@ const VerRelacionados = () => {
           />
         </View>
       )}
-             <Modal
-                visible={showErrorModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowErrorModal(false)}
-              >
-                <View style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                }}>
-                  <View style={{
-                    backgroundColor: 'red',
-                    padding: 20,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    width: '80%',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 5,
-                  }}>
-                    <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
-                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
-                      Erro
-                    </Text>
-                    <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>
-                      {errorMessage}
-                    </Text>
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: 'white',
-                        paddingHorizontal: 20,
-                        paddingVertical: 10,
-                        borderRadius: 5,
-                      }}
-                      onPress={() => setShowErrorModal(false)}
-                    >
-                      <Text style={{ color: 'red', fontWeight: 'bold' }}>Fechar</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Modal>
-              <Modal
-              visible={showSuccessModal}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={() => setShowSuccessModal(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.successModal}>
-                  <MaterialCommunityIcons name="check-circle" size={48} color="white" />
-                  <Text style={styles.modalTitle}>Sucesso</Text>
-                  <Text style={styles.modalMessage}>{successMessage}</Text>
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => {
-                      setShowSuccessModal(false);
-                      
-                    }}
-                  >
-                    <Text style={styles.closeButtonText}>Fechar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
+
+      {/* Modal de Erro */}
+      <Modal visible={showErrorModal} transparent={true} animationType="slide" onRequestClose={() => setShowErrorModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.errorModal}>
+            <MaterialCommunityIcons name="alert-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Erro</Text>
+            <Text style={styles.modalMessage}>{errorMessage}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setShowErrorModal(false)}>
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Sucesso */}
+      <Modal visible={showSuccessModal} transparent={true} animationType="slide" onRequestClose={() => setShowSuccessModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.successModal}>
+            <MaterialCommunityIcons name="check-circle" size={48} color="white" />
+            <Text style={styles.modalTitle}>Sucesso</Text>
+            <Text style={styles.modalMessage}>{successMessage}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setShowSuccessModal(false)}>
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

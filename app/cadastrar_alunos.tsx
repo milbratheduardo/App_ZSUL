@@ -18,7 +18,7 @@ const CampoFutebolSVG = ({ turmaId, handlePressPosition }) => {
     { id: 4, position: 'Zagueiro Direito', abbreviation: 'ZD', cx: 35, cy: 30, value: 'zagueiro-central' },
     { id: 5, position: 'Lateral Direito', abbreviation: 'LD', cx: 15, cy: 30, value: 'lateral-direito' },
     { id: 6, position: 'Volante', abbreviation: 'V', cx: 30, cy: 50, value: 'volante' },
-    { id: 7, position: 'Meia Central', abbreviation: 'ME', cx: 40, cy: 60, value: 'meia-central' },
+    { id: 7, position: 'Meia Central', abbreviation: 'MC', cx: 40, cy: 60, value: 'meia-central' },
     { id: 8, position: 'Meia Ofensivo', abbreviation: 'MO', cx: 20, cy: 60, value: 'meia-ofensivo' },
     { id: 9, position: 'Ponta Esquerda', abbreviation: 'PE', cx: 40, cy: 80, value: 'ponta-esquerda' },
     { id: 10, position: 'Centroavante', abbreviation: 'CA', cx: 30, cy: 85, value: 'centroavante' },

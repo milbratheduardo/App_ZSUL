@@ -172,7 +172,9 @@ const Turmas = () => {
                 <Image source={images.escola_sp_transparente} className="w-[115px] h-[90px]" />
               </View>
             </View>
-
+            <Text className="text-primary text-lg font-pregular mb-1">
+                Selecione uma Data
+            </Text>
             <FlatList
               data={days}
               horizontal

@@ -37,6 +37,7 @@ const History = () => {
   
       if (user.admin === 'admin') {
         const allAlunos = await getAllAlunos();
+
         alunosData = await Promise.all(
           allAlunos.map(async (aluno) => {
             const turmaTitle = aluno.turmaId ? await getTurmaTitle(aluno.turmaId) : 'Nenhuma Turma';
@@ -45,6 +46,7 @@ const History = () => {
         );
       } else if (user.role === 'responsavel') {
         const allAlunos = await getAllAlunos();
+        
         alunosData = await Promise.all(
           allAlunos
             .filter((aluno) => aluno.nomeResponsavel === user.cpf)
@@ -54,16 +56,28 @@ const History = () => {
             })
         );
       } else if (user.role === 'atleta') {
-        const allAlunos = await getAllAlunos();
-        alunosData = await Promise.all(
-          allAlunos
-            .filter((aluno) => aluno.$id === user.userId)
-            .map(async (aluno) => {
-              const turmaTitle = aluno.turmaId ? await getTurmaTitle(aluno.turmaId) : 'Nenhuma Turma';
-              return { ...aluno, turmaTitle };
-            })
-        );
+        try {
+          const allAlunos = await getAllAlunos();
+          const currentAluno = allAlunos.find((aluno) => aluno.userId === user.userId);
+      
+          if (currentAluno && currentAluno.turmaId) {
+            const alunosDaMesmaTurma = await getAllAlunos();
+            
+            alunosData = await Promise.all(
+              alunosDaMesmaTurma.map(async (aluno) => {
+                const turmaTitle = aluno.turmaId ? await getTurmaTitle(aluno.turmaId) : 'Nenhuma Turma';
+                return { ...aluno, turmaTitle };
+              })
+            );
+          } else {
+            console.log('Nenhuma turma encontrada para o usuário.');
+            alunosData = [];
+          }
+        } catch (error) {
+          console.error('Erro ao buscar alunos da mesma turma:', error);
+        }
       }
+      
   
       setAlunos(alunosData);
       setFilteredAlunos(alunosData);
@@ -135,7 +149,7 @@ const History = () => {
   }    
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, paddingBottom: 200 }}>
       <View style={{ padding: 16 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <View>
@@ -145,12 +159,17 @@ const History = () => {
           <Image source={images.escola_sp_transparente} style={styles.logo} />
         </View>
 
-        <TextInput
-          placeholder="Pesquisar por nome do atleta"
-          value={searchText}
-          onChangeText={handleSearch}
-          style={styles.searchInput}
-        />
+        <View style={styles.searchContainer}>
+          <TouchableOpacity style={styles.filterButton}>
+            <MaterialCommunityIcons name="filter-outline" size={24} color="gray" />
+          </TouchableOpacity>
+          <TextInput
+            placeholder="Pesquisar por nome do atleta"
+            value={searchText}
+            onChangeText={handleSearch}
+            style={styles.searchInput}
+          />
+        </View>
 
         {filteredAlunos.length === 0 ? (
           <Text style={styles.noAlunosText}>Alunos</Text>
@@ -220,6 +239,26 @@ const styles = StyleSheet.create({
   logo: {
     width: 115,
     height: 90,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    fontSize: 16,
+  },
+  filterButton: {
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   welcomeText: {
     fontSize: 14,

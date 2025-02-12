@@ -23,11 +23,7 @@ const AllRelatorios = () => {
         setShowErrorModal(true);
       }
     };
-    const onRefresh = async () => {
-      setRefreshing(true);
-      await fetchData();
-      setRefreshing(false);
-    };
+
     const fetchRelatorios = async () => {
       try {
         const allRelatorios = await getAllRelatorios();
@@ -44,6 +40,12 @@ const AllRelatorios = () => {
     fetchTurma();
     fetchRelatorios();
   }, [turmaId]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchRelatorios();
+    setRefreshing(false);
+  };
 
   const renderRelatorio = ({ item }) => (
     <View style={styles.relatorioCard}>

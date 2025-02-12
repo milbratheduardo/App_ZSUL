@@ -32,13 +32,13 @@ const PagamentosAtuais = () => {
         const alunosComFaturas = allAlunos.map((aluno) => {
           let plano;
           switch (aluno.status_pagamento) {
-            case '2c93808493b072d80193be79bea105ac':
+            case '2c93808493b072d70193d233e9eb0b23':
               plano = 'Plano Semestral';
               break;
-            case '2c93808493b072d70193be7c14b30582':
+            case '2c93808493b073170193d2317ddb0ac2':
               plano = 'Plano Mensal';
               break;
-            case '2c93808493b073170193be7a300c053f':
+            case '2c93808493b072d80193d234fe0e0b24':
               plano = 'Plano Anual';
               break;
             default:
@@ -69,9 +69,9 @@ const PagamentosAtuais = () => {
         ).length;
         const cartaoCount = alunosComFaturas.filter(
           (aluno) =>
-            aluno.planId === '2c93808493b072d80193be79bea105ac' ||
-            aluno.planId === '2c93808493b072d70193be7c14b30582' ||
-            aluno.planId === '2c93808493b073170193be7a300c053f'
+            aluno.plano === 'Plano Mensal' ||
+            aluno.plano === 'Plano Semestral' ||
+            aluno.plano === 'Plano Anual'
         ).length;
         const pendenteCount = alunosComFaturas.filter(
           (aluno) => !aluno.plano || aluno.plano.trim() === ''
@@ -110,9 +110,9 @@ const PagamentosAtuais = () => {
     } else if (filter === 'Cartão de Crédito') {
       filtered = alunos.filter(
         (aluno) =>
-          aluno.planId === '2c93808493b072d80193be79bea105ac' ||
-          aluno.planId === '2c93808493b072d70193be7c14b30582' ||
-          aluno.planId === '2c93808493b073170193be7a300c053f'
+          aluno.plano === 'Plano Mensal' ||
+          aluno.plano === 'Plano Semestral' ||
+          aluno.plano === 'Plano Anual'
       );
     } else if (filter === 'Pendentes') {
       filtered = alunos.filter(
@@ -120,9 +120,9 @@ const PagamentosAtuais = () => {
           !(
             (aluno.plano && aluno.plano.toLowerCase().includes('pix')) ||
             (aluno.plano && aluno.plano.toLowerCase().includes('dinheiro')) ||
-            aluno.planId === '2c93808493b072d80193be79bea105ac' ||
-            aluno.planId === '2c93808493b072d70193be7c14b30582' ||
-            aluno.planId === '2c93808493b073170193be7a300c053f'
+            aluno.plano === 'Plano Mensal' ||
+            aluno.plano === 'Plano Semestral' ||
+            aluno.plano === 'Plano Anual'
           )
       );
     }
@@ -163,8 +163,6 @@ const PagamentosAtuais = () => {
       setShowErrorModal(true);
     }
   };
-  
-
 
   
 

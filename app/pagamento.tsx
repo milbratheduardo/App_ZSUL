@@ -90,7 +90,7 @@ const Pagamentos2 = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchAlunos(); // Chama a função de busca para atualizar os dados
+    await fetchAlunos(); 
     setRefreshing(false);
   };
 
@@ -172,7 +172,6 @@ const Pagamentos2 = () => {
   
     try {
       setLoading(true);
-      console.log('Selected Plan: ', selectedPlan)
 
       const cupom = alunosComDesconto > 0 ? null : 'sim';
 
@@ -340,6 +339,7 @@ const Pagamentos2 = () => {
       );
   
       Alert.alert('Sucesso', 'Pagamento registrado com sucesso!');
+      onRefresh();
     } catch (error) {
       setErrorMessage('Falha ao registrar pagamento.');
       setShowErrorModal(true);

@@ -5,6 +5,7 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import emailjs from 'emailjs-com';
 import { getTurmaById, updateUserData } from '@/lib/appwrite'; // Importe a função corretamente
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const InformacoesPessoais = () => {
   const { user } = useGlobalContext();
@@ -14,6 +15,7 @@ const InformacoesPessoais = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [currentField, setCurrentField] = useState('');
   const [currentValue, setCurrentValue] = useState('');
+
 
   const handleEditField = (fieldLabel, fieldValue) => {
     setCurrentField(fieldLabel);
@@ -58,12 +60,14 @@ const InformacoesPessoais = () => {
   const userInfoArray = (() => {
     if (user.role === 'responsavel') {
       return [
+        { label: 'Nome', value: user.nome, icon: 'user' },
         { label: 'CPF', value: user.cpf, icon: 'id-card', editable: true },
         { label: 'Email', value: user.email, icon: 'envelope', editable: false },
         { label: 'WhatsApp', value: user.whatsapp, icon: 'whatsapp', editable: true },
       ];
     } else if (user.role === 'profissional') {
       return [
+        { label: 'Nome', value: user.nome, icon: 'user' },
         { label: 'CPF', value: user.cpf, icon: 'id-card' },
         { label: 'Email', value: user.email, icon: 'envelope' },
         { label: 'Modalidade', value: user.modalidade, icon: 'futbol-o' },
@@ -72,6 +76,7 @@ const InformacoesPessoais = () => {
       ];
     } else if (user.role === 'atleta') {
       return [
+        { label: 'Nome', value: user.nome, icon: 'user' },
         { label: 'CPF', value: user.cpf, icon: 'id-card' },
         { label: 'Email', value: user.email, icon: 'envelope' },
         { label: 'Data de Nascimento', value: user.birthDate, icon: 'calendar' },

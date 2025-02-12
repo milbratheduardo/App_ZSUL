@@ -26,45 +26,53 @@ const Faturas = () => {
   const [pagamentos, setPagamentos] = useState([]);
 
 
-    useEffect(() => {
-      const fetchFaturas = async () => {
-        try {
-          setLoading(true);
-          
-          const historico = await getHistoricoPagamentosByResponsavel(user.cpf);
+  useEffect(() => {
+    const fetchFaturas = async () => {
+      try {
+        setLoading(true);
+        
+        const historico = await getHistoricoPagamentosByResponsavel(user.cpf);
   
-          const pagamentosFormatados = historico.map((pagamento) => {
-            // Formatar a data de vencimento
-            const formattedEndDate = pagamento.end_date
-              ? format(new Date(pagamento.end_date), 'dd/MM/yyyy')
-              : 'N/A';
+        const pagamentosFormatados = historico.map((pagamento) => {
+          // Formatar a data de vencimento
+          const formattedEndDate = pagamento.end_date
+            ? format(new Date(pagamento.end_date), 'dd/MM/yyyy')
+            : 'N/A';
   
-            return {
-              ...pagamento,
-              formattedEndDate,
-            };
-          });
+          // Formatar a data de pagamento (Created)
+          const formattedCreatedDate = pagamento.$createdAt
+            ? format(new Date(pagamento.$createdAt), 'dd/MM/yyyy')
+            : 'N/A';
   
-          setPagamentos(pagamentosFormatados);
-        } catch (error) {
-          setErrorMessage(`Não foi possível carregar as faturas.`);
-          setShowErrorModal(true);
-        } finally {
-          setLoading(false);
-        }
-      };
+          return {
+            ...pagamento,
+            formattedEndDate,
+            formattedCreatedDate,
+          };
+        });
   
-      fetchFaturas();
-    }, [user.cpf]);
-
-    const renderPagamentoItem = ({ item }) => (
-      <View style={styles.card}>
-        <Text style={styles.alunoName}>{item.nome}</Text>
-        <Text style={styles.info}>Plano: {item.status_pagamento || 'N/A'}</Text>
-        <Text style={styles.info}>ID Transação: {item.id_transacao || 'N/A'}</Text>
-        <Text style={styles.info}>Data de Vencimento: {item.formattedEndDate}</Text>
-      </View>
-    );
+        setPagamentos(pagamentosFormatados);
+      } catch (error) {
+        setErrorMessage(`Não foi possível carregar as faturas.`);
+        setShowErrorModal(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchFaturas();
+  }, [user.cpf]);
+  
+  const renderPagamentoItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.alunoName}>{item.nome}</Text>
+      <Text style={styles.info}>Plano: {item.status_pagamento || 'N/A'}</Text>
+      <Text style={styles.info}>ID Transação: {item.id_transacao || 'N/A'}</Text>
+      <Text style={styles.info1}>Pagamento Realizado em: {item.formattedCreatedDate}</Text>
+      <Text style={styles.info2}>Próximo Pagamento em: {item.formattedEndDate}</Text>
+    </View>
+  );
+  
   
     return (
       <SafeAreaView style={styles.container}>
@@ -154,6 +162,8 @@ const styles = StyleSheet.create({
   },
   alunoName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   info: { fontSize: 14, color: '#666', marginTop: 4 },
+  info1: { fontSize: 14, color: 'green', marginTop: 4 },
+  info2: { fontSize: 14, color: 'red', marginTop: 4 },
   emptyState: { alignItems: 'center', marginTop: 50 },
   emptyText: { fontSize: 16, color: '#888' },
 });

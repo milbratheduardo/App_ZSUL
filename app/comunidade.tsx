@@ -17,6 +17,7 @@ const Community = () => {
         { id: '1', title: 'Novidades na Comunidade', icon: 'newspaper-o', description: 'Fique por dentro das novidades e eventos.', route: '/news_comunidade' },
         { id: '2', title: 'Contato dos Profissionais', icon: 'address-book', description: 'Entre em contato com os profissionais do time.', route: '/profissionais_contact' },
         { id: '3', title: 'Administração', icon: 'building', description: 'Entre em contato com o departamento administrativo.', route: null },
+        { id: '4', title: 'Grupo de Pais', icon: 'users', description: 'Grupo dedicado aos pais e responsáveis.', route: '/parents_group' },
       ];
     } else if (user.role === 'profissional') {
       return [

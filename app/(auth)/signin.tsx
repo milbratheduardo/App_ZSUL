@@ -83,7 +83,7 @@ const SignIn = () => {
       setTimeout(() => {
         setIsSubmitting(false);
         router.replace('/turmas');
-      }, 3000);
+      }, 1000);
     } catch (error) {
       setHasError(true);
       if (error.message.includes('Invalid credentials')) {
@@ -97,7 +97,7 @@ const SignIn = () => {
     } finally {
       setTimeout(() => {
         setIsSubmitting(false);
-      }, 3000);
+      }, 1000);
     }
   };
 
@@ -111,7 +111,7 @@ const SignIn = () => {
     const templateParams = {
       email: recoveryEmail,
       assunto: 'Recuperação de Senha',
-      descricao: 'Solicitação para redefinição de senha.'
+      descricao: `Solicitação para redefinição de senha. ${recoveryEmail}`
     };
 
     try {
@@ -266,7 +266,7 @@ const SignIn = () => {
           }}>
             <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 10 }}>Recuperar Senha</Text>
             {emailSent ? (
-              <Text style={{ color: 'green', marginBottom: 20 }}>Email enviado com sucesso!</Text>
+              <Text style={{ color: 'green', marginBottom: 20 }}>Email enviado com sucesso! Você receberá uma resposta em instantes.</Text>
             ) : (
               <>
                 <TextInput

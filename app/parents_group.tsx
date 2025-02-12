@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getAllTurmas } from '@/lib/appwrite';
+import { getAllTurmas, getAlunosByTurmaId, getAllResponsaveis } from '@/lib/appwrite';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const ParentsGroup = () => {
@@ -20,13 +20,39 @@ const ParentsGroup = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await getAllTurmas();
-      const filteredData = response.filter(
-        turma =>
-          turma.profissionalId.includes(user.userId) // Verifica se o user.userId está contido em turma.profissionalId
-      );
-      setTurmas(filteredData);
+      let filteredTurmas = [];
+  
+      const allTurmas = await getAllTurmas();
+  
+      if (user.admin === 'admin') {
+        filteredTurmas = allTurmas; 
+      } else if (user.role === 'profissional') {
+        filteredTurmas = allTurmas.filter((turma) =>
+          turma.profissionalId.includes(user.userId)
+        );
+      } else if (user.role === 'responsavel') {
+        const responsaveis = await getAllResponsaveis();
+        const currentResponsavel = responsaveis.find(
+          (resp) => resp.userId === user.userId
+        );
+  
+        if (currentResponsavel) {
+          const cpf = currentResponsavel.cpf;
+          const alunosPromises = allTurmas.map((turma) =>
+            getAlunosByTurmaId(turma.$id)
+          );
+  
+          const allAlunos = await Promise.all(alunosPromises);
+  
+          filteredTurmas = allTurmas.filter((turma, index) =>
+            allAlunos[index].some((aluno) => aluno.nomeResponsavel === cpf)
+          );
+        }
+      }
+  
+      setTurmas(filteredTurmas);
     } catch (error) {
+      console.error('Erro ao buscar turmas:', error);
       setErrorMessage(`Erro.`);
       setShowErrorModal(true);
     } finally {

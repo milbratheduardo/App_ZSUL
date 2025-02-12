@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TextInput, Alert, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAllAlunos, getAllUsers } from '@/lib/appwrite'; // Funções necessárias
+import { getAllAlunos, getAllUsers, getEventsConfirmados, getAllResponsaveis, getAllProfissionais } from '@/lib/appwrite'; // Funções necessárias
 import { useLocalSearchParams } from 'expo-router'; // Para pegar os parâmetros passados via navegação
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -16,7 +16,7 @@ const VerConfirmados = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   // Pegando os parâmetros passados via navegação
-  const { confirmados: confirmadosParam, eventTitle } = useLocalSearchParams();
+  const { confirmados: confirmadosParam, eventTitle, eventId } = useLocalSearchParams();
 
   useEffect(() => {
     fetchData();
@@ -24,21 +24,34 @@ const VerConfirmados = () => {
 
   const fetchData = async () => {
     try {
-
-      const allAlunos = await getAllAlunos();
-      const allUsers = await getAllUsers();
-
+      const confirmadosIds = await getEventsConfirmados(eventId);
   
-      if (confirmadosParam) {
-        const confirmadosIds = confirmadosParam.split(',');
-       
+      if (confirmadosIds.length > 0) {
+        const allUsers = await getAllUsers();
+        const responsaveis = await getAllResponsaveis();
+        const alunos = await getAllAlunos();
+        const profissionais = await getAllProfissionais();
   
-        const confirmadosAlunos = allAlunos.filter((aluno) => confirmadosIds.includes(aluno.userId));
-        const confirmadosUsers = allUsers.filter((user) => confirmadosIds.includes(user.userId));
+        const confirmadosData = confirmadosIds.map((userId) => {
+          const user = allUsers.find((u) => u.userId === userId);
   
-
+          if (!user) return null;
   
-        setFilteredConfirmados([...confirmadosAlunos, ...confirmadosUsers]);
+          if (user.role === 'responsavel') {
+            const responsavel = responsaveis.find((r) => r.userId === userId);
+            return responsavel ? { userId, nome: responsavel.nome, role: 'responsavel' } : null;
+          } else if (user.role === 'atleta') {
+            const aluno = alunos.find((a) => a.userId === userId);
+            return aluno ? { userId, nome: aluno.nome, role: 'atleta' } : null;
+          } else if (user.role === 'profissional') {
+            const profissional = profissionais.find((p) => p.userId === userId);
+            return profissional ? { userId, nome: profissional.nome, role: 'profissional' } : null;
+          }
+  
+          return null;
+        });
+  
+        setFilteredConfirmados(confirmadosData.filter((item) => item !== null));
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -47,20 +60,19 @@ const VerConfirmados = () => {
     }
   };
   
-
+  
   const handleSearch = (text) => {
     setSearchQuery(text);
     if (text === '') {
-      setFilteredConfirmados([...alunos, ...users].filter((item) => confirmadosParam.split(',').includes(item.$id)));
+      fetchData(); // Recarregar a lista completa se a pesquisa estiver vazia
     } else {
-      const filtered = [...alunos, ...users].filter(
-        (item) =>
-          item.username.toLowerCase().includes(text.toLowerCase()) &&
-          confirmadosParam.split(',').includes(item.$id)
+      const filtered = filteredConfirmados.filter((item) =>
+        item.nome.toLowerCase().includes(text.toLowerCase())
       );
       setFilteredConfirmados(filtered);
     }
   };
+  
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
@@ -81,23 +93,24 @@ const VerConfirmados = () => {
         }}
       />
 
-      <FlatList
-        data={filteredConfirmados}
-        keyExtractor={(item) => item.$id.toString()}
-        renderItem={({ item }) => (
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              padding: 10,
-              backgroundColor: 'white',
-            }}
-          >
-            <Text>{item.email}</Text>
-            <Text style={{ fontSize: 18 }}>{'✓'}</Text>
-          </View>
-        )}
-      />
+          <FlatList
+            data={filteredConfirmados}
+            keyExtractor={(item, index) => item.userId || index.toString()}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  padding: 10,
+                  backgroundColor: 'white',
+                }}
+              >
+                <Text>{item.nome}</Text>
+                <Text style={{ fontSize: 18 }}>{'✓'}</Text>
+              </View>
+            )}
+          />
+
              <Modal
                 visible={showErrorModal}
                 transparent={true}

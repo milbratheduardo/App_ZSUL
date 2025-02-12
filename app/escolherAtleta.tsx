@@ -141,6 +141,7 @@ const EscolherAtleta = () => {
             </Text>
           </TouchableOpacity>
         )}
+        contentContainerStyle={{ paddingBottom: 25 }}
       />
 
       <View style={styles.buttonContainer}>
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 20
   },
   modalOverlay: {
     flex: 1,
