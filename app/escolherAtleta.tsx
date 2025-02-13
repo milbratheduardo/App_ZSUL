@@ -60,8 +60,7 @@ const EscolherAtleta = () => {
       }
 
   
-      setAlunos(alunosFiltrados);
-      setFilteredAlunos(alunosFiltrados.slice(0, 10)); // Exibir os primeiros 10 alunos
+      setAlunos(alunosFiltrados); // Exibir os primeiros 10 alunos
     } catch (error) {
       setErrorMessage(`Não foi possível carregar os alunos.`);
       setShowErrorModal(true);
@@ -95,7 +94,6 @@ const EscolherAtleta = () => {
       setShowErrorModal(true);
     }
   };
-  
 
 
   return (
@@ -115,6 +113,7 @@ const EscolherAtleta = () => {
             Dia1: turma.Dia1,
             Dia2: turma.Dia2,
             Dia3: turma.Dia3,
+            Sub: turma.Sub,
             MaxAlunos: turma.MaxAlunos,
           }}
         />
@@ -125,7 +124,7 @@ const EscolherAtleta = () => {
       <Text style={styles.subtitle}>Selecione os Atletas</Text>
 
       <FlatList
-        data={filteredAlunos}
+        data={alunos}
         keyExtractor={(item) => item.userId.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity

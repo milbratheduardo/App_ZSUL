@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ScrollView,Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,9 +19,27 @@ const Dashboard = () => {
   const [showPicker, setShowPicker] = useState(false);
   const [totalEventos, setTotalEventos] = useState(0); // Total de eventos
   const [eventosDoMes, setEventosDoMes] = useState(0); // Eventos do mês
+  const [modalVisible, setModalVisible] = useState(false); // Estado para controlar o modal
+  const [presentes, setPresentes] = useState([]);
 
+  const alunos = [
+    { userId: '1', nome: 'Eventos Totais' },
+    { userId: '2', nome: 'Eventos Mensal 2' },
+    { userId: '3', nome: 'Numero de Atletas' },
+    { userId: '4', nome: 'Eventos Totais' },
+    { userId: '5', nome: 'Eventos Mensal 2' },
+    { userId: '6', nome: 'Numero de Atletas' },
+    { userId: '7', nome: 'Eventos Totais' },
+    { userId: '8', nome: 'Eventos Mensal 2' },
+    { userId: '9', nome: 'Numero de Atletas' },
+  ];
 
-
+  const handleSelectAluno = (userId) => {
+    setPresentes((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+  
   const handleDateChange = (event, date) => {
     if (date) {
       setSelectedDate(date);
@@ -135,8 +153,9 @@ const Dashboard = () => {
   
 
   const options = [
-    { title: 'Características dos Alunos', icon: 'users', route: '/students' },
-    { title: 'Alunos', icon: 'user-circle', route: '/alunos_stats' },
+    /*{ title: 'Características dos Alunos', icon: 'users', route: '/students' }, //Relatorio*/
+    { title: 'Alunos', icon: 'user-circle', route:'/history'  }, // antigo caminho '/alunos_stats'
+    { title: 'Turmas', icon: 'group', route: '/all_turmas' },
     { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/dash_treinos' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
     { title: 'Eventos e Jogos', icon: 'trophy', route: '/lista_eventos' },
@@ -171,13 +190,23 @@ const Dashboard = () => {
 
       <ScrollView contentContainerStyle={styles.dashboardContent}>
         
-        <View style={styles.summaryCard}>
-          <TouchableOpacity style={styles.calendarButton} onPress={() => setShowPicker(true)}>
-            <Icon name="calendar" size={20} color="#126046" />
-            <Text style={styles.calendarText}>{formatMonthYear(selectedDate)}</Text>
-          </TouchableOpacity>
-          <View style={styles.summaryContent}>
-            <View style={styles.summaryItem}>
+    <View style={styles.summaryCard}>
+      {/* Botão do Calendário e Ícone de Configurações */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity style={styles.calendarButton} onPress={() => console.log('Abrir DatePicker')}>
+          <Icon name="calendar" size={20} color="#126046" />
+          <Text style={styles.calendarText}>Janeiro 2025</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.settingsButton} onPress={() => setModalVisible(true)}>
+          <Icon name="gear" size={20} color="#126046" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Modal de Configuração */}
+        {/* Conteúdo do Resumo dentro do Modal */}
+        <View style={styles.summaryContent}>
+          <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>{totalAlunos}</Text>
             <Text style={styles.summaryLabel}>Total de Alunos</Text>
           </View>
@@ -192,9 +221,40 @@ const Dashboard = () => {
           <View style={styles.summaryItem}>
             <Text style={styles.summaryValue}>{totalEventos}</Text>
             <Text style={styles.summaryLabel}>Total de Eventos</Text>
-            </View>
           </View>
         </View>
+
+      <Modal visible={modalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Quais os dados que você quer visualizar?{"\n"}</Text>
+            
+            <FlatList
+              data={alunos}
+              keyExtractor={(item) => item.userId}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.alunoContainer,
+                    presentes.includes(item.userId) && styles.alunoSelecionado,
+                  ]}
+                  onPress={() => handleSelectAluno(item.userId)}
+                >
+                  <Text style={styles.alunoText}>{presentes.includes(item.userId) ? '✓' : '○'}  {item.nome}{"\n"}</Text>
+
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Salvar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+
+
+
         {showPicker && (
           <DateTimePicker
             value={selectedDate}
@@ -340,4 +400,41 @@ const styles = StyleSheet.create({
   arrowIcon: {
     color: '#126046',
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  settingsButton: {
+    padding: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  closeButton: {
+    padding: 10,
+    backgroundColor: '#126046',
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  
+
 });

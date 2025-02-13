@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { getTreinosPersonalizados, getAllTreinosPersonalizados, getAlunosById } from '@/lib/appwrite';
+import { getTreinosPersonalizados, getAllTreinosPersonalizados, getAlunosById, deleteTreino } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -53,20 +53,28 @@ const DashTreinos = () => {
     Alert.alert('Editar', `Editar treino: ${treino.titulo}`);
   };
 
-  const deleteTreino = (id) => {
+  const handleDelete = (id) => {
     Alert.alert('Confirmação', 'Deseja excluir este treino?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',
         style: 'destructive',
-        onPress: () => {
-          setTreinos(treinos.filter((t) => t.$id !== id));
-          setSuccessMessage('Treino excluído com sucesso!');
-          setShowSuccessModal(true);
+        onPress: async () => {
+          try {
+            await deleteTreino(id); // Chama a função deleteTreino
+            setTreinos(treinos.filter((t) => t.$id !== id)); // Atualiza a lista local
+            setSuccessMessage('Treino excluído com sucesso!');
+            setShowSuccessModal(true);
+          } catch (error) {
+            console.error('Erro ao excluir treino:', error);
+            setErrorMessage('Erro ao excluir o treino.');
+            setShowErrorModal(true);
+          }
         },
       },
     ]);
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,7 +109,7 @@ const DashTreinos = () => {
               </Text>
             )}
             <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => deleteTreino(item.$id)} style={styles.iconButton}>
+              <TouchableOpacity onPress={() => handleDelete(item.$id)} style={styles.iconButton}>
                 <Feather name="trash" size={20} color="red" />
               </TouchableOpacity>
             </View>

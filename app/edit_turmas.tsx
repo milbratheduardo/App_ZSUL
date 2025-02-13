@@ -19,6 +19,7 @@ const EditTurmas = () => {
     Dia3: '',
     Local: '',
     MaxAlunos: '',
+    Sub: '',
     Horario_de_inicio: '',
     Horario_de_termino: ''
   });
@@ -48,6 +49,7 @@ const EditTurmas = () => {
         Dia3: turmaData.Dia3,
         Local: turmaData.Local,
         MaxAlunos: turmaData.MaxAlunos.toString(),
+        Sub: turmaData.Sub,
         Horario_de_inicio: turmaData.Horario_de_inicio,
         Horario_de_termino: turmaData.Horario_de_termino
       });
@@ -76,6 +78,7 @@ const EditTurmas = () => {
       form.Dia1 === '' ||
       form.Local === '' ||
       form.MaxAlunos === '' ||
+      form.Sub === '' ||
       form.Horario_de_inicio === '' ||
       form.Horario_de_termino === ''
     ) {
@@ -84,6 +87,7 @@ const EditTurmas = () => {
       return;
     }
 
+    
     setIsSubmitting(true);
 
     try {
@@ -170,6 +174,24 @@ const EditTurmas = () => {
           keyboardType="numeric"
         />
 
+        <View>
+          <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 5 }}>Turma Sub</Text>
+          <TextInput
+            value={form.Sub}
+            onChangeText={(e) => setForm({ ...form, Sub: e })}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ddd',
+              borderRadius: 8,
+              padding: 12,
+              backgroundColor: '#f9f9f9'
+            }}
+            placeholder="Digite o número categiria"
+            placeholderTextColor="#aaa"
+            keyboardType="numeric"
+          />
+        </View>
+
         <Text style={styles.label}>Horário de Início</Text>
         <TouchableOpacity
           onPress={() => setShowInicioPicker(true)}
@@ -239,7 +261,7 @@ const EditTurmas = () => {
 
 const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700', marginBottom: 20 },
-  label: { fontSize: 16, fontWeight: '600', marginBottom: 5 },
+  label: { fontSize: 16, fontWeight: '600', marginBottom: 10 },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',

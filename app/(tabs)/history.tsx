@@ -171,6 +171,7 @@ const History = () => {
           />
         </View>
 
+
         {filteredAlunos.length === 0 ? (
           <Text style={styles.noAlunosText}>Alunos</Text>
         ) : (

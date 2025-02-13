@@ -153,6 +153,7 @@ const Turmas = () => {
               Dia2: item.Dia2,
               Dia3: item.Dia3,
               Local: item.Local,
+              Sub: item.Sub,
               MaxAlunos: item.MaxAlunos,
               Horario_de_inicio: item.Horario_de_inicio,
               Horario_de_termino: item.Horario_de_termino,

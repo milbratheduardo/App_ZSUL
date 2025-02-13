@@ -19,6 +19,7 @@ const CadastroTurma = () => {
     Dia3: '',
     Local: '',
     MaxAlunos: '',
+    Sub: '',
     Horario_de_inicio: '',
     Horario_de_termino: ''
   });
@@ -55,6 +56,7 @@ const CadastroTurma = () => {
       form.Dia1 === '' ||
       form.Local === '' ||
       form.MaxAlunos === '' ||
+      form.Sub === '' ||
       form.Horario_de_inicio === '' ||
       form.Horario_de_termino === ''
     ) {
@@ -74,6 +76,7 @@ const CadastroTurma = () => {
         form.Dia3,
         form.Local,
         form.MaxAlunos,
+        form.Sub,
         form.Horario_de_inicio,
         form.Horario_de_termino
       );
@@ -88,6 +91,7 @@ const CadastroTurma = () => {
         Dia3: '',
         Local: '',
         MaxAlunos: '',
+        Sub: '',
         Horario_de_inicio: '',
         Horario_de_termino: ''
       });
@@ -241,6 +245,24 @@ const CadastroTurma = () => {
           <TextInput
             value={form.MaxAlunos}
             onChangeText={(e) => setForm({ ...form, MaxAlunos: e })}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ddd',
+              borderRadius: 8,
+              padding: 12,
+              backgroundColor: '#f9f9f9'
+            }}
+            placeholder="Digite o número de vagas"
+            placeholderTextColor="#aaa"
+            keyboardType="numeric"
+          />
+        </View>
+
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 5 }}>Turma Sub</Text>
+          <TextInput
+            value={form.Sub}
+            onChangeText={(e) => setForm({ ...form, Sub: e })}
             style={{
               borderWidth: 1,
               borderColor: '#ddd',

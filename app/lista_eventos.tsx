@@ -135,7 +135,7 @@ const ListarEventos = () => {
                   onPress={clearFilters}
                   style={styles.clearFilterButton}
                 >
-                  <Text style={styles.clearFilterText}>X</Text>
+                  <Text style={styles.clearFilterText}>Todos Meses</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     color: '#126046',
   },
   clearFilterButton: {
-    backgroundColor: '#D30A0C',
+    backgroundColor: 'green',
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 12,

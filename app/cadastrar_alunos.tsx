@@ -163,6 +163,7 @@ const CadastrarAlunos = () => {
             Dia1: turma.Dia1,
             Dia2: turma.Dia2,
             Dia3: turma.Dia3,
+            Sub: turma.Sub,
             MaxAlunos: turma.MaxAlunos,
           }}
         />

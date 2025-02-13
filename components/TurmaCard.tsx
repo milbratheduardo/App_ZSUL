@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { getAlunosByTurmaId } from '@/lib/appwrite';
 import { router } from 'expo-router';
 
-const TurmasCard = ({ turma: { turmaId, title, Horario_de_inicio, Local, Dia1, Dia2, Dia3, Horario_de_termino, MaxAlunos } }) => {
+const TurmasCard = ({ turma: { turmaId, title, Horario_de_inicio, Local, Dia1, Dia2, Dia3, Sub, Horario_de_termino, MaxAlunos } }) => {
   const [vagasDisponiveis, setVagasDisponiveis] = useState();
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const TurmasCard = ({ turma: { turmaId, title, Horario_de_inicio, Local, Dia1, D
             </View>
           </View>
         </View>
-
+        <Text style={styles.additionalInfo}>Sub {Sub}</Text>
         <Text style={styles.additionalInfo}>Dias: {Dia1} | {Dia2} | {Dia3}</Text>
         <Text style={styles.additionalInfo}>Local: {Local}</Text>
       </View>

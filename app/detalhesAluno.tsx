@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Image, ImageBackground, Modal, Dimensions } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { getAlunosById, getAllTurmas } from '@/lib/appwrite';
+import { getAlunosById, getAllTurmas, updateAlunoTurma } from '@/lib/appwrite';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -54,6 +54,30 @@ const detalhesAluno = () => {
     router.push(`/edit_card_aluno?alunoId=${alunoId}`);
   };
 
+  const handleInfo = () => {
+    router.push(`/info_geral_aluno?alunoId=${alunoId}`);
+  };
+  const handleDesvincular = async () => {
+    if (!aluno?.turmaId) {
+      setErrorMessage("Este atleta não pertence a nenhuma turma.");
+      setShowErrorModal(true);
+      return;
+    }
+  
+    try {
+      // Função para fazer o update da turmaId para null
+      await updateAlunoTurma(alunoId); 
+      setAluno({ ...aluno, turmaId: null, turmaTitle: "Nenhuma Turma" });
+  
+      setSuccessMessage("Aluno desvinculado da turma com sucesso.");
+      setShowSuccessModal(true);
+    } catch (error) {
+      setErrorMessage("Erro ao desvincular o aluno da turma.");
+      setShowErrorModal(true);
+    }
+  };
+  
+
   const calculateAge = (birthDate) => {
     const [day, month, year] = birthDate.split('/').map(Number);
     const birth = new Date(year, month - 1, day);
@@ -73,15 +97,17 @@ const detalhesAluno = () => {
     <View style={styles.screenContainer}>
       {user.role == 'profissional' && (
         <>
-      <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-        <Icon name="edit" size={18} color="#FFFFFF" />
-        <Text style={styles.editButtonText}>Editar Card</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+          <Icon name="edit" size={18} color="#FFFFFF" />
+          <Text style={styles.editButtonText}>Editar Card</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.editButton1}>
-        <Icon name="remove" size={18} color="#FFFFFF" />
-        <Text style={styles.editButtonText}>Disvincular Aluno</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.editButton1} onPress={handleDesvincular}>
+          <Icon name="remove" size={18} color="#FFFFFF" />
+          <Text style={styles.editButtonText}>Desvincular Aluno</Text>
+        </TouchableOpacity>
+      </View>
       </>
       )}
       <View style={styles.cardContainer}>
@@ -94,6 +120,7 @@ const detalhesAluno = () => {
           <Text style={styles.position}>{aluno.posicao}</Text>
 
           <Text style={styles.turmaText}>Turma: {aluno.turmaTitle || 'Nenhuma Turma'}</Text>
+          
 
           <View style={styles.imageContainer}>
             <Image 
@@ -126,7 +153,7 @@ const detalhesAluno = () => {
             <View style={styles.column}>
               <View style={styles.infoItem}>
                 <Icon name="birthday-cake" size={18} color="#FFFFFF" />
-                <Text style={styles.attributeText}>Idade: {calculateAge(aluno.birthDate)} anos</Text>
+                <Text style={styles.attributeText}>Idade: {aluno.birthDate}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Icon name="soccer-ball-o" size={18} color="#FFFFFF" />
@@ -189,7 +216,7 @@ const detalhesAluno = () => {
                   </View>
                 </View>
               </Modal>
-              <TouchableOpacity style={styles.editButton2}>
+              <TouchableOpacity style={styles.editButton2} onPress={handleInfo}>
               <Icon name="info" size={18} color="#FFFFFF" />
               <Text style={styles.editButtonText}>Info Geral</Text>
             </TouchableOpacity>
@@ -202,6 +229,11 @@ const detalhesAluno = () => {
 export default detalhesAluno;
 
 const styles = StyleSheet.create({
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,6 +247,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
+    marginRight: 10
   },
   editButton1: {
     flexDirection: 'row',
@@ -244,6 +277,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
+    width: 300
   },
   editButtonText: {
     color: '#FFFFFF',
@@ -307,6 +341,16 @@ const styles = StyleSheet.create({
   turmaText: {
     position: 'absolute',
     top: '20%',
+    left: '10%',
+    fontSize: 12,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginTop: 2,
+    fontWeight: 'light',
+  },
+  anotext: {
+    position: 'absolute',
+    top: '62%',
     left: '10%',
     fontSize: 12,
     color: '#FFFFFF',

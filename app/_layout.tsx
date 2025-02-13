@@ -103,6 +103,7 @@ const RootLayout = () => {
         <Stack.Screen name="pagamentos_atuais" options={{headerShown: false}} />
         <Stack.Screen name="historico_pagamentos" options={{headerShown: false}} />
         <Stack.Screen name="edit_turmas" options={{headerShown: false}} />
+        <Stack.Screen name="info_geral_aluno" options={{headerShown: false}} />
 
 
 

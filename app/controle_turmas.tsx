@@ -146,8 +146,8 @@ const toggleDeleteTurma = () => {
     'meia-central': { abbreviation: 'MC', color: '#32CD32' },
     'meia-ofensivo': { abbreviation: 'MO', color: '#32CD32' },
     'meia-defensivo': { abbreviation: 'MD', color: '#32CD32' },
-    'ponta direita': { abbreviation: 'PD', color: '#FF6347' },
-    'ponta esquerda': { abbreviation: 'PE', color: '#FF6347' },
+    'ponta-direita': { abbreviation: 'PD', color: '#FF6347' },
+    'ponta-esquerda': { abbreviation: 'PE', color: '#FF6347' },
     'centroavante': { abbreviation: 'CA', color: '#FF6347' },
   };
 
@@ -190,6 +190,7 @@ const toggleDeleteTurma = () => {
               Dia1: turma.Dia1,
               Dia2: turma.Dia2,
               Dia3: turma.Dia3,
+              Sub: turma.Sub,
               MaxAlunos: turma.MaxAlunos,
             }}
           />

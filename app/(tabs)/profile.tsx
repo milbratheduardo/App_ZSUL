@@ -28,9 +28,8 @@ const Profile = () => {
   } else if (user.role === 'profissional') {
     navigationOptions = [
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
-      { title: 'Metodologia de Trabalho', icon: 'book', route: '/metodologia' },
       { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
-      { title: 'Turmas', icon: 'group', route: '/all_turmas' },
+      { title: 'Criar Metodologia de Trabalho', icon: 'book', route: '/metodologia' },
       { title: 'Criar Treinos Personalizados', icon: 'heartbeat', route: '/personalize_training' },
       { title: 'Dashboard', icon: 'line-chart', route: '/dashboard' },
     ];

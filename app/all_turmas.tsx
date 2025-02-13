@@ -89,6 +89,7 @@ const TurmasList = () => {
               Dia3: item.Dia3,
               Local: item.Local,
               MaxAlunos: item.MaxAlunos,
+              Sub: item.Sub,
               Horario_de_inicio: item.Horario_de_inicio,
               Horario_de_termino: item.Horario_de_termino,
             }}
