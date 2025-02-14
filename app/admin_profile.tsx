@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 const AdminOptions = () => {
   const { user } = useGlobalContext();
+    const router = useRouter();
 
   // Verifica se o usuário é administrador
   if (user.admin !== 'admin') {
@@ -24,13 +26,32 @@ const AdminOptions = () => {
   // Opções de navegação para administradores
   const adminOptions = [
     { title: 'Gerenciar Usuários', icon: 'users-cog', route: '/gerenciar_usuarios' },
-    { title: 'Vincular Profissional', icon: 'user-plus', route: '/vincular_prof' },
-    { title: 'Pagamentos Recentes', icon: 'wallet', route: '/pagamentos_atuais' },
+    { title: 'Vincular Profissional', icon: 'user', route: '/vincular_prof' },
+    { title: 'Controle de Faturamento', icon: 'wallet', route: '/pagamentos_atuais' },
     { title: 'Histórico de Pagamentos', icon: 'history', route: '/historico_pagamentos' },
+    {
+      title: 'Cadastrar novo Atleta',
+      icon: 'user-plus',
+      action: () => {
+        router.push({
+          pathname: '/signup',
+          params: { role: 'atleta', cpf: '000.000.000-10'},
+        });
+      }
+    },
   ];
 
-  const renderOption = ({ item }: { item: { title: string; icon: string; route: string } }) => (
-    <TouchableOpacity style={styles.optionContainer} onPress={() => router.push(item.route)}>
+  const renderOption = ({ item }: { item: { title: string; icon: string; route?: string; action?: () => void } }) => (
+    <TouchableOpacity
+      style={styles.optionContainer}
+      onPress={() => {
+        if (item.action) {
+          item.action();  // Executa a função personalizada
+        } else if (item.route) {
+          router.push(item.route);  // Redireciona para a rota padrão
+        }
+      }}
+    >
       <View style={styles.optionContent}>
         <FontAwesome5 name={item.icon} size={24} style={styles.optionIcon} />
         <Text style={styles.optionText}>{item.title}</Text>
@@ -38,6 +59,7 @@ const AdminOptions = () => {
       <FontAwesome5 name="angle-right" size={16} style={styles.arrowIcon} />
     </TouchableOpacity>
   );
+  
 
   return (
     <SafeAreaView style={styles.container}>

@@ -54,7 +54,7 @@ const TurmasCard = ({ turma: { turmaId, title, Horario_de_inicio, Local, Dia1, D
             </View>
           </View>
         </View>
-        <Text style={styles.additionalInfo}>Sub {Sub}</Text>
+        <Text style={styles.additionalInfo}>Categoria: Sub - {Sub}</Text>
         <Text style={styles.additionalInfo}>Dias: {Dia1} | {Dia2} | {Dia3}</Text>
         <Text style={styles.additionalInfo}>Local: {Local}</Text>
       </View>

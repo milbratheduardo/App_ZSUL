@@ -579,7 +579,7 @@ const submitAtleta = async () => {
               value={form.nomeResponsavel}
               handleChangeText={(e) => setForm({ ...form, nomeResponsavel: e })}
               maskType={'cpf'}
-              editable={!cpf} // Bloqueia edição se 'cpf' estiver definido
+              editable={!cpf}
               style={cpf ? { backgroundColor: '#e0e0e0' } : {}} // Altera o estilo para indicar bloqueio
             />
 

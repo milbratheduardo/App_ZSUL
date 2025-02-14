@@ -194,7 +194,7 @@ const PagamentosAtuais = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.headerText}>Pagamentos Atuais</Text>
+      <Text style={styles.headerText}>Controle de Faturamento</Text>
 
       <TextInput
         style={styles.searchBar}

@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, RefreshControl, Modal } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, RefreshControl, Modal, ScrollView } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider'; 
@@ -6,6 +6,7 @@ import { getAllTurmas, getAlunosByTurmaId, getAllAlunos, getTurmaById } from '@/
 import { images } from '@/constants'; 
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import CustomButton from '@/components/CustomButton';
 
 const History = () => {
   const { user } = useGlobalContext();
@@ -17,6 +18,12 @@ const History = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [availablePositions, setAvailablePositions] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedPosition, setSelectedPosition] = useState(null);
+  const [isAlphabetical, setIsAlphabetical] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -78,7 +85,8 @@ const History = () => {
         }
       }
       
-  
+      alunosData.sort((a, b) => a.nome.localeCompare(b.nome));
+      
       setAlunos(alunosData);
       setFilteredAlunos(alunosData);
     } catch (error) {
@@ -86,6 +94,38 @@ const History = () => {
       setShowErrorModal(true);
     }
   }, [user]);
+
+  const extractFilterOptions = (alunos) => {
+    const years = [...new Set(alunos.map((aluno) => aluno.birthDate.split('/')[2]))]; // Extrai os anos
+    const positions = [...new Set(alunos.map((aluno) => aluno.posicao).filter(Boolean))]; // Extrai posições únicas
+    setAvailableYears(years.sort()); // Ordena os anos
+    setAvailablePositions(positions);
+  };
+  
+  const applyFilters = () => {
+    let filtered = alunos;
+  
+    if (selectedYear) {
+      filtered = filtered.filter((aluno) => aluno.birthDate.includes(selectedYear));
+    }
+  
+    if (selectedPosition) {
+      filtered = filtered.filter((aluno) => aluno.posicao === selectedPosition);
+    }
+  
+
+      filtered = filtered.sort((a, b) => a.nome.localeCompare(b.nome));
+    
+  
+    setFilteredAlunos(filtered);
+    setShowFilterModal(false);
+  };
+  
+  useEffect(() => {
+    if (alunos.length > 0) {
+      extractFilterOptions(alunos);
+    }
+  }, [alunos]);
   
   
 
@@ -160,9 +200,9 @@ const History = () => {
         </View>
 
         <View style={styles.searchContainer}>
-          <TouchableOpacity style={styles.filterButton}>
-            <MaterialCommunityIcons name="filter-outline" size={24} color="gray" />
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilterModal(true)}>
+          <MaterialCommunityIcons name="filter-outline" size={24} color="gray" />
+        </TouchableOpacity>
           <TextInput
             placeholder="Pesquisar por nome do atleta"
             value={searchText}
@@ -186,6 +226,41 @@ const History = () => {
           />
         )}
       </View>
+
+
+      <Modal visible={showFilterModal} transparent={true} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Filtrar Alunos</Text>
+
+            <Text style={styles.filterLabel}>Ano de Nascimento:</Text>
+            <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingVertical: 8 }}>
+              {availableYears.map((year) => (
+                <TouchableOpacity key={year} onPress={() => setSelectedYear((prev) => (prev === year ? null : year))}>
+                  <Text style={[styles.filterOption, selectedYear === year && styles.selectedOption]}>
+                    {year}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <Text style={styles.filterLabel}>Posição:</Text>
+            <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingVertical: 8 }}>
+              {availablePositions.map((position) => (
+                <TouchableOpacity key={position} onPress={() => setSelectedPosition((prev) => (prev === position ? null : position))}>
+                  <Text style={[styles.filterOption, selectedPosition === position && styles.selectedOption]}>
+                    {position}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <CustomButton title="Aplicar Filtros" containerStyles="mt-5 pt-2 pb-2" handlePress={applyFilters} />
+          </View>
+        </View>
+      </Modal>
+
+
       <Modal
               visible={showErrorModal}
               transparent={true}
@@ -241,6 +316,46 @@ const styles = StyleSheet.create({
     width: 115,
     height: 90,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    maxHeight: '80%',  
+  },
+  scrollView: {
+    maxHeight: 150,  
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  filterLabel: {
+    fontSize: 16,
+    marginVertical: 8,
+    fontWeight: 'bold',
+  },
+  filterOption: {
+    fontSize: 16,
+    padding: 10,
+    borderRadius: 5,
+  },
+  selectedOption: {
+    backgroundColor: '#126046',
+    color: '#fff',
+  },
+  toggleOption: {
+    marginTop: 16,
+  },  
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',

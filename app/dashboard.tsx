@@ -23,15 +23,7 @@ const Dashboard = () => {
   const [presentes, setPresentes] = useState([]);
 
   const alunos = [
-    { userId: '1', nome: 'Eventos Totais' },
-    { userId: '2', nome: 'Eventos Mensal 2' },
-    { userId: '3', nome: 'Numero de Atletas' },
-    { userId: '4', nome: 'Eventos Totais' },
-    { userId: '5', nome: 'Eventos Mensal 2' },
-    { userId: '6', nome: 'Numero de Atletas' },
-    { userId: '7', nome: 'Eventos Totais' },
-    { userId: '8', nome: 'Eventos Mensal 2' },
-    { userId: '9', nome: 'Numero de Atletas' },
+    { userId: '1', nome: ' Disponível na próxima atualização' },
   ];
 
   const handleSelectAluno = (userId) => {
@@ -246,7 +238,7 @@ const Dashboard = () => {
               )}
             />
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>Salvar</Text>
+              <Text style={styles.closeButtonText}>Sair</Text>
             </TouchableOpacity>
           </View>
         </View>
