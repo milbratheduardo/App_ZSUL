@@ -4,14 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAllTurmas } from '@/lib/appwrite';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import EmptyState from '@/components/EmptyState';
-import TurmasCard from '@/components/TurmaCard';
+import TurmasCard3 from '@/components/TurmaCard3';
 import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
     
-const TurmasList = () => {
+const SelectTurma = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,8 +116,6 @@ const TurmasList = () => {
           <Icon name="shield" size={50} color="#126046" style={styles.teamLogo} />
         </View>
       </View>
-
-      
       <View style={styles.buttonRow}>
   <TouchableOpacity 
     style={styles.actionButton} 
@@ -139,13 +137,11 @@ const TurmasList = () => {
           </Text>
         </TouchableOpacity>
       </View>
-
-
       <FlatList
         data={filteredData}
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (
-          <TurmasCard turma={{
+          <TurmasCard3 turma={{
             turmaId: item.$id,
             title: item.title,
             Qtd_Semana: item.Qtd_Semana,
@@ -168,50 +164,45 @@ const TurmasList = () => {
         }
       />
 
-      <Modal 
-        visible={showFilterModal} 
-        transparent={true} 
-        animationType="slide"
-        onRequestClose={() => setShowFilterModal(false)} // Fecha ao pressionar "voltar" no Android
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowFilterModal(false)}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filtrar Turmas</Text>
+<Modal 
+  visible={showFilterModal} 
+  transparent={true} 
+  animationType="slide"
+  onRequestClose={() => setShowFilterModal(false)} // Fecha ao pressionar "voltar" no Android
+>
+  <Pressable style={styles.modalOverlay} onPress={() => setShowFilterModal(false)}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>Filtrar Turmas</Text>
 
-          <Text style={styles.filterLabel}>Local:</Text>
-          <View style={styles.filterOptionsContainer}>
-            {availableLocals.map((local) => (
-              <TouchableOpacity key={local} onPress={() => toggleLocalFilter(local)}>
-                <Text style={[
-                  styles.filterOption,
-                  selectedLocal === local && styles.selectedOption
-                ]}>
-                  {local}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <Text style={styles.filterLabel}>Local:</Text>
+      {availableLocals.map((local) => (
+        <TouchableOpacity key={local} onPress={() => toggleLocalFilter(local)}>
+          <Text style={[
+            styles.filterOption,
+            selectedLocal === local && styles.selectedOption
+          ]}>
+            {local}
+          </Text>
+        </TouchableOpacity>
+      ))}
 
-          <Text style={styles.filterLabel}>Dia da Semana:</Text>
-          <View style={styles.filterOptionsContainer}>
-            {availableDays.map((day) => (
-              <TouchableOpacity key={day} onPress={() => toggleDayFilter(day)}>
-                <Text style={[
-                  styles.filterOption,
-                  selectedDay === day && styles.selectedOption
-                ]}>
-                  {day}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <CustomButton title="Aplicar" containerStyles="mt-5 pr-5 pl-5 pt-2 pb-2" handlePress={applyFilters} />
-        </View>
+      <Text style={styles.filterLabel}>Dia da Semana:</Text>
+      {availableDays.map((day) => (
+        <TouchableOpacity key={day} onPress={() => toggleDayFilter(day)}>
+          <Text style={[
+            styles.filterOption,
+            selectedDay === day && styles.selectedOption
+          ]}>
+            {day}
+          </Text>
+        </TouchableOpacity>
+      ))}
 
-        </Pressable>
+      <CustomButton title="Aplicar" containerStyles="mt-5 pr-5 pl-5 pt-2 pb-2" handlePress={applyFilters} />
+    </View>
+  </Pressable>
 
-      </Modal>
-
+</Modal>
       <Modal
         visible={showErrorModal}
         transparent={true}
@@ -261,193 +252,193 @@ const TurmasList = () => {
   );
 };
 
-export default TurmasList;
+export default SelectTurma;
 
 const styles = StyleSheet.create({
-  container: {
+    container: {
+      flex: 1,
+      backgroundColor: '#F9FAFB',
+    },
+    editButton2: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop:20,
+      marginBottom: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      backgroundColor: 'blue', // Verde escuro
+      borderRadius: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+      width: 300,
+      marginLeft: 30
+    },
+     modalOverlay: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  editButton2: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
-    marginTop:20,
-    marginBottom: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: 'blue', // Verde escuro
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    width: 300,
-    marginLeft: 30
+    alignItems: 'center',
   },
-   modalOverlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-modalContent: {
-  backgroundColor: '#fff',
-  padding: 20,
-  borderRadius: 10,
-  width: '80%',
-},
-modalTitle: {
-  fontSize: 20,
-  fontWeight: 'bold',
-  marginBottom: 16,
-  textAlign:"center"
-},
-filterLabel: {
-  fontSize: 16,
-  marginVertical: 8,
-},
-filterOption: {
-  fontSize: 16,
-  padding: 10,
-  borderRadius: 5,
-},
-selectedOption: {
-  backgroundColor: '#126046',
-  color: '#fff',
-},
-  editButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  }, 
-  header: {
+  modalContent: {
+    backgroundColor: '#fff',
     padding: 20,
-    backgroundColor: '#126046',
-    borderBottomWidth: 0,
+    borderRadius: 10,
+    width: '80%',
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  profileDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  headerText: {
-    justifyContent: 'center',
-  },
-  greeting: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  userInfo: {
-    fontSize: 14,
-    color: '#D1FAE5',
-    marginTop: 4,
-  },
-  teamLogo: {
-    marginLeft: 16,
-  },
-  optionsList: {
-    padding: 16,
-  },
-  optionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  optionIcon: {
-    marginRight: 16,
-    color: '#126046',
-  },
-  optionText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
-  arrowIcon: {
-    color: '#126046',
-  },
-
-  buttonRow: {
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    alignItems: 'center',
-    gap: 15, // Espaço entre os botões
-    marginTop: 10,
-  },
-  actionButton: {
-    flexDirection: 'row', 
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#007AFF', // Azul estilo iOS
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    elevation: 5, // Sombra no Android
-    shadowColor: '#000', // Sombra no iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  buttonIcon: {
-    marginRight: 8, // Espaço entre o ícone e o texto
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
+    marginBottom: 16,
+    textAlign:"center"
   },
   filterLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    color: '#555',
+    marginVertical: 8,
   },
   filterOption: {
     fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    marginVertical: 5,
+    padding: 10,
     borderRadius: 5,
-    backgroundColor: '#EEE',
-    textAlign: 'center',
-    width: '100%',
   },
   selectedOption: {
-    backgroundColor: '#007AFF',
-    color: '#FFF',
+    backgroundColor: '#126046',
+    color: '#fff',
   },
-});
+    editButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginLeft: 8,
+    }, 
+    header: {
+      padding: 20,
+      backgroundColor: '#126046',
+      borderBottomWidth: 0,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    profileDetails: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    profileImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      marginRight: 16,
+    },
+    headerText: {
+      justifyContent: 'center',
+    },
+    greeting: {
+      fontSize: 22,
+      fontWeight: '600',
+      color: '#FFFFFF',
+    },
+    userInfo: {
+      fontSize: 14,
+      color: '#D1FAE5',
+      marginTop: 4,
+    },
+    teamLogo: {
+      marginLeft: 16,
+    },
+    optionsList: {
+      padding: 16,
+    },
+    optionContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+      padding: 14,
+      borderRadius: 12,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    optionContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    optionIcon: {
+      marginRight: 16,
+      color: '#126046',
+    },
+    optionText: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: '#333',
+    },
+    arrowIcon: {
+      color: '#126046',
+    },
+
+    buttonRow: {
+      flexDirection: 'row', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      gap: 15, // Espaço entre os botões
+      marginTop: 10,
+    },
+    actionButton: {
+      flexDirection: 'row', 
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#007AFF', // Azul estilo iOS
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+      elevation: 5, // Sombra no Android
+      shadowColor: '#000', // Sombra no iOS
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+    },
+    buttonIcon: {
+      marginRight: 8, // Espaço entre o ícone e o texto
+    },
+    buttonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 15,
+      color: '#333',
+    },
+    filterLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginTop: 10,
+      alignSelf: 'flex-start',
+      color: '#555',
+    },
+    filterOption: {
+      fontSize: 16,
+      paddingVertical: 8,
+      paddingHorizontal: 15,
+      marginVertical: 5,
+      borderRadius: 5,
+      backgroundColor: '#EEE',
+      textAlign: 'center',
+      width: '100%',
+    },
+    selectedOption: {
+      backgroundColor: '#007AFF',
+      color: '#FFF',
+    },
+  });
   

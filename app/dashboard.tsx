@@ -151,7 +151,7 @@ const Dashboard = () => {
     { title: 'Treinos Personalizados', icon: 'heartbeat', route: '/dash_treinos' },
     { title: 'Metodologias', icon: 'book', route: '/methodologies' },
     { title: 'Eventos e Jogos', icon: 'trophy', route: '/lista_eventos' },
-    { title: 'Histórico de Relatórios', icon: 'file-text', route: '/historico_relatorios' }
+    { title: 'Histórico de Relatórios', icon: 'file-text', route: '/select_turma' }
   ];
 
   const renderOption = ({ item }) => (
@@ -190,9 +190,9 @@ const Dashboard = () => {
           <Text style={styles.calendarText}>Janeiro 2025</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingsButton} onPress={() => setModalVisible(true)}>
+        {/*<TouchableOpacity style={styles.settingsButton} onPress={() => setModalVisible(true)}>
           <Icon name="gear" size={20} color="#126046" />
-        </TouchableOpacity>
+        </TouchableOpacity>*/}
       </View>
 
       {/* Modal de Configuração */}

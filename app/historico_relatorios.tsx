@@ -22,6 +22,8 @@ import {
 } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router'; 
+
 
 const HistoricoRelatorios = () => {
   const { user } = useGlobalContext();
@@ -35,62 +37,68 @@ const HistoricoRelatorios = () => {
   const [errorMessage, setErrorMessage] = useState(''); 
   const [showSuccessModal, setShowSuccessModal] = useState(false); 
   const [successMessage, setSuccessMessage] = useState('');
+  const { turmaId } = useLocalSearchParams();
 
   useEffect(() => {
     fetchRelatorios();
   }, []);
 
+  
   const fetchRelatorios = async () => {
     setIsLoading(true);
     try {
-      let response = await getAllRelatorios();
 
-      if (user.admin !== 'admin') {
-        response = response.filter((relatorio) => relatorio.userId === user.userId);
-      }
+    let response = await getAllRelatorios();
 
-      const profissionais = await getAllProfissionais();
+    // Filtra os relatórios de acordo com o user e turmaId
+    response = response.filter((relatorio) => 
+      (user.admin === 'admin' || relatorio.userId === user.userId) &&
+      relatorio.turmaId === turmaId
+    );
 
-      const relatoriosComDetalhes = await Promise.all(
-        response.map(async (relatorio) => {
-          try {
-            const autor = profissionais.find(
-              (profissional) => profissional.userId === relatorio.userId
-            );
+    const profissionais = await getAllProfissionais();
 
-            const turma = await getTurmaById(relatorio.turmaId);
+    const relatoriosComDetalhes = await Promise.all(
+      response.map(async (relatorio) => {
+        try {
+          const autor = profissionais.find(
+            (profissional) => profissional.userId === relatorio.userId
+          );
 
-            const imagens = await Promise.all(
-              relatorio.imagens.map(async (imageId) => {
-                try {
-                  const uri = await getImageUrlTreinos(imageId);
-                  return { id: imageId, uri };
-                } catch {
-                  return null;
-                }
-              })
-            ).then((imgList) => imgList.filter((img) => img !== null));
+          const turma = await getTurmaById(relatorio.turmaId);
 
-            return {
-              ...relatorio,
-              autor: autor ? autor.nome : 'Autor desconhecido',
-              turmaTitle: turma.title || 'Turma desconhecida',
-              imagens,
-            };
-          } catch (error) {
-            return { ...relatorio, autor: 'Erro', turmaTitle: 'Erro', imagens: [] };
-          }
-        })
-      );
+          const imagens = await Promise.all(
+            relatorio.imagens.map(async (imageId) => {
+              try {
+                const uri = await getImageUrlTreinos(imageId);
+                return { id: imageId, uri };
+              } catch {
+                return null;
+              }
+            })
+          ).then((imgList) => imgList.filter((img) => img !== null));
 
-      setRelatorios(relatoriosComDetalhes);
-    } catch (error) {
-      setErrorMessage(`Não foi possível carregar os relatórios.`);
-      setShowErrorModal(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+          return {
+            ...relatorio,
+            autor: autor ? autor.nome : 'Autor desconhecido',
+            turmaTitle: turma?.title || 'Turma desconhecida',
+            imagens,
+          };
+        } catch (error) {
+          return { ...relatorio, autor: 'Erro', turmaTitle: 'Erro', imagens: [] };
+        }
+      })
+    );
+
+    setRelatorios(relatoriosComDetalhes);
+  } catch (error) {
+    setErrorMessage(`Não foi possível carregar os relatórios.`);
+    setShowErrorModal(true);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleViewImages = (images) => {
     setSelectedImages(images);
@@ -184,7 +192,6 @@ const HistoricoRelatorios = () => {
       </View>
 
       <View style={styles.content}>
-
         {isLoading ? (
           <Text style={styles.loadingText}>Carregando...</Text>
         ) : (
@@ -192,9 +199,15 @@ const HistoricoRelatorios = () => {
             data={relatorios}
             keyExtractor={(item) => item.$id.toString()}
             renderItem={renderRelatorioCard}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                Não há nenhum Relatório de Treino para esta Turma.
+              </Text>
+            }
           />
         )}
       </View>
+
 
       {selectedImages.length > 0 && (
         <Modal visible={isModalVisible} transparent={true} animationType="fade">
@@ -296,6 +309,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#D1FAE5',
     marginTop: 4,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: 'gray',
+    marginTop: 20,
   },
   teamLogo: {
     marginLeft: 16,

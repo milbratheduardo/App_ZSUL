@@ -166,11 +166,24 @@ const PagamentosAtuais = () => {
 
   
 
+  const getPlanoNome = (status_pagamento) => {
+    const planos = {
+      "2c93808493b073170193d2317ddb0ac2": "Plano Mensal",
+      "2c93808493b072d70193d233e9eb0b23": "Plano Semestral",
+      "2c93808493b072d80193d234fe0e0b24": "Plano Anual",
+      "2c9380849469a4a101946ae6d35700aa": "Plano Irmãos Mensal",
+      "2c9380849469a43201946ae4a44100a4": "Plano Irmãos Semestral",
+      "2c9380849469a43201946add8ee300a0": "Plano Irmãos Anual"
+    };
+  
+    return planos[status_pagamento] || status_pagamento; // Se não estiver no mapeamento, mantém o valor original
+  };
+  
   const renderAluno = ({ item }) => (
     <View style={styles.userCard}>
       <Text style={styles.userName}>Nome do Atleta: {item.nome}</Text>
       <Text style={styles.userInfo}>Data de Vencimento: {item.formattedEndDate}</Text>
-      <Text style={styles.userInfo}>Status do Pagamento: {item.status_pagamento}</Text>
+      <Text style={styles.userInfo}>Status do Pagamento: {getPlanoNome(item.status_pagamento)}</Text>
   
       {item.plano && item.plano.toLowerCase().includes('dinheiro') && item.status_pagamento && (
         item.status_pagamento.includes('Pendente') || item.status_pagamento.includes('Pago') ? (
@@ -188,7 +201,8 @@ const PagamentosAtuais = () => {
         ) : null
       )}
     </View>
-  ); 
+  );
+  
   
   
 

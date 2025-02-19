@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, RefreshControl, Modal, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, RefreshControl, Modal, ScrollView, Pressable } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider'; 
@@ -6,6 +6,7 @@ import { getAllTurmas, getAlunosByTurmaId, getAllAlunos, getTurmaById } from '@/
 import { images } from '@/constants'; 
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Icon from 'react-native-vector-icons/Feather'; // Ou FontAwesome, MaterialIcons, dependendo do pacote usado
 import CustomButton from '@/components/CustomButton';
 
 const History = () => {
@@ -228,37 +229,49 @@ const History = () => {
       </View>
 
 
-      <Modal visible={showFilterModal} transparent={true} animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Filtrar Alunos</Text>
+      <Modal 
+  visible={showFilterModal} 
+  transparent={true} 
+  animationType="slide"
+  onRequestClose={() => setShowFilterModal(false)} // Fecha no Android ao pressionar "voltar"
+>
+  <Pressable style={styles.modalOverlay} onPress={() => setShowFilterModal(false)}>
+    <View style={styles.modalContent}>
+      
+      {/* Botão de fechar */}
+      <TouchableOpacity style={styles.closeButton} onPress={() => setShowFilterModal(false)}>
+        <Icon name="x" size={22} color="#333" />
+      </TouchableOpacity>
 
-            <Text style={styles.filterLabel}>Ano de Nascimento:</Text>
-            <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingVertical: 8 }}>
-              {availableYears.map((year) => (
-                <TouchableOpacity key={year} onPress={() => setSelectedYear((prev) => (prev === year ? null : year))}>
-                  <Text style={[styles.filterOption, selectedYear === year && styles.selectedOption]}>
-                    {year}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+      <Text style={styles.modalTitle}>Filtrar Alunos</Text>
 
-            <Text style={styles.filterLabel}>Posição:</Text>
-            <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingVertical: 8 }}>
-              {availablePositions.map((position) => (
-                <TouchableOpacity key={position} onPress={() => setSelectedPosition((prev) => (prev === position ? null : position))}>
-                  <Text style={[styles.filterOption, selectedPosition === position && styles.selectedOption]}>
-                    {position}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+      <Text style={styles.filterLabel}>Ano de Nascimento:</Text>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingVertical: 8 }}>
+        {availableYears.map((year) => (
+          <TouchableOpacity key={year} onPress={() => setSelectedYear((prev) => (prev === year ? null : year))}>
+            <Text style={[styles.filterOption, selectedYear === year && styles.selectedOption]}>
+              {year}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-            <CustomButton title="Aplicar Filtros" containerStyles="mt-5 pt-2 pb-2" handlePress={applyFilters} />
-          </View>
-        </View>
-      </Modal>
+      <Text style={styles.filterLabel}>Posição:</Text>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingVertical: 8 }}>
+        {availablePositions.map((position) => (
+          <TouchableOpacity key={position} onPress={() => setSelectedPosition((prev) => (prev === position ? null : position))}>
+            <Text style={[styles.filterOption, selectedPosition === position && styles.selectedOption]}>
+              {position}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <CustomButton title="Aplicar Filtros" containerStyles="mt-5 pl-2 pr-2 pt-2 pb-2" handlePress={applyFilters} />
+    </View>
+  </Pressable>
+</Modal>
+
 
 
       <Modal
@@ -318,40 +331,58 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fundo escurecido para melhor visibilidade
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    width: '85%',
+    backgroundColor: '#FFF',
     padding: 20,
-    borderRadius: 10,
-    width: '80%',
-    maxHeight: '80%',  
+    borderRadius: 12,
+    alignItems: 'center',
+    elevation: 5, // Sombra para Android
+    shadowColor: '#000', // Sombra para iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
-  scrollView: {
-    maxHeight: 150,  
-    marginBottom: 16,
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 5,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
+    marginBottom: 15,
+    color: '#333',
   },
   filterLabel: {
     fontSize: 16,
-    marginVertical: 8,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    color: '#555',
+  },
+  scrollView: {
+    maxHeight: 150,
+    width: '100%',
   },
   filterOption: {
     fontSize: 16,
-    padding: 10,
-    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginVertical: 5,
+    borderRadius: 6,
+    backgroundColor: '#EEE',
+    textAlign: 'center',
+    width: '100%',
   },
   selectedOption: {
-    backgroundColor: '#126046',
-    color: '#fff',
+    backgroundColor: '#007AFF',
+    color: '#FFF',
   },
   toggleOption: {
     marginTop: 16,
