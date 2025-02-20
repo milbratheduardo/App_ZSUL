@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { getAllAlunos, updateStatusPagamento2 } from '@/lib/appwrite';
-import { format } from 'date-fns';
+import { getAllAlunos, updateStatusPagamento2, getAllHistoricoPagamentos } from '@/lib/appwrite';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const PagamentosAtuais = () => {
   const [alunos, setAlunos] = useState([]);
@@ -13,6 +14,8 @@ const PagamentosAtuais = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(null);
 
   // Contadores das categorias
   const [counts, setCounts] = useState({
@@ -22,111 +25,94 @@ const PagamentosAtuais = () => {
     pendente: 0,
   });
 
+  const generateLastSixMonths = () => {
+    const months = [];
+    const currentDate = new Date();
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(currentDate.getMonth() - i);
+      months.push({
+        label: format(date, 'MMMM yyyy', { locale: ptBR }),
+        value: format(date, 'MM/yyyy'),
+      });
+    }
+    return months;
+  };
+
   useEffect(() => {
-    const fetchFinanceiro = async () => {
-      try {
-        setLoading(true);
-
-        const allAlunos = await getAllAlunos();
-
-        const alunosComFaturas = allAlunos.map((aluno) => {
-          let plano;
-          switch (aluno.status_pagamento) {
-            case '2c93808493b072d70193d233e9eb0b23':
-              plano = 'Plano Semestral';
-              break;
-            case '2c93808493b073170193d2317ddb0ac2':
-              plano = 'Plano Mensal';
-              break;
-            case '2c93808493b072d80193d234fe0e0b24':
-              plano = 'Plano Anual';
-              break;
-            default:
-              plano = aluno.status_pagamento;
-          }
-
-          // Formatar a data de vencimento
-          const formattedEndDate = aluno.end_date
-            ? format(new Date(aluno.end_date), 'dd/MM/yyyy')
-            : 'N/A';
-
-          return {
-            ...aluno,
-            plano,
-            formattedEndDate,
-          };
-        });
-
-        setAlunos(alunosComFaturas);
-        setFilteredAlunos(alunosComFaturas); // Exibe todos inicialmente
-
-        // Contar as categorias
-        const pixCount = alunosComFaturas.filter(
-          (aluno) => aluno.plano && aluno.plano.toLowerCase().includes('pix')
-        ).length;
-        const dinheiroCount = alunosComFaturas.filter(
-          (aluno) => aluno.plano && aluno.plano.toLowerCase().includes('dinheiro')
-        ).length;
-        const cartaoCount = alunosComFaturas.filter(
-          (aluno) =>
-            aluno.plano === 'Plano Mensal' ||
-            aluno.plano === 'Plano Semestral' ||
-            aluno.plano === 'Plano Anual'
-        ).length;
-        const pendenteCount = alunosComFaturas.filter(
-          (aluno) => !aluno.plano || aluno.plano.trim() === ''
-        ).length;
-
-        setCounts({
-          pix: pixCount,
-          dinheiro: dinheiroCount,
-          cartao: cartaoCount,
-          pendente: pendenteCount,
-        });
-      } catch (error) {
-        setErrorMessage(`Não foi possível carregar os dados financeiros.`);
-        setShowErrorModal(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFinanceiro();
-  }, []);
+  }, [selectedMonth]);
+
+  const fetchFinanceiro = async () => {
+    try {
+      setLoading(true);
+      let allAlunos;
+
+      if (!selectedMonth || selectedMonth === format(new Date(), 'MM/yyyy')) {
+        allAlunos = await getAllAlunos();
+      } else {
+        const allHistorico = await getAllHistoricoPagamentos();
+        allAlunos = allHistorico.filter(aluno => {
+          const createdMonth = format(parseISO(aluno.$createdAt, 'MMM dd, yyyy, HH:mm', new Date()), 'MM/yyyy');
+          return createdMonth === selectedMonth;
+        });
+      }
+
+      
+      const alunosComFaturas = allAlunos.map((aluno) => {
+        let plano;
+        switch (aluno.status_pagamento) {
+          case '2c93808493b072d70193d233e9eb0b23':
+            plano = 'Plano Semestral';
+            break;
+          case '2c93808493b073170193d2317ddb0ac2':
+            plano = 'Plano Mensal';
+            break;
+          case '2c93808493b072d80193d234fe0e0b24':
+            plano = 'Plano Anual';
+            break;
+          default:
+            plano = aluno.status_pagamento;
+        }
+
+        const formattedEndDate = aluno.end_date
+          ? format(new Date(aluno.end_date), 'dd/MM/yyyy')
+          : 'N/A';
+
+        return { ...aluno, plano, formattedEndDate };
+      });
+
+      setAlunos(alunosComFaturas);
+      setFilteredAlunos(alunosComFaturas);
+
+      setCounts({
+        pix: alunosComFaturas.filter(aluno => aluno.plano?.toLowerCase().includes('pix') && aluno.status_pagamento.includes('Pago')).length,
+        dinheiro: alunosComFaturas.filter(aluno => aluno.plano?.toLowerCase().includes('dinheiro') && aluno.status_pagamento.includes('Pago')).length,
+        cartao: alunosComFaturas.filter(aluno => ['Plano Mensal', 'Plano Semestral', 'Plano Anual'].includes(aluno.plano)).length,
+        pendente: alunosComFaturas.filter(aluno => (aluno.plano?.toLowerCase().includes('dinheiro') && aluno.status_pagamento.includes('Pendente')) || !aluno.plano || aluno.plano.trim() === '' ||  aluno.plano?.toLowerCase().includes('pix') && aluno.status_pagamento.includes('Pendente')).length,
+      });
+    } catch (error) {
+      setErrorMessage('Não foi possível carregar os dados financeiros.');
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFilter = (filter) => {
     setSelectedFilter(filter);
-
     let filtered;
 
     if (filter === 'Pix') {
-      filtered = alunos.filter(
-        (aluno) => aluno.plano && aluno.plano.toLowerCase().includes('pix')
-      );
+      filtered = alunos.filter(aluno => aluno.plano?.toLowerCase().includes('pix') && aluno.status_pagamento.includes('Pago'));
     } else if (filter === 'Dinheiro') {
-      filtered = alunos.filter(
-        (aluno) => aluno.plano && aluno.plano.toLowerCase().includes('dinheiro')
-      );
+      filtered = alunos.filter(aluno => aluno.plano?.toLowerCase().includes('dinheiro') && aluno.status_pagamento.includes('Pago'));
     } else if (filter === 'Cartão de Crédito') {
-      filtered = alunos.filter(
-        (aluno) =>
-          aluno.plano === 'Plano Mensal' ||
-          aluno.plano === 'Plano Semestral' ||
-          aluno.plano === 'Plano Anual'
-      );
+      filtered = alunos.filter(aluno => ['Plano Mensal', 'Plano Semestral', 'Plano Anual'].includes(aluno.plano));
     } else if (filter === 'Pendentes') {
-      filtered = alunos.filter(
-        (aluno) =>
-          !(
-            (aluno.plano && aluno.plano.toLowerCase().includes('pix')) ||
-            (aluno.plano && aluno.plano.toLowerCase().includes('dinheiro')) ||
-            aluno.plano === 'Plano Mensal' ||
-            aluno.plano === 'Plano Semestral' ||
-            aluno.plano === 'Plano Anual'
-          )
-      );
+      filtered = alunos.filter(aluno => (aluno.plano?.toLowerCase().includes('dinheiro') && aluno.status_pagamento.includes('Pendente')) || !aluno.plano || aluno.plano.trim() === '' ||  aluno.plano?.toLowerCase().includes('pix') && aluno.status_pagamento.includes('Pendente'));
     }
-
+    
     setFilteredAlunos(filtered);
   };
 
@@ -168,12 +154,12 @@ const PagamentosAtuais = () => {
 
   const getPlanoNome = (status_pagamento) => {
     const planos = {
-      "2c93808493b073170193d2317ddb0ac2": "Plano Mensal",
-      "2c93808493b072d70193d233e9eb0b23": "Plano Semestral",
-      "2c93808493b072d80193d234fe0e0b24": "Plano Anual",
-      "2c9380849469a4a101946ae6d35700aa": "Plano Irmãos Mensal",
-      "2c9380849469a43201946ae4a44100a4": "Plano Irmãos Semestral",
-      "2c9380849469a43201946add8ee300a0": "Plano Irmãos Anual"
+      "2c93808493b073170193d2317ddb0ac2": "Plano Mensal - Pago",
+      "2c93808493b072d70193d233e9eb0b23": "Plano Semestral - Pago",
+      "2c93808493b072d80193d234fe0e0b24": "Plano Anual - Pago",
+      "2c9380849469a4a101946ae6d35700aa": "Plano Irmãos Mensal - Pago",
+      "2c9380849469a43201946ae4a44100a4": "Plano Irmãos Semestral - Pago",
+      "2c9380849469a43201946add8ee300a0": "Plano Irmãos Anual - Pago"
     };
   
     return planos[status_pagamento] || status_pagamento; // Se não estiver no mapeamento, mantém o valor original
@@ -181,10 +167,27 @@ const PagamentosAtuais = () => {
   
   const renderAluno = ({ item }) => (
     <View style={styles.userCard}>
-      <Text style={styles.userName}>Nome do Atleta: {item.nome}</Text>
-      <Text style={styles.userInfo}>Data de Vencimento: {item.formattedEndDate}</Text>
-      <Text style={styles.userInfo}>Status do Pagamento: {getPlanoNome(item.status_pagamento)}</Text>
-  
+    <Text style={styles.userName}>Nome do Atleta: {item.nome}</Text>
+
+    <Text style={styles.userInfo}>
+      Data do Pagamento: 
+      {(!item.status_pagamento || item.status_pagamento === "" || item.status_pagamento.includes("Pendente")) 
+        ? " Pendente" 
+        : new Date(item.$createdAt).toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+    </Text>
+
+    <Text style={styles.userInfo}>Próxima Fatura: {item.formattedEndDate}</Text>
+
+    <Text style={styles.userInfo}>
+      Detalhes do Pagamento: {item.status_pagamento ? getPlanoNome(item.status_pagamento) : "Pendente"}
+    </Text>
+      
       {item.plano && item.plano.toLowerCase().includes('dinheiro') && item.status_pagamento && (
         item.status_pagamento.includes('Pendente') || item.status_pagamento.includes('Pago') ? (
           <TouchableOpacity
@@ -208,8 +211,18 @@ const PagamentosAtuais = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.buttonRow}>
       <Text style={styles.headerText}>Controle de Faturamento</Text>
-
+      <Text style={styles.subHeaderText}>Mês Selecionado: {selectedMonth ? selectedMonth : "Todos"}</Text>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => setShowFilterModal(true)}
+            activeOpacity={0.7}
+          >
+            <Icon name="filter" size={20} color="#FFF" style={styles.buttonIcon} />
+            <Text style={styles.buttonText}>Filtrar</Text>
+          </TouchableOpacity>
+        </View>
       <TextInput
         style={styles.searchBar}
         placeholder="Buscar por nome do atleta"
@@ -272,6 +285,29 @@ const PagamentosAtuais = () => {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showFilterModal} transparent animationType="slide">
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Filtrar por mês</Text>
+            {generateLastSixMonths().map((month) => (
+              <TouchableOpacity
+                key={month.value}
+                style={{ padding: 10, borderBottomWidth: 1, borderColor: '#ddd' }}
+                onPress={() => {
+                  setSelectedMonth(month.value);
+                  setShowFilterModal(false);
+                }}
+              >
+                <Text>{month.label}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+              <Text style={{ textAlign: 'center', marginTop: 10, color: 'red' }}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -298,6 +334,12 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: '#126046',
+    marginBottom: 8
+  },
+  subHeaderText: {
+    fontSize: 14,
+    fontWeight: 'regular',
     color: '#126046',
     marginVertical: 16,
   },
@@ -398,6 +440,35 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: 'white',
+    fontWeight: 'bold',
+  },
+  buttonRow: {
+    flexDirection: 'column', 
+    alignItems: 'center',
+    gap: 5, // Espaço entre os botões
+    marginTop: 10,
+    marginBottom: 10
+  },
+  actionButton: {
+    flexDirection: 'row', 
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF', // Azul estilo iOS
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    elevation: 5, // Sombra no Android
+    shadowColor: '#000', // Sombra no iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  buttonIcon: {
+    marginRight: 8, // Espaço entre o ícone e o texto
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

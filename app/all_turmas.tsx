@@ -119,14 +119,14 @@ const TurmasList = () => {
 
       
       <View style={styles.buttonRow}>
-  <TouchableOpacity 
-    style={styles.actionButton} 
-    onPress={() => setShowFilterModal(true)}
-    activeOpacity={0.7}
-  >
-    <Icon name="filter" size={20} color="#FFF" style={styles.buttonIcon} />
-    <Text style={styles.buttonText}>Filtrar</Text>
-  </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => setShowFilterModal(true)}
+        activeOpacity={0.7}
+      >
+        <Icon name="filter" size={20} color="#FFF" style={styles.buttonIcon} />
+        <Text style={styles.buttonText}>Filtrar</Text>
+      </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.actionButton} 
