@@ -26,41 +26,54 @@ const HistoricoPagamentos = () => {
       const fetchHistorico = async () => {
         try {
           setLoading(true);
-  
+    
           const allHistorico = await getAllHistoricoPagamentos();
-  
-          const historicoFormatado = allHistorico.map((pagamento) => {
+    
+          // Ordenar pelo $createdAt (mais novo primeiro)
+          const historicoOrdenado = allHistorico.sort(
+            (a, b) => new Date(b.$createdAt) - new Date(a.$createdAt)
+          );
+    
+          const historicoFormatado = historicoOrdenado.map((pagamento) => {
             // Formatar o campo `end_date`
             const formattedEndDate = pagamento.end_date
               ? format(new Date(pagamento.end_date), 'dd/MM/yyyy')
               : 'N/A';
-  
+    
             return {
               ...pagamento,
               formattedEndDate,
             };
           });
-  
+    
           setHistorico(historicoFormatado);
           setFilteredHistorico(historicoFormatado); // Exibe todos inicialmente
-  
+    
           // Contar as categorias
           const pixCount = historicoFormatado.filter(
-            (pagamento) => pagamento.status_pagamento && pagamento.status_pagamento.toLowerCase().includes('pix')
+            (pagamento) =>
+              pagamento.status_pagamento &&
+              pagamento.status_pagamento.toLowerCase().includes('pix')
           ).length;
           const dinheiroCount = historicoFormatado.filter(
-            (pagamento) => pagamento.status_pagamento && pagamento.status_pagamento.toLowerCase().includes('dinheiro')
+            (pagamento) =>
+              pagamento.status_pagamento &&
+              pagamento.status_pagamento.toLowerCase().includes('dinheiro')
           ).length;
           const cartaoCount = historicoFormatado.filter(
             (pagamento) =>
-              pagamento.status_pagamento === 'Plano Mensal' ||
-              pagamento.status_pagamento === 'Plano Semestral' ||
-              pagamento.status_pagamento === 'Plano Anual'
+              pagamento.status_pagamento === "2c93808493b073170193d2317ddb0ac2" ||
+              pagamento.status_pagamento === "2c93808493b072d70193d233e9eb0b23" ||
+              pagamento.status_pagamento === "2c93808493b072d80193d234fe0e0b24" ||
+              pagamento.status_pagamento === "2c9380849469a4a101946ae6d35700aa" ||
+              pagamento.status_pagamento === "2c9380849469a43201946ae4a44100a4" ||
+              pagamento.status_pagamento === "2c9380849469a43201946add8ee300a0"
           ).length;
           const pendenteCount = historicoFormatado.filter(
-            (pagamento) => !pagamento.status_pagamento || pagamento.status_pagamento.trim() === ''
+            (pagamento) =>
+              !pagamento.status_pagamento || pagamento.status_pagamento.trim() === ''
           ).length;
-  
+    
           setCounts({
             pix: pixCount,
             dinheiro: dinheiroCount,
@@ -74,36 +87,47 @@ const HistoricoPagamentos = () => {
           setLoading(false);
         }
       };
-  
+    
       fetchHistorico();
     }, []);
+    
   
     const handleFilter = (filter) => {
       setSelectedFilter(filter);
-  
+    
       let filtered;
-  
+    
       if (filter === 'Pix') {
         filtered = historico.filter(
-          (pagamento) => pagamento.status_pagamento && pagamento.status_pagamento.toLowerCase().includes('pix')
+          (pagamento) =>
+            pagamento.status_pagamento &&
+            pagamento.status_pagamento.toLowerCase().includes('pix')
         );
       } else if (filter === 'Dinheiro') {
         filtered = historico.filter(
-          (pagamento) => pagamento.status_pagamento && pagamento.status_pagamento.toLowerCase().includes('dinheiro')
+          (pagamento) =>
+            pagamento.status_pagamento &&
+            pagamento.status_pagamento.toLowerCase().includes('dinheiro')
         );
       } else if (filter === 'Cartão de Crédito') {
         filtered = historico.filter(
           (pagamento) =>
-            pagamento.status_pagamento === 'Plano Mensal' ||
-            pagamento.status_pagamento === 'Plano Semestral' ||
-            pagamento.status_pagamento === 'Plano Anual'
+            pagamento.status_pagamento === "2c93808493b073170193d2317ddb0ac2" ||
+            pagamento.status_pagamento === "2c93808493b072d70193d233e9eb0b23" ||
+            pagamento.status_pagamento === "2c93808493b072d80193d234fe0e0b24" ||
+            pagamento.status_pagamento === "2c9380849469a4a101946ae6d35700aa" ||
+            pagamento.status_pagamento === "2c9380849469a43201946ae4a44100a4" ||
+            pagamento.status_pagamento === "2c9380849469a43201946add8ee300a0"
         );
       } else if (filter === 'Pendente') {
-        filtered = historico.filter((pagamento) => !pagamento.status_pagamento || pagamento.status_pagamento.trim() === '');
+        filtered = historico.filter(
+          (pagamento) => !pagamento.status_pagamento || pagamento.status_pagamento.trim() === ''
+        );
       }
-  
+    
       setFilteredHistorico(filtered);
     };
+    
   
     const handleSearch = (text) => {
       setSearchQuery(text);
@@ -112,12 +136,42 @@ const HistoricoPagamentos = () => {
       );
       setFilteredHistorico(filtered);
     };
+
+    const getPlanoNome = (status_pagamento) => {
+      const planos = {
+        "2c93808493b073170193d2317ddb0ac2": "Plano Mensal - Pago",
+        "2c93808493b072d70193d233e9eb0b23": "Plano Semestral - Pago",
+        "2c93808493b072d80193d234fe0e0b24": "Plano Anual - Pago",
+        "2c9380849469a4a101946ae6d35700aa": "Plano Irmãos Mensal - Pago",
+        "2c9380849469a43201946ae4a44100a4": "Plano Irmãos Semestral - Pago",
+        "2c9380849469a43201946add8ee300a0": "Plano Irmãos Anual - Pago"
+      };
+    
+      return planos[status_pagamento] || status_pagamento; // Se não estiver no mapeamento, mantém o valor original
+    };
   
     const renderPagamento = ({ item }) => (
       <View style={styles.userCard}>
-        <Text style={styles.userName}>Nome: {item.nome}</Text>
-        <Text style={styles.userInfo}>Status: {item.status_pagamento || 'Pendente'}</Text>
-        <Text style={styles.userInfo}>Data de Vencimento: {item.formattedEndDate}</Text>
+        <Text style={styles.userName}>Nome do Atleta: {item.nome}</Text>
+
+        <Text style={styles.userInfo}>
+          Data do Pagamento: 
+          {(!item.status_pagamento || item.status_pagamento === "" || item.status_pagamento.includes("Pendente")) 
+            ? " Pendente" 
+            : new Date(item.$createdAt).toLocaleString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+        </Text>
+
+        <Text style={styles.userInfo}>Próxima Fatura: {item.formattedEndDate}</Text>
+
+        <Text style={styles.userInfo}>
+          Detalhes do Pagamento: {item.status_pagamento ? getPlanoNome(item.status_pagamento) : "Pendente"}
+        </Text>
       </View>
     );
 
@@ -137,7 +191,6 @@ const HistoricoPagamentos = () => {
           { filter: 'Pix', icon: 'qrcode', label: 'Pix', count: counts.pix },
           { filter: 'Dinheiro', icon: 'money-bill-wave', label: 'Dinheiro', count: counts.dinheiro },
           { filter: 'Cartão de Crédito', icon: 'credit-card', label: 'Cartão de Crédito', count: counts.cartao },
-          { filter: 'Pendentes', icon: 'exclamation-circle', label: 'Pendentes', count: counts.pendente },
         ].map(({ filter, icon, label, count }) => (
           <TouchableOpacity
             key={filter}
