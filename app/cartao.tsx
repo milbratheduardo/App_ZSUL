@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { getAlunosById, updateStatusPagamento, createHistoricoPagamentos } from '@/lib/appwrite';
+import { getAlunosById, updateStatusPagamento, createHistoricoPagamentos, updateStatusFaturaCartao } from '@/lib/appwrite';
 import { createCardToken, handleIntegrationMP } from '../utils/MPIntegration';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -34,7 +34,7 @@ const Cartao = () => {
     cardholder_cpf: '',
   });
 
-  const { plan_id, userId, atletaId } = useLocalSearchParams();
+  const { plan_id, atletaId, docId } = useLocalSearchParams();
 
   useEffect(() => {
     const fetchAluno = async () => {
@@ -61,6 +61,7 @@ const Cartao = () => {
       return;
     }
   
+    // Valida se todos os campos do cartão estão preenchidos
     const isCardDetailsValid = Object.values(cardDetails).every((field) => field.trim() !== '');
     if (!isCardDetailsValid) {
       setErrorMessage(`Preencha todas as informações do cartão.`);
@@ -70,6 +71,8 @@ const Cartao = () => {
   
     try {
       setLoading(true);
+  
+      // Cria o token do cartão
       const cardTokenId = await createCardToken({
         card_number: cardDetails.card_number,
         expiration_month: cardDetails.expiration_month,
@@ -84,43 +87,57 @@ const Cartao = () => {
         },
       });
   
+      // Processa o pagamento no Mercado Pago
       const result = await handleIntegrationMP(user.email, cardTokenId, plan_id);
   
-      if (result.status === 'authorized') {
-        const formattedEndDate = result.auto_recurring?.end_date || new Date().toISOString();
+      if (result && result.status === 'authorized') {
+        const paymentId = result.id;
   
-        // Atualiza o status do pagamento
-        const updatedAluno = await updateStatusPagamento(
-          atletaId,
-          plan_id,
-          result.id,
-          formattedEndDate
-        );
+        // Define o status do pagamento conforme o plano
+        let status_pagamento = '';
+        switch (plan_id) {
+          case '2c93808493b073170193d2317ddb0ac2':
+            status_pagamento = 'Cartão Mensal - Autorizado';
+            break;
+          case '2c93808493b072d70193d233e9eb0b23':
+            status_pagamento = 'Cartão Semestral - Autorizado';
+            break;
+          case '2c93808493b072d80193d234fe0e0b24':
+            status_pagamento = 'Cartão Anual - Autorizado';
+            break;
+          case '2c9380849469a4a101946ae6d35700aa':
+            status_pagamento = 'Cartão Irmãos Mensal - Autorizado';
+            break;
+          case '2c9380849469a43201946ae4a44100a4':
+            status_pagamento = 'Cartão Irmãos Semestral - Autorizado';
+            break;
+          case '2c9380849469a43201946add8ee300a0':
+            status_pagamento = 'Cartão Irmãos Anual - Autorizado';
+            break;
+          case '2c9380849469a43201946ae827c500a9':
+            status_pagamento = 'Cartão 50Off - Autorizado';
+            break;
+          default:
+            throw new Error('Plano inválido.');
+        }
   
-        // Cria o histórico do pagamento
-        await createHistoricoPagamentos(
-          atletaId,
-          aluno?.nome || 'Nome não informado',
-          aluno?.cpf || 'CPF não informado',
-          aluno?.nomeResponsavel || 'Responsável não informado',
-          plan_id,
-          formattedEndDate,
-          result.id
-        );
+        // Atualiza o status da fatura no Appwrite
+        await updateStatusFaturaCartao(docId,status_pagamento, paymentId);
   
-        setSuccessMessage('Pagamento Realizado com Sucesso!');
+        setSuccessMessage('Pagamento realizado com sucesso!');
         setShowSuccessModal(true);
       } else {
-        setErrorMessage(`Erro, pagamento não foi concluído.`);
-        setShowErrorModal(true);
+        throw new Error('Pagamento não autorizado.');
       }
     } catch (error) {
+      console.error('Erro ao processar pagamento:', error);
       setErrorMessage(`Erro ao processar pagamento.`);
       setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>
