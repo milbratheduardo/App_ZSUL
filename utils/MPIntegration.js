@@ -175,4 +175,41 @@ export const handlePixPaymentMP3 = async (userEmail, userCPF, userNome) => {
 };
 
 
+export const handlePixPaymentMP4 = async (userEmail, userCPF, userNome) => {
+  try {
+    const idempotencyKey = `key-${new Date().getTime()}`; // Geração do X-Idempotency-Key
 
+    const pixPaymentData = {
+      transaction_amount: 25, // Valor do plano
+      description: 'Pagamento do Plano Mensal - 3 Irmãos',
+      payment_method_id: 'pix',
+      payer: {
+        email: userEmail,
+        first_name: userNome,
+        identification: { type: 'CPF', number: userCPF },
+      },
+    };
+
+    const response = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        'X-Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify(pixPaymentData),
+    });
+
+    const data = await response.json();
+    
+
+    if (data.id && data.point_of_interaction?.transaction_data?.ticket_url) {
+      return data; 
+    } else {
+      throw new Error('Erro: Resposta não contém ID da transação ou ticket_url.');
+    }
+  } catch (error) {
+    
+    throw error;
+  }
+};

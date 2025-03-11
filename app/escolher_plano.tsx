@@ -17,17 +17,22 @@ const planosBase = [
   ];
   
   const planosIrmaos = {
-    1: {
-      Mensal: '2c9380849469a4a101946ae6d35700aa',
-      Semestral: '2c9380849469a43201946ae4a44100a4',
-      Anual: '2c9380849469a43201946add8ee300a0',
+    0: { // Se não houver atletas, usa os planos base
+        Mensal: '2c93808493b073170193d2317ddb0ac2',
+        Semestral: '2c93808493b072d70193d233e9eb0b23',
+        Anual: '2c93808493b072d80193d234fe0e0b24',
     },
-    2: {
-      Mensal: '2c938084954560f50195499e713a0295',
-      Semestral: '2c938084954560f50195499e713a0294',
-      Anual: '2c938084954560f50195499e713a0293',
+    1: { // Se houver 1 atleta
+        Mensal: '2c9380849469a4a101946ae6d35700aa',
+        Semestral: '2c9380849469a43201946ae4a44100a4',
+        Anual: '2c9380849469a43201946add8ee300a0',
     },
-  };
+    2: { // Se houver 2 atletas
+        Mensal: '2c9380849563a16501957c04c9b90c2c',
+        Semestral: '2c938084955cc48001957c03e73a0f95',
+        Anual: '2c938084954560f50195499e713a0293',
+    }
+};
 
   
   const EscolherPlano = () => {
@@ -44,17 +49,20 @@ const planosBase = [
     const [mensagemPlano, setMensagemPlano] = useState('');
     
     useEffect(() => {
-        const fetchFaturas = async () => {
-            try {
-                const faturas = await getAllFaturas();
-                const atletasUnicos = new Set(
-                    faturas.filter((fatura) => fatura.responsavelId === user.userId).map((fatura) => fatura.atletaId)
-                );
-                setQuantidadeAtletas(atletasUnicos.size);
-            } catch (error) {
-                console.error('Erro ao buscar faturas:', error);
-            }
-        };
+      const fetchFaturas = async () => {
+        try {
+          const faturas = await getAllFaturas();          
+          // Filtra faturas do responsável atual
+          const faturasResponsavel = faturas.filter((fatura) => fatura.responsavelId === user.userId);
+
+          // Criar um conjunto com os atletaId únicos
+          const atletasUnicos = new Set(faturasResponsavel.map((fatura) => fatura.atletaId));
+
+          setQuantidadeAtletas(atletasUnicos.size); 
+        } catch (error) {
+            console.error('Erro ao buscar faturas:', error);
+        }
+      };
 
         const verificarAluno = async () => {
             try {
@@ -71,13 +79,22 @@ const planosBase = [
         verificarAluno();
     }, [user.userId, params.alunoId]);
 
+    useEffect(() => {
+      if (quantidadeAtletas > 0) {
+          setPlanosDisponiveis(planosBase); // Atualiza os planos disponíveis
+      }
+  }, [quantidadeAtletas]);
+
   
     const handleSelecionarPlano = (plano) => {
       let selectedPlanId = plano.id;
-  
+
+      // Se o único plano disponível for o 50% OFF, força essa seleção
       if (planosDisponiveis.length === 1 && planosDisponiveis[0].id === '2c9380849469a43201946ae827c500a9') {
-          selectedPlanId = '2c9380849469a43201946ae827c500a9';
-      } else if (quantidadeAtletas > 0 && quantidadeAtletas <= 2) {
+          selectedPlanId = '2c9380849469a43201946ae827c500a9'; 
+      } 
+      // Caso contrário, verifica a quantidade de atletas e ajusta o plano conforme a tabela `planosIrmaos`
+      else if (quantidadeAtletas >= 0 && quantidadeAtletas <= 2) { 
           selectedPlanId = planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id;
       }
   
@@ -174,11 +191,17 @@ const planosBase = [
   ];
   
   const getPlanoPreco = (plano) => {
+    if (quantidadeAtletas === undefined) {
+        return 'N/A'; 
+    }
+
     const planoId = planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id;
-    
     const planoEncontrado = precosPlanos.find(p => p.id === planoId);
+
     return planoEncontrado ? planoEncontrado.price : 'N/A';
 };
+
+
     
     return (
       <SafeAreaView style={styles.container}>

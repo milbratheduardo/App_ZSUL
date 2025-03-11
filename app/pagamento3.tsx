@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getAllAlunos, updateStatusFatura, updateStatusFaturaPix } from '@/lib/appwrite';
 import Checkbox from 'expo-checkbox';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { handlePixPaymentMP, handlePixPaymentMP2, handlePixPaymentMP3 } from '../utils/MPIntegration';
+import { handlePixPaymentMP, handlePixPaymentMP2, handlePixPaymentMP3, handlePixPaymentMP4 } from '../utils/MPIntegration';
 import { useGlobalContext } from '@/context/GlobalProvider';
 
 const planos = [
@@ -66,6 +66,9 @@ const Pagamento3 = () => {
       } else if (selectedPlan.id === '2c9380849469a4a101946ae6d35700aa') {
         pixResponse = await handlePixPaymentMP3(user.email, user.cpf, user.nome);
         status_pagamento = 'Pix Irmãos Mensal - Pendente';
+      } else if (selectedPlan.id === '2c9380849563a16501957c04c9b90c2c') {
+        pixResponse = await handlePixPaymentMP4(user.email, user.cpf, user.nome);
+        status_pagamento = 'Pix 3 Irmãos Mensal - Pendente';
       } else {
         throw new Error('Plano inválido para pagamento via Pix.');
       }
@@ -128,6 +131,15 @@ const Pagamento3 = () => {
           break;
         case '2c9380849469a43201946ae827c500a9':
           status_pagamento = 'Pendente em Dinheiro - 50Off';
+          break;
+        case '2c9380849563a16501957c04c9b90c2c':
+          status_pagamento = 'Pendente em Dinheiro - 3 Irmãos Mensal';
+          break;
+        case '2c938084955cc48001957c03e73a0f95':
+          status_pagamento = 'Pendente em Dinheiro - 3 Irmãos Semestral';
+          break;
+        case '2c938084954560f50195499e713a0293':
+          status_pagamento = 'Pendente em Dinheiro - 3 Irmãos Anual';
           break;
         default:
           throw new Error('Plano inválido.');
