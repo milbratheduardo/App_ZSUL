@@ -41,6 +41,7 @@ const planosBase = [
     const [modalMessage, setModalMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [planosDisponiveis, setPlanosDisponiveis] = useState(planosBase);
+    const [mensagemPlano, setMensagemPlano] = useState('');
     
     useEffect(() => {
         const fetchFaturas = async () => {
@@ -72,20 +73,30 @@ const planosBase = [
 
   
     const handleSelecionarPlano = (plano) => {
-        let selectedPlanId = plano.id;
-    
-        // Se o aluno tem apenas um plano disponível e é o de desconto, usa diretamente o ID dele
-        if (planosDisponiveis.length === 1 && planosDisponiveis[0].id === '2c9380849469a43201946ae827c500a9') {
-            selectedPlanId = '2c9380849469a43201946ae827c500a9';
-        } 
-        // Se não tem 50Off, mas é irmão, aplica a lógica de planos irmãos
-        else if (quantidadeAtletas > 0 && quantidadeAtletas <= 2) {
-            selectedPlanId = planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id;
-        }
-    
-        setPlanoSelecionado({ nome: plano.nome, id: selectedPlanId });
-    
-    }; 
+      let selectedPlanId = plano.id;
+  
+      if (planosDisponiveis.length === 1 && planosDisponiveis[0].id === '2c9380849469a43201946ae827c500a9') {
+          selectedPlanId = '2c9380849469a43201946ae827c500a9';
+      } else if (quantidadeAtletas > 0 && quantidadeAtletas <= 2) {
+          selectedPlanId = planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id;
+      }
+  
+      setPlanoSelecionado({ nome: plano.nome, id: selectedPlanId });
+  
+      switch (plano.nome) {
+          case 'Mensal':
+              setMensagemPlano('Este plano é ideal para quem deseja flexibilidade, com renovação mensal.');
+              break;
+          case 'Semestral':
+              setMensagemPlano('Este plano oferece um contrato único com validade de 6 meses, sem possibilidade de cancelamento.');
+              break;
+          case 'Anual':
+              setMensagemPlano('Este plano oferece um contrato único com validade de 1 ano, sem possibilidade de cancelamento.');
+              break;
+          default:
+              setMensagemPlano('');
+      }
+  };
     
     const handleSalvarPlano = async () => {
         if (!planoSelecionado || !diaCobranca) {
@@ -148,6 +159,26 @@ const planosBase = [
             setLoading(false);
         }
     };  
+
+    const precosPlanos = [
+      { id: '2c93808493b073170193d2317ddb0ac2', price: 100 },
+      { id: '2c93808493b072d70193d233e9eb0b23', price: 90 },
+      { id: '2c93808493b072d80193d234fe0e0b24', price: 80 },
+      { id: '2c9380849469a4a101946ae6d35700aa', price: 50 },
+      { id: '2c9380849469a43201946ae4a44100a4', price: 45 }, 
+      { id: '2c9380849469a43201946add8ee300a0', price: 40 },
+      { id: '2c9380849563a16501957c04c9b90c2c', price: 25 },
+      { id: '2c938084955cc48001957c03e73a0f95', price: 25 },
+      { id: '2c938084954560f50195499e713a0293', price: 25 },
+      { id: '2c9380849469a43201946ae827c500a9', price: 50 },
+  ];
+  
+  const getPlanoPreco = (plano) => {
+    const planoId = planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id;
+    
+    const planoEncontrado = precosPlanos.find(p => p.id === planoId);
+    return planoEncontrado ? planoEncontrado.price : 'N/A';
+};
     
     return (
       <SafeAreaView style={styles.container}>
@@ -167,24 +198,28 @@ const planosBase = [
       </Modal>
   
       <View style={styles.planosContainer}>
-                {planosDisponiveis.map((plano) => (
-                    <TouchableOpacity
-                    key={plano.id}
-                    style={[
-                        styles.planoCard,
-                        planoSelecionado?.id === (planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id) && styles.planoSelecionado
-                    ]}
-                    onPress={() => handleSelecionarPlano(plano)}
-                >
-                    <Text style={[
-                        styles.planoText,
-                        planoSelecionado?.id === (planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id) && styles.planoTextSelecionado
-                    ]}>
-                        {plano.nome}
-                    </Text>
-                </TouchableOpacity>                
-                ))}
-            </View>
+          {planosDisponiveis.map((plano) => {
+              const preco = getPlanoPreco(plano); 
+
+              return (
+                  <TouchableOpacity
+                      key={plano.id}
+                      style={[
+                          styles.planoCard,
+                          planoSelecionado?.id === (planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id) && styles.planoSelecionado
+                      ]}
+                      onPress={() => handleSelecionarPlano(plano)}
+                  >
+                      <Text style={[
+                          styles.planoText,
+                          planoSelecionado?.id === (planosIrmaos[quantidadeAtletas]?.[plano.nome] || plano.id) && styles.planoTextSelecionado
+                      ]}>
+                          {plano.nome} - R$ {preco},00
+                      </Text>
+                  </TouchableOpacity>
+              );
+          })}
+      </View>
   
         <TextInput
           style={styles.input}
@@ -202,6 +237,9 @@ const planosBase = [
             <Text style={styles.salvarButtonText}>Salvar Plano</Text>
             )}
         </TouchableOpacity>
+        {mensagemPlano !== '' && (
+            <Text style={styles.mensagemPlano}>{mensagemPlano}</Text>
+        )}
       </SafeAreaView>
     );
   };
@@ -213,6 +251,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
     padding: 20,
+  },
+  mensagemPlano: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   title: {
     fontSize: 22,

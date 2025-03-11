@@ -109,6 +109,8 @@ const RootLayout = () => {
         <Stack.Screen name="escolher_plano" options={{headerShown: false}} />
         <Stack.Screen name="ver_faturas" options={{headerShown: false}} />
         <Stack.Screen name="pagamento3" options={{headerShown: false}} />
+        <Stack.Screen name="historico_pagamentos2" options={{headerShown: false}} />
+        <Stack.Screen name="ver_faturas_admin" options={{headerShown: false}} />
 
 
 

@@ -24,7 +24,6 @@ const Profile = () => {
       { title: 'Seu Atleta', icon: 'child', route: '/seu_atleta' },
       { title: 'Pagamentos', icon: 'credit-card', route: '/pagamento' },
       { title: 'Pagamentos_Novo', icon: 'credit-card', route: '/planos_atletas' },
-      { title: 'Meus Pagamentos', icon: 'file-text', route: '/faturas' },
     ];
   } else if (user.role === 'profissional') {
     navigationOptions = [
