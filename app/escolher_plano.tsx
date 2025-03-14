@@ -126,37 +126,40 @@ const planosBase = [
         const mesAtual = moment().month();
         let faturas = [];
     
-        if (planoSelecionado.nome === 'Mensal') {
-            for (let i = 1; i <= 12; i++) {
-                let novoMes = (mesAtual + i) % 12;
-                let novoAno = anoAtual + Math.floor((mesAtual + i) / 12);
-                const dataFutura = moment().month(novoMes).year(novoAno);
-                faturas.push({ 
-                    dia: diaCobranca, 
-                    mes_cobranca: dataFutura.format('MMMM/YY') 
-                });
-            }
-        } else if (planoSelecionado.nome === 'Semestral') {
-            for (let i = 1; i <= 6; i++) {  // Gera 6 faturas separadas
-                let novoMes = (mesAtual + i) % 12;
-                let novoAno = anoAtual + Math.floor((mesAtual + i) / 12);
-                const dataFutura = moment().month(novoMes).year(novoAno);
-                faturas.push({ 
-                    dia: diaCobranca, 
-                    mes_cobranca: dataFutura.format('MMMM/YY') 
-                });
-            }
-        } else if (planoSelecionado.nome === 'Anual') {
-            for (let i = 1; i <= 12; i++) {  // Gera 12 faturas separadas
-                let novoMes = (mesAtual + i) % 12;
-                let novoAno = anoAtual + Math.floor((mesAtual + i) / 12);
-                const dataFutura = moment().month(novoMes).year(novoAno);
-                faturas.push({ 
-                    dia: diaCobranca, 
-                    mes_cobranca: dataFutura.format('MMMM/YY') 
-                });
-            }
-        }
+        if (planoSelecionado.nome === "Mensal") {
+          for (let i = 0; i < 12; i++) {  // Iniciar em 0 para incluir o mês atual
+              let novoMes = (mesAtual + i) % 12;
+              let novoAno = anoAtual + Math.floor((mesAtual + i) / 12);
+              const dataFutura = moment().month(novoMes).year(novoAno);
+              
+              faturas.push({
+                  dia: diaCobranca,
+                  mes_cobranca: dataFutura.format("MMMM/YY")
+              });
+          }
+      } else if (planoSelecionado.nome === "Semestral") {
+          for (let i = 0; i < 6; i++) {  // Gera 6 faturas separadas, incluindo mês atual
+              let novoMes = (mesAtual + i) % 12;
+              let novoAno = anoAtual + Math.floor((mesAtual + i) / 12);
+              const dataFutura = moment().month(novoMes).year(novoAno);
+              
+              faturas.push({
+                  dia: diaCobranca,
+                  mes_cobranca: dataFutura.format("MMMM/YY")
+              });
+          }
+      } else if (planoSelecionado.nome === "Anual") {
+          for (let i = 0; i < 12; i++) {  // Gera 12 faturas separadas, incluindo mês atual
+              let novoMes = (mesAtual + i) % 12;
+              let novoAno = anoAtual + Math.floor((mesAtual + i) / 12);
+              const dataFutura = moment().month(novoMes).year(novoAno);
+              
+              faturas.push({
+                  dia: diaCobranca,
+                  mes_cobranca: dataFutura.format("MMMM/YY")
+              });
+          }
+      }
     
         try {
             for (let fatura of faturas) {
@@ -167,6 +170,7 @@ const planosBase = [
                     planoId: planoSelecionado.id,
                     dia_cobranca: diaCobranca,
                     mes_cobranca: fatura.mes_cobranca,
+                    createdAtCustom: new Date().toISOString().split("T")[0]
                 });
             }
             setModalMessage('Plano escolhido com sucesso!');

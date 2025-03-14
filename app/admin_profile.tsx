@@ -28,8 +28,7 @@ const AdminOptions = () => {
     { title: 'Gerenciar Usuários', icon: 'users-cog', route: '/gerenciar_usuarios' },
     { title: 'Vincular Profissional', icon: 'user', route: '/vincular_prof' },
     { title: 'Controle de Faturamento', icon: 'wallet', route: '/pagamentos_atuais' },
-    { title: 'Histórico de Pagamentos', icon: 'history', route: '/historico_pagamentos' },
-    { title: 'Histórico de Pagamentos_Novo', icon: 'history', route: '/historico_pagamentos2' },
+    { title: 'Histórico de Pagamentos', icon: 'history', route: '/historico_pagamentos2' },
     {
       title: 'Cadastrar novo Atleta',
       icon: 'user-plus',

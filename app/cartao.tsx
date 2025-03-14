@@ -14,8 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { getAlunosById, updateStatusPagamento, createHistoricoPagamentos, updateStatusFaturaCartao } from '@/lib/appwrite';
 import { createCardToken, handleIntegrationMP } from '../utils/MPIntegration';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 
 const Cartao = () => {
   const { user } = useGlobalContext();
@@ -35,6 +36,7 @@ const Cartao = () => {
   });
 
   const { plan_id, atletaId, docId } = useLocalSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchAluno = async () => {
@@ -113,6 +115,15 @@ const Cartao = () => {
             break;
           case '2c9380849469a43201946add8ee300a0':
             status_pagamento = 'Cartão Irmãos Anual - Autorizado';
+            break;
+          case '2c9380849563a16501957c04c9b90c2c':
+              status_pagamento = 'Cartão 3 Irmãos Mensal - Autorizado';
+            break;
+          case '2c938084955cc48001957c03e73a0f95':
+              status_pagamento = 'Cartão 3 Irmãos Semestral - Autorizado';
+            break;
+          case '2c938084954560f50195499e713a0293':
+              status_pagamento = 'Cartão 3 Irmãos Anual - Autorizado';
             break;
           case '2c9380849469a43201946ae827c500a9':
             status_pagamento = 'Cartão 50Off - Autorizado';
@@ -283,7 +294,7 @@ const Cartao = () => {
                     style={styles.closeButton}
                     onPress={() => {
                       setShowSuccessModal(false);
-                      
+                      router.push("/profile");
                     }}
                   >
                     <Text style={styles.closeButtonText}>Fechar</Text>

@@ -22,8 +22,7 @@ const Profile = () => {
       { title: 'Informações Pessoais', icon: 'user', route: '/informacoes_pessoais' },
       { title: 'Comunidade', icon: 'globe', route: '/comunidade' },
       { title: 'Seu Atleta', icon: 'child', route: '/seu_atleta' },
-      { title: 'Pagamentos', icon: 'credit-card', route: '/pagamento' },
-      { title: 'Pagamentos_Novo', icon: 'credit-card', route: '/planos_atletas' },
+      { title: 'Pagamentos', icon: 'credit-card', route: '/planos_atletas' },
     ];
   } else if (user.role === 'profissional') {
     navigationOptions = [
