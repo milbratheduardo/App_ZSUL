@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rafaguthes.Zsul"
+      "bundleIdentifier": "com.rafaguthes.Zsul2.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,11 +17,11 @@
         "backgroundColor": "#ffffff"
       },
       "splash": {
-      "image": "./assets/images/icon.png", 
-      "resizeMode": "contain",             
-      "backgroundColor": "#ffffff"       
+        "image": "./assets/images/icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
       },
-      "package": "com.rafaguthes.Zsul"
+      "package": "com.rafaguthes.Zsullll"
     },
     "web": {
       "bundler": "metro",

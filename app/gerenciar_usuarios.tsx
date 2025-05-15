@@ -52,7 +52,7 @@ const GerenciarUsuarios = () => {
     try {
       const allUsers = await getAllUsers(); // Busca todos os usuários
       let fetchedUsers = [];
-
+  
       if (type === 'profissionais') {
         const profissionais = await getAllProfissionais();
         fetchedUsers = allUsers
@@ -79,70 +79,103 @@ const GerenciarUsuarios = () => {
               cpf: atleta?.cpf || 'CPF não informado',
               posicao: atleta?.posicao || 'Posição não informada',
               role: 'atleta',
-              off: atleta?.off || 'Sem desconto'
+              off: atleta?.off || 'Sem desconto',
             };
           });
       } else if (type === 'responsaveis') {
         const responsaveis = await getAllResponsaveis();
-        fetchedUsers = allUsers
-          .filter((user) => user.role === 'responsavel' && user.status !== 'Arquivado')
-          .map((user) => {
-            const responsavel = responsaveis.find((r) => r.userId === user.userId);
-            return {
-              userId: user.userId,
-              nome: responsavel?.nome || 'Nome não informado',
-              cpf: responsavel?.cpf || 'CPF não informado',
-              whatsapp: responsavel?.whatsapp || 'WhatsApp não informado',
-              role: 'responsavel',
-            };
-          });
-      } else if (type === 'arquivados') {
-        const profissionais = await getAllProfissionais();
-        const atletas = await getAllAlunos();
-        const responsaveis = await getAllResponsaveis();
-
-        fetchedUsers = allUsers
-          .filter((user) => user.status === 'Arquivado')
-          .map((user) => {
-            if (user.role === 'profissional') {
-              const profissional = profissionais.find((p) => p.userId === user.userId);
-              return {
-                userId: user.userId,
-                nome: profissional?.nome || 'Nome não informado',
-                cpf: profissional?.cpf || 'CPF não informado',
-                role: 'profissional',
-                profissao: profissional?.profissao || 'Profissão não informada',
-              };
-            } else if (user.role === 'atleta') {
-              const atleta = atletas.find((a) => a.userId === user.userId);
-              return {
-                userId: user.userId,
-                nome: atleta?.nome || 'Nome não informado',
-                cpf: atleta?.cpf || 'CPF não informado',
-                role: 'atleta',
-                posicao: atleta?.posicao || 'Posição não informada',
-                off: atleta?.off || 'Sem desconto'
-              };
-            } else if (user.role === 'responsavel') {
+        const alunos = await getAllAlunos();
+  
+        fetchedUsers = await Promise.all(
+          allUsers
+            .filter((user) => user.role === 'responsavel' && user.status !== 'Arquivado')
+            .map(async (user) => {
               const responsavel = responsaveis.find((r) => r.userId === user.userId);
+              let email = 'Email não informado';
+              try {
+                // Busca o e-mail pelo userId do responsável
+                const userDetail = allUsers.find((u) => u.userId === responsavel?.userId);
+                if (userDetail) {
+                  email = userDetail.email || 'Email não informado';
+                }
+              } catch (error) {
+                console.error('Erro ao buscar o e-mail:', error);
+              }
+  
+              const countAlunos = alunos.filter((a) => a.nomeResponsavel === responsavel?.cpf).length;
+  
               return {
                 userId: user.userId,
                 nome: responsavel?.nome || 'Nome não informado',
                 cpf: responsavel?.cpf || 'CPF não informado',
-                role: 'responsavel',
                 whatsapp: responsavel?.whatsapp || 'WhatsApp não informado',
+                email: email,
+                role: 'responsavel',
+                alunosCount: countAlunos,
               };
-            }
-            return { userId: user.userId, nome: 'Desconhecido', role: user.role };
-          });
+            })
+        );
+      } else if (type === 'arquivados') {
+        const profissionais = await getAllProfissionais();
+        const atletas = await getAllAlunos();
+        const responsaveis = await getAllResponsaveis();
+  
+        fetchedUsers = await Promise.all(
+          allUsers
+            .filter((user) => user.status === 'Arquivado')
+            .map(async (user) => {
+              if (user.role === 'profissional') {
+                const profissional = profissionais.find((p) => p.userId === user.userId);
+                return {
+                  userId: user.userId,
+                  nome: profissional?.nome || 'Nome não informado',
+                  cpf: profissional?.cpf || 'CPF não informado',
+                  role: 'profissional',
+                  profissao: profissional?.profissao || 'Profissão não informada',
+                };
+              } else if (user.role === 'atleta') {
+                const atleta = atletas.find((a) => a.userId === user.userId);
+                return {
+                  userId: user.userId,
+                  nome: atleta?.nome || 'Nome não informado',
+                  cpf: atleta?.cpf || 'CPF não informado',
+                  role: 'atleta',
+                  posicao: atleta?.posicao || 'Posição não informada',
+                  off: atleta?.off || 'Sem desconto',
+                };
+              } else if (user.role === 'responsavel') {
+                const responsavel = responsaveis.find((r) => r.userId === user.userId);
+                let email = 'Email não informado';
+                try {
+                  // Busca o e-mail pelo userId do responsável
+                  const userDetail = allUsers.find((u) => u.userId === responsavel?.userId);
+                  if (userDetail) {
+                    email = userDetail.email || 'Email não informado';
+                  }
+                } catch (error) {
+                  console.error('Erro ao buscar o e-mail arquivado:', error);
+                }
+  
+                return {
+                  userId: user.userId,
+                  nome: responsavel?.nome || 'Nome não informado',
+                  cpf: responsavel?.cpf || 'CPF não informado',
+                  role: 'responsavel',
+                  whatsapp: responsavel?.whatsapp || 'WhatsApp não informado',
+                  email: email,
+                };
+              }
+              return { userId: user.userId, nome: 'Desconhecido', role: user.role };
+            })
+        );
       }
-
+  
       setUsers(fetchedUsers);
     } catch (error) {
       setErrorMessage(`Não foi possível carregar os dados.`);
       setShowErrorModal(true);
     }
-  };
+  };  
 
 
   const handleSpecialAction = async (userId) => {
@@ -225,13 +258,29 @@ const GerenciarUsuarios = () => {
   };
 
   const renderUser = ({ item }) => {
-  
     return (
       <View style={styles.userCard}>
         <Text style={styles.userName}>{item.nome}</Text>
-        {item.role === 'profissional' && <Text style={styles.userInfo}>Profissão: {item.profissao}</Text>}
-        {item.role === 'atleta' && <Text style={styles.userInfo}>Posição: {item.posicao}</Text>}
-        {item.role === 'responsavel' && <Text style={styles.userInfo}>WhatsApp: {item.whatsapp}</Text>}
+  
+        {item.role === 'profissional' && (
+          <Text style={styles.userInfo}>Profissão: {item.profissao}</Text>
+        )}
+  
+        {item.role === 'atleta' && (
+          <>
+            <Text style={styles.userInfo}>Posição: {item.posicao}</Text>
+            <Text style={styles.userInfo}>Desconto: {item.off}</Text>
+          </>
+        )}
+  
+        {item.role === 'responsavel' && (
+          <>
+            <Text style={styles.userInfo}>WhatsApp: {item.whatsapp}</Text>
+            <Text style={styles.userInfo}>Email: {item.email || 'Email não informado'}</Text>
+            <Text style={styles.userInfo}>Atletas Responsáveis: {item.alunosCount || 0}</Text>
+          </>
+        )}
+  
         <Text style={styles.userCpf}>CPF: {item.cpf}</Text>
   
         <View style={styles.iconContainer}>
@@ -264,6 +313,7 @@ const GerenciarUsuarios = () => {
       </View>
     );
   };
+  
   
 
   return (
